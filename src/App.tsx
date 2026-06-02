@@ -29,6 +29,10 @@ function PageLoader() {
   )
 }
 
+const HerdClientPage = lazy(() => import('@/pages/HerdClientPage').then((m) => ({ default: m.HerdClientPage })))
+const SemenPage = lazy(() => import('@/pages/SemenPage').then((m) => ({ default: m.SemenPage })))
+const AuditoriaClientPage = lazy(() => import('@/pages/AuditoriaClientPage').then((m) => ({ default: m.AuditoriaClientPage })))
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -47,6 +51,9 @@ export default function App() {
             <Route path="/results" element={<Suspense fallback={<PageLoader />}><ResultsPage /></Suspense>} />
             <Route path="/females" element={<Suspense fallback={<PageLoader />}><FemalesPage /></Suspense>} />
             <Route path="/admin" element={<Suspense fallback={<PageLoader />}><AdminPage /></Suspense>} />
+            <Route path="/herd" element={<Suspense fallback={<PageLoader />}><HerdClientPage /></Suspense>} />
+            <Route path="/semen" element={<Suspense fallback={<PageLoader />}><SemenPage /></Suspense>} />
+            <Route path="/auditoria" element={<Suspense fallback={<PageLoader />}><AuditoriaClientPage /></Suspense>} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

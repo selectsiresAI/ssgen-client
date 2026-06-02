@@ -20,36 +20,74 @@ interface NavItem {
   adminOnly?: boolean
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { to: '/', label: 'Dashboard', icon: '📊' },
-  { to: '/orders', label: 'Ordens de Serviço', icon: '📋' },
-  { to: '/results', label: 'Resultados', icon: '🧬' },
-  { to: '/females', label: 'Fêmeas', icon: '🐄' },
-  { to: '/admin', label: 'Administração', icon: '⚙️', adminOnly: true },
+interface NavGroup {
+  title?: string
+  items: NavItem[]
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    items: [
+      { to: '/', label: 'Dashboard', icon: '📊' },
+    ],
+  },
+  {
+    title: 'Bancos de Dados',
+    items: [
+      { to: '/herd', label: 'Rebanho', icon: '🐄' },
+      { to: '/semen', label: 'Botijao Virtual', icon: '🧪' },
+    ],
+  },
+  {
+    title: 'Analises',
+    items: [
+      { to: '/auditoria', label: 'Auditoria Genetica', icon: '📈' },
+    ],
+  },
+  {
+    items: [
+      { to: '/orders', label: 'Ordens de Servico', icon: '📋' },
+      { to: '/results', label: 'Resultados', icon: '🧬' },
+      { to: '/females', label: 'Femeas', icon: '🐮' },
+      { to: '/admin', label: 'Administracao', icon: '⚙️', adminOnly: true },
+    ],
+  },
 ]
 
 function NavItems({ onClick, isAdmin }: { onClick?: () => void; isAdmin: boolean }) {
-  const items = isAdmin ? NAV_ITEMS : NAV_ITEMS.filter((i) => !i.adminOnly)
   return (
     <nav className="flex flex-col gap-1">
-      {items.map((item) => (
-        <NavLink
-          key={item.to}
-          to={item.to}
-          end={item.to === '/'}
-          onClick={onClick}
-          className={({ isActive }) =>
-            `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-              isActive
-                ? 'bg-primary/10 text-primary font-medium'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`
-          }
-        >
-          <span>{item.icon}</span>
-          {item.label}
-        </NavLink>
-      ))}
+      {NAV_GROUPS.map((group, gi) => {
+        const items = isAdmin ? group.items : group.items.filter((i) => !i.adminOnly)
+        if (items.length === 0) return null
+        return (
+          <div key={gi}>
+            {group.title && (
+              <p className="px-3 pt-3 pb-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {group.title}
+              </p>
+            )}
+            {items.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/'}
+                onClick={onClick}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                    isActive
+                      ? 'bg-primary/10 text-primary font-medium'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`
+                }
+              >
+                <span>{item.icon}</span>
+                {item.label}
+              </NavLink>
+            ))}
+          </div>
+        )
+      })}
     </nav>
   )
 }

@@ -27,6 +27,118 @@ async function callFunction<T>(name: string, params?: Record<string, string>): P
   return res.json()
 }
 
+export interface FemaleFull {
+  id: string
+  client_id: string
+  ear_tag: string | null
+  name: string | null
+  registration: string | null
+  birth_date: string | null
+  breed: string | null
+  category: string | null
+  status: string | null
+  parity_order: number | null
+  sire_naab: string | null
+  mgs_naab: string | null
+  mmgs_naab: string | null
+  genomic_result_id: string | null
+  hhp_dollar: number | null
+  tpi: number | null
+  nm_dollar: number | null
+  cm_dollar: number | null
+  fm_dollar: number | null
+  gm_dollar: number | null
+  f_sav: number | null
+  ptam: number | null
+  cfp: number | null
+  ptaf: number | null
+  ptaf_pct: number | null
+  ptap: number | null
+  ptap_pct: number | null
+  pl: number | null
+  dpr: number | null
+  liv: number | null
+  scs: number | null
+  mast: number | null
+  met: number | null
+  rp: number | null
+  da: number | null
+  ket: number | null
+  mf: number | null
+  ptat: number | null
+  udc: number | null
+  flc: number | null
+  sce: number | null
+  dce: number | null
+  ssb: number | null
+  dsb: number | null
+  h_liv: number | null
+  ccr: number | null
+  hcr: number | null
+  fi: number | null
+  gl: number | null
+  efc: number | null
+  bwc: number | null
+  sta: number | null
+  str: number | null
+  dfm: number | null
+  rua: number | null
+  rls: number | null
+  rtp: number | null
+  ftl: number | null
+  rw: number | null
+  rlr: number | null
+  fta: number | null
+  fls: number | null
+  fua: number | null
+  ruh: number | null
+  ruw: number | null
+  ucl: number | null
+  udp: number | null
+  ftp: number | null
+  rfi: number | null
+  beta_casein: string | null
+  kappa_casein: string | null
+  gfi: number | null
+  created_at: string
+  [key: string]: unknown
+}
+
+export interface BullSemen {
+  code: string
+  name: string | null
+  registration: string | null
+  breed: string | null
+  daughters_count: number
+  [key: string]: unknown
+}
+
+export interface ServiceOrderOption {
+  id: string
+  ordem_servico_ssgen: number | null
+  nome_produto: string | null
+}
+
+export interface ParentageRow {
+  role: string
+  status: string
+  n: number
+  pct: number
+}
+
+export interface TopParentRow {
+  parent_label: string
+  daughters_count: number
+  trait_mean: number | null
+}
+
+export interface LinearMeanRow {
+  trait_key: string
+  group_label: string
+  mean_value: number
+  n: number
+}
+
 // --- Types ---
 
 export interface DashboardData {
@@ -129,6 +241,18 @@ export interface Technician {
 // --- API calls ---
 
 export const api = {
+  getFemalesFull: (params?: { page?: string; per_page?: string; search?: string; service_order_id?: string }) =>
+    callFunction<Paginated<FemaleFull>>('get-my-females-full', params),
+
+  getSemenInventory: (params?: { search?: string }) =>
+    callFunction<{ data: BullSemen[] }>('get-my-semen-inventory', params),
+
+  getAuditoria: (params: { step: string; service_order_id?: string; parent_type?: string; order_trait?: string; limit?: string; traits?: string }) =>
+    callFunction<{ data: unknown }>('get-my-auditoria', params),
+
+  getServiceOrderOptions: () =>
+    callFunction<Paginated<ServiceOrderOption>>('get-my-orders', { per_page: '100' }),
+
   getDashboard: () => callFunction<DashboardData>('get-my-dashboard'),
 
   getOrders: (params?: { page?: string; per_page?: string; status?: string }) =>
