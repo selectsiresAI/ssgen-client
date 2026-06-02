@@ -62,12 +62,30 @@ Deno.serve(async (req: Request) => {
       return (grIds ?? []).map((r: { id: string }) => r.id);
     }
 
+    // Map frontend trait names → actual DB column names (with PostgREST alias syntax)
+    const TRAIT_ALIAS: Record<string, string> = {
+      ptam: "ptam:pta_milk", ptaf: "ptaf:pta_fat", ptaf_pct: "ptaf_pct:pta_fat_pct",
+      ptap: "ptap:pta_protein", ptap_pct: "ptap_pct:pta_protein_pct",
+      pl: "pl:pta_pl", dpr: "dpr:pta_dpr", liv: "liv:pta_livability", scs: "scs:pta_scs",
+      mf: "mf:mf_num", str: "str:str_num",
+      ptat: "ptat:pta_ptat", udc: "udc:pta_udc", flc: "flc:pta_flc",
+      sce: "sce:pta_sce", ccr: "ccr:pta_ccr", hcr: "hcr:pta_hcr",
+    };
+
+    function mapSelectCols(cols: string): string {
+      return cols.split(",").map(c => {
+        const t = c.trim();
+        return TRAIT_ALIAS[t] ?? t;
+      }).join(", ");
+    }
+
     // Helper: build base female query with client and optional SO filter
     async function getFemales(selectCols: string) {
+      const mappedCols = mapSelectCols(selectCols);
       const resultIds = await getFemaleFilter();
       let query = platformDb
         .from("females")
-        .select(selectCols)
+        .select(mappedCols)
         .in("client_id", clientIds);
       if (resultIds !== null) {
         if (resultIds.length === 0) return [];

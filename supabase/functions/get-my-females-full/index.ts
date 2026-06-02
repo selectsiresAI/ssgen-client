@@ -56,8 +56,27 @@ Deno.serve(async (req: Request) => {
     const from = (page - 1) * perPage;
     const to = from + perPage - 1;
 
-    // Build select with ALL PTA columns
-    const selectCols = "id, client_id, ear_tag, name, registration, birth_date, breed, category, status, parity_order, sire_naab, mgs_naab, mmgs_naab, genomic_result_id, hhp_dollar, tpi, nm_dollar, cm_dollar, fm_dollar, gm_dollar, f_sav, ptam, cfp, ptaf, ptaf_pct, ptap, ptap_pct, pl, dpr, liv, scs, mast, met, rp, da, ket, mf, ptat, udc, flc, sce, dce, ssb, dsb, h_liv, ccr, hcr, fi, gl, efc, bwc, sta, str, dfm, rua, rls, rtp, ftl, rw, rlr, fta, fls, fua, ruh, ruw, ucl, udp, ftp, rfi, beta_casein, kappa_casein, gfi, created_at";
+    // Build select with ALL PTA columns (using PostgREST aliases where DB column name differs)
+    const selectCols = [
+      "id", "client_id", "ear_tag", "name", "registration", "birth_date",
+      "breed", "category", "status", "parity_order",
+      "sire_naab", "mgs_naab", "mmgs_naab", "genomic_result_id",
+      // Direct columns (same name in DB)
+      "hhp_dollar", "tpi", "nm_dollar", "cm_dollar", "fm_dollar", "gm_dollar",
+      "f_sav", "cfp", "da", "ket", "mast", "met", "rp", "ssb", "dsb",
+      "h_liv", "fi", "gl", "efc", "bwc",
+      "sta", "dfm", "rua", "rls", "rtp", "ftl", "rw", "rlr",
+      "fta", "fls", "fua", "ruh", "ruw", "ucl", "udp", "ftp",
+      "rfi", "beta_casein", "kappa_casein", "gfi",
+      // Aliased columns (DB name differs from frontend convention)
+      "ptam:pta_milk", "ptaf:pta_fat", "ptaf_pct:pta_fat_pct",
+      "ptap:pta_protein", "ptap_pct:pta_protein_pct",
+      "pl:pta_pl", "dpr:pta_dpr", "liv:pta_livability", "scs:pta_scs",
+      "mf:mf_num", "str:str_num",
+      "ptat:pta_ptat", "udc:pta_udc", "flc:pta_flc",
+      "sce:pta_sce", "ccr:pta_ccr", "hcr:pta_hcr",
+      "created_at",
+    ].join(", ");
 
     let query = platformDb
       .from("females")

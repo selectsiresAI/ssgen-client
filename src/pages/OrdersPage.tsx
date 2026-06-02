@@ -87,7 +87,7 @@ export function OrdersPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>OS SSGEN</TableHead>
-                  <TableHead>Cliente / Fazenda</TableHead>
+                  <TableHead>Cliente</TableHead>
                   <TableHead>Produto</TableHead>
                   <TableHead className="text-center">Amostras</TableHead>
                   <TableHead>Status</TableHead>
@@ -116,13 +116,8 @@ export function OrdersPage() {
                       <TableCell className="font-medium">
                         {o.ordem_servico_ssgen ?? '—'}
                       </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="text-sm">{o.client_name ?? '—'}</p>
-                          {o.farm_name && (
-                            <p className="text-xs text-muted-foreground">{o.farm_name}</p>
-                          )}
-                        </div>
+                      <TableCell className="text-sm">
+                        {o.client_name ?? '—'}
                       </TableCell>
                       <TableCell className="text-sm">{o.nome_produto ?? '—'}</TableCell>
                       <TableCell className="text-center">{o.numero_amostras ?? '—'}</TableCell>

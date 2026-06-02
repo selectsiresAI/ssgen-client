@@ -46,9 +46,7 @@ const NAV_GROUPS: NavGroup[] = [
   },
   {
     items: [
-      { to: '/orders', label: 'Ordens de Servico', icon: '📋' },
       { to: '/results', label: 'Resultados', icon: '🧬' },
-      { to: '/females', label: 'Femeas', icon: '🐮' },
       { to: '/admin', label: 'Administracao', icon: '⚙️', adminOnly: true },
     ],
   },

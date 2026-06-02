@@ -25,7 +25,6 @@ interface PlatformClient {
   id: string
   cod_ssgen: string | null
   nome: string
-  farm_name: string | null
   cidade: string | null
   estado: string | null
   status: string | null
@@ -113,8 +112,8 @@ function LinkManagement() {
       await supabase.from('notifications').insert({
         user_id: profile.id,
         type: 'welcome',
-        title: 'Fazenda vinculada',
-        body: `A fazenda "${selectedClient.nome}" foi vinculada a sua conta.`,
+        title: 'Cliente vinculado',
+        body: `O cliente "${selectedClient.nome}" foi vinculado a sua conta.`,
         metadata: { client_id: selectedClient.id },
       })
     },
@@ -145,7 +144,7 @@ function LinkManagement() {
       {/* Create Link Form */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Vincular usuario a fazenda</CardTitle>
+          <CardTitle className="text-base">Vincular usuario a cliente</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {message && (
@@ -165,7 +164,7 @@ function LinkManagement() {
           </div>
 
           <div className="space-y-2">
-            <Label>Buscar cliente/fazenda na Platform</Label>
+            <Label>Buscar cliente na Platform</Label>
             <Input
               placeholder="Digite nome ou codigo SSGEN..."
               value={clientSearch}
@@ -192,7 +191,6 @@ function LinkManagement() {
                   <div>
                     <p className="font-medium">{c.nome}</p>
                     <p className="text-xs text-muted-foreground">
-                      {c.farm_name ? `${c.farm_name} - ` : ''}
                       {c.cidade}/{c.estado}
                       {c.cod_ssgen ? ` (${c.cod_ssgen})` : ''}
                     </p>
@@ -227,7 +225,7 @@ function LinkManagement() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Cliente/Fazenda</TableHead>
+                <TableHead>Cliente</TableHead>
                 <TableHead>User ID</TableHead>
                 <TableHead>Data</TableHead>
                 <TableHead className="w-20" />

@@ -7,9 +7,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { AppLayout } from '@/components/AppLayout'
 
 const DashboardPage = lazy(() => import('@/pages/DashboardPage').then((m) => ({ default: m.DashboardPage })))
-const OrdersPage = lazy(() => import('@/pages/OrdersPage').then((m) => ({ default: m.OrdersPage })))
 const ResultsPage = lazy(() => import('@/pages/ResultsPage').then((m) => ({ default: m.ResultsPage })))
-const FemalesPage = lazy(() => import('@/pages/FemalesPage').then((m) => ({ default: m.FemalesPage })))
 const AdminPage = lazy(() => import('@/pages/AdminPage').then((m) => ({ default: m.AdminPage })))
 
 const queryClient = new QueryClient({
@@ -47,9 +45,7 @@ export default function App() {
             }
           >
             <Route path="/" element={<Suspense fallback={<PageLoader />}><DashboardPage /></Suspense>} />
-            <Route path="/orders" element={<Suspense fallback={<PageLoader />}><OrdersPage /></Suspense>} />
             <Route path="/results" element={<Suspense fallback={<PageLoader />}><ResultsPage /></Suspense>} />
-            <Route path="/females" element={<Suspense fallback={<PageLoader />}><FemalesPage /></Suspense>} />
             <Route path="/admin" element={<Suspense fallback={<PageLoader />}><AdminPage /></Suspense>} />
             <Route path="/herd" element={<Suspense fallback={<PageLoader />}><HerdClientPage /></Suspense>} />
             <Route path="/semen" element={<Suspense fallback={<PageLoader />}><SemenPage /></Suspense>} />

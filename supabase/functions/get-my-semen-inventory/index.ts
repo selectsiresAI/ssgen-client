@@ -82,7 +82,7 @@ Deno.serve(async (req: Request) => {
     // Fetch bull data
     let bullQuery = platformDb
       .from("bulls_denorm")
-      .select("code, name, registration, breed, hhp_dollar, tpi, nm_dollar, cm_dollar, fm_dollar, gm_dollar, f_sav, ptam, cfp, ptaf, ptaf_pct, ptap, ptap_pct, pl, dpr, liv, scs, mast, met, rp, da, ket, mf, ptat, udc, flc, sce, dce, ssb, dsb, h_liv, ccr, hcr, fi, gl, efc, bwc, sta, str, dfm, rua, rls, rtp, ftl, rw, rlr, fta, fls, fua, ruh, ruw, ucl, udp, ftp, rfi, beta_casein, kappa_casein, gfi")
+      .select("code, name, registration, company, hhp_dollar, tpi, nm_dollar, cm_dollar, fm_dollar, gm_dollar, f_sav, ptam, cfp, ptaf, ptaf_pct, ptap, ptap_pct, pl, dpr, liv, scs, mast, met, rp, da, ket, mf, ptat, udc, flc, sce, dce, ssb, dsb, h_liv, ccr, hcr, fi, bwc, sta, str, dfm, rua, rls, rtp, ftl, rw, rlr, fta, fls, fua, ruh, ruw, ucl, udp, ftp, rfi, beta_casein, kappa_casein, gfi")
       .in("code", naabCodes);
 
     if (search) {

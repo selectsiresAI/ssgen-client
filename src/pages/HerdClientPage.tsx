@@ -5,19 +5,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { useFemalesFull, useServiceOrderOptions } from '@/hooks/useApi'
 import { calculateCategoryCounts, getAutomaticCategory } from '@/utils/femaleCategories'
@@ -31,10 +22,12 @@ export function HerdClientPage() {
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [serviceOrderId, setServiceOrderId] = useState<string>('')
-  const [sortKey, setSortKey] = useState<string>('')
-  const [sortDir, setSortDir] = useState<SortDir>('asc')
+  const [sortKey, setSortKey] = useState<string>('hhp_dollar')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [categoryFilter, setCategoryFilter] = useState('')
+  const [yearFilter, setYearFilter] = useState('')
+  const [sireFilter, setSireFilter] = useState('')
 
-  // Debounce search
   const [timer, setTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
   const handleSearch = (v: string) => {
     setSearch(v)
@@ -52,11 +45,39 @@ export function HerdClientPage() {
   const females = data?.data ?? []
   const totalPages = data ? Math.ceil(data.total / data.per_page) : 0
 
-  const categoryCounts = useMemo(() => calculateCategoryCounts(females), [females])
+  // Client-side filters
+  const filteredFemales = useMemo(() => {
+    let result = females
+    if (categoryFilter) {
+      result = result.filter(f => getAutomaticCategory(f.birth_date) === categoryFilter)
+    }
+    if (yearFilter) {
+      result = result.filter(f => {
+        if (!f.birth_date) return false
+        return f.birth_date.substring(0, 4) === yearFilter
+      })
+    }
+    if (sireFilter) {
+      const lower = sireFilter.toLowerCase()
+      result = result.filter(f => f.sire_naab?.toLowerCase().includes(lower))
+    }
+    return result
+  }, [females, categoryFilter, yearFilter, sireFilter])
+
+  const categoryCounts = useMemo(() => calculateCategoryCounts(filteredFemales), [filteredFemales])
+
+  // Extract available years
+  const availableYears = useMemo(() => {
+    const years = new Set<string>()
+    females.forEach(f => {
+      if (f.birth_date) years.add(f.birth_date.substring(0, 4))
+    })
+    return Array.from(years).sort().reverse()
+  }, [females])
 
   const sortedFemales = useMemo(() => {
-    if (!sortKey) return females
-    return [...females].sort((a, b) => {
+    if (!sortKey) return filteredFemales
+    return [...filteredFemales].sort((a, b) => {
       const av = (a as Record<string, unknown>)[sortKey]
       const bv = (b as Record<string, unknown>)[sortKey]
       if (av == null && bv == null) return 0
@@ -69,15 +90,11 @@ export function HerdClientPage() {
         ? String(av).localeCompare(String(bv))
         : String(bv).localeCompare(String(av))
     })
-  }, [females, sortKey, sortDir])
+  }, [filteredFemales, sortKey, sortDir])
 
   const handleSort = (key: string) => {
-    if (sortKey === key) {
-      setSortDir(d => d === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortKey(key)
-      setSortDir('asc')
-    }
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(key); setSortDir('desc') }
   }
 
   const SortIcon = ({ col }: { col: string }) => {
@@ -88,25 +105,51 @@ export function HerdClientPage() {
   const serviceOrders = soData?.data ?? []
 
   const categoryCards = [
-    { label: 'Total', value: categoryCounts.total, color: 'bg-primary/10 text-primary' },
-    { label: 'Bezerras', value: categoryCounts.bezerras, color: 'bg-pink-50 text-pink-600' },
-    { label: 'Novilhas', value: categoryCounts.novilhas, color: 'bg-purple-50 text-purple-600' },
-    { label: 'Primiparas', value: categoryCounts.primiparas, color: 'bg-blue-50 text-blue-600' },
-    { label: 'Secundiparas', value: categoryCounts.secundiparas, color: 'bg-amber-50 text-amber-600' },
-    { label: 'Multiparas', value: categoryCounts.multiparas, color: 'bg-emerald-50 text-emerald-600' },
+    { label: 'Total', value: categoryCounts.total, color: 'bg-primary/10 text-primary', filter: '' },
+    { label: 'Bezerras', value: categoryCounts.bezerras, color: 'bg-pink-50 text-pink-600', filter: 'Bezerra' },
+    { label: 'Novilhas', value: categoryCounts.novilhas, color: 'bg-purple-50 text-purple-600', filter: 'Novilha' },
+    { label: 'Primiparas', value: categoryCounts.primiparas, color: 'bg-blue-50 text-blue-600', filter: 'Primipara' },
+    { label: 'Secundiparas', value: categoryCounts.secundiparas, color: 'bg-amber-50 text-amber-600', filter: 'Secundipara' },
+    { label: 'Multiparas', value: categoryCounts.multiparas, color: 'bg-emerald-50 text-emerald-600', filter: 'Multipara' },
   ]
+
+  const exportExcel = () => {
+    import('xlsx').then(({ utils, writeFile }) => {
+      const headers = ['Nome', 'Brinco', 'Registro', 'Nascimento', 'Categoria', 'Raca', 'Sire', 'MGS',
+        ...ANIMAL_METRIC_COLUMNS.map(c => c.label)]
+      const rows = sortedFemales.map(f => {
+        const cat = getAutomaticCategory(f.birth_date)
+        return [
+          f.name ?? '', f.ear_tag ?? '', f.registration ?? '',
+          f.birth_date ?? '', cat, f.breed ?? '', f.sire_naab ?? '', f.mgs_naab ?? '',
+          ...ANIMAL_METRIC_COLUMNS.map(col => (f as Record<string, unknown>)[col.key] ?? '')
+        ]
+      })
+      const ws = utils.aoa_to_sheet([headers, ...rows])
+      const wb = utils.book_new()
+      utils.book_append_sheet(wb, ws, 'Rebanho')
+      writeFile(wb, `rebanho-${new Date().toISOString().split('T')[0]}.xlsx`)
+    })
+  }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Rebanho</h1>
-        <p className="text-muted-foreground text-sm">Visualize as femeas genotipadas do seu rebanho</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Rebanho</h1>
+          <p className="text-muted-foreground text-sm">Visualize as femeas genotipadas do seu rebanho</p>
+        </div>
+        <Button variant="outline" onClick={exportExcel}>Exportar Excel</Button>
       </div>
 
-      {/* Category cards */}
+      {/* Category cards — clickable */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {categoryCards.map(c => (
-          <Card key={c.label}>
+          <Card
+            key={c.label}
+            className={`cursor-pointer transition-shadow hover:shadow-md ${categoryFilter === c.filter ? 'ring-2 ring-primary' : ''}`}
+            onClick={() => setCategoryFilter(prev => prev === c.filter ? '' : c.filter)}
+          >
             <CardContent className="p-3 text-center">
               <p className="text-xs text-muted-foreground">{c.label}</p>
               <p className={`text-2xl font-bold ${c.color}`}>{c.value}</p>
@@ -119,10 +162,7 @@ export function HerdClientPage() {
       <div className="flex flex-wrap items-center gap-3">
         <Select
           value={serviceOrderId || 'all'}
-          onValueChange={(v: string | null) => {
-            setServiceOrderId(!v || v === 'all' ? '' : v)
-            setPage(1)
-          }}
+          onValueChange={(v: string | null) => { setServiceOrderId(!v || v === 'all' ? '' : v); setPage(1) }}
         >
           <SelectTrigger className="w-[280px]">
             <SelectValue placeholder="Filtrar por Ordem de Servico" />
@@ -137,6 +177,45 @@ export function HerdClientPage() {
           </SelectContent>
         </Select>
 
+        <Select
+          value={categoryFilter || 'all'}
+          onValueChange={(v: string | null) => setCategoryFilter(!v || v === 'all' ? '' : v)}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Categoria" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas categorias</SelectItem>
+            <SelectItem value="Bezerra">Bezerras</SelectItem>
+            <SelectItem value="Novilha">Novilhas</SelectItem>
+            <SelectItem value="Primipara">Primiparas</SelectItem>
+            <SelectItem value="Secundipara">Secundiparas</SelectItem>
+            <SelectItem value="Multipara">Multiparas</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {availableYears.length > 0 && (
+          <Select
+            value={yearFilter || 'all'}
+            onValueChange={(v: string | null) => setYearFilter(!v || v === 'all' ? '' : v)}
+          >
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Ano nasc." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os anos</SelectItem>
+              {availableYears.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
+
+        <Input
+          placeholder="Filtrar por pai (sire)..."
+          value={sireFilter}
+          onChange={e => setSireFilter(e.target.value)}
+          className="w-[180px]"
+        />
+
         <Input
           placeholder="Buscar por nome, brinco ou registro..."
           value={search}
@@ -146,7 +225,7 @@ export function HerdClientPage() {
 
         {data && (
           <span className="text-sm text-muted-foreground">
-            {data.total} femea{data.total !== 1 ? 's' : ''}
+            {filteredFemales.length} de {data.total} femea{data.total !== 1 ? 's' : ''}
           </span>
         )}
       </div>
@@ -170,11 +249,7 @@ export function HerdClientPage() {
                   <TableHead className="min-w-[80px]">Sire</TableHead>
                   <TableHead className="min-w-[80px]">MGS</TableHead>
                   {ANIMAL_METRIC_COLUMNS.map(col => (
-                    <TableHead
-                      key={col.key}
-                      className="min-w-[70px] text-right cursor-pointer"
-                      onClick={() => handleSort(col.key)}
-                    >
+                    <TableHead key={col.key} className="min-w-[70px] text-right cursor-pointer" onClick={() => handleSort(col.key)}>
                       {col.label} <SortIcon col={col.key} />
                     </TableHead>
                   ))}
@@ -200,14 +275,10 @@ export function HerdClientPage() {
                     const cat = getAutomaticCategory(f.birth_date)
                     return (
                       <TableRow key={f.id}>
-                        <TableCell className="sticky left-0 bg-card z-10 font-medium">
-                          {f.name ?? '—'}
-                        </TableCell>
+                        <TableCell className="sticky left-0 bg-card z-10 font-medium">{f.name ?? '—'}</TableCell>
                         <TableCell>{f.ear_tag ?? '—'}</TableCell>
                         <TableCell className="text-xs">{f.registration ?? '—'}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="text-xs">{cat}</Badge>
-                        </TableCell>
+                        <TableCell><Badge variant="outline" className="text-xs">{cat}</Badge></TableCell>
                         <TableCell className="text-xs">{f.breed ?? '—'}</TableCell>
                         <TableCell className="text-xs font-mono">{f.sire_naab ?? '—'}</TableCell>
                         <TableCell className="text-xs font-mono">{f.mgs_naab ?? '—'}</TableCell>
