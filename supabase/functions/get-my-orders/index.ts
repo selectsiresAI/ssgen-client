@@ -63,7 +63,9 @@ Deno.serve(async (req: Request) => {
       .order("created_at", { ascending: false })
       .range(from, to);
 
-    if (status) {
+    if (status === "in_progress") {
+      query = query.neq("etapa_atual", "Faturamento");
+    } else if (status) {
       query = query.eq("etapa_atual", status);
     }
 

@@ -20,25 +20,9 @@ import {
 } from '@/components/ui/table'
 import { useOrders } from '@/hooks/useApi'
 
-const STAGES = [
-  'CRA',
-  'Envio Planilha',
-  'VRI',
-  'LPR',
-  'Envio Resultados',
-  'Receb. Resultados',
-  'Faturamento',
-] as const
-
 function stageBadgeVariant(stage: string): 'default' | 'secondary' | 'outline' | 'destructive' {
   if (stage === 'Faturamento') return 'default'
-  if (stage === 'CRA' || stage === 'VRI') return 'destructive'
   return 'secondary'
-}
-
-function formatDate(d: string | null) {
-  if (!d) return '—'
-  return new Date(d).toLocaleDateString('pt-BR')
 }
 
 export function OrdersPage() {
@@ -77,15 +61,12 @@ export function OrdersPage() {
           }}
         >
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filtrar por etapa" />
+            <SelectValue placeholder="Filtrar por status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas as etapas</SelectItem>
-            {STAGES.map((s) => (
-              <SelectItem key={s} value={s}>
-                {s}
-              </SelectItem>
-            ))}
+            <SelectItem value="all">Todas</SelectItem>
+            <SelectItem value="in_progress">Em andamento</SelectItem>
+            <SelectItem value="Faturamento">Concluidas</SelectItem>
           </SelectContent>
         </Select>
         {data && (
@@ -109,17 +90,14 @@ export function OrdersPage() {
                   <TableHead>Cliente / Fazenda</TableHead>
                   <TableHead>Produto</TableHead>
                   <TableHead className="text-center">Amostras</TableHead>
-                  <TableHead>Etapa</TableHead>
-                  <TableHead>CRA</TableHead>
-                  <TableHead>Previsao</TableHead>
-                  <TableHead>Liberacao</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
-                      {Array.from({ length: 8 }).map((_, j) => (
+                      {Array.from({ length: 5 }).map((_, j) => (
                         <TableCell key={j}>
                           <Skeleton className="h-4 w-full" />
                         </TableCell>
@@ -150,14 +128,9 @@ export function OrdersPage() {
                       <TableCell className="text-center">{o.numero_amostras ?? '—'}</TableCell>
                       <TableCell>
                         <Badge variant={stageBadgeVariant(o.etapa_atual)}>
-                          {o.etapa_atual}
+                          {o.etapa_atual === 'Faturamento' ? 'Concluida' : 'Em andamento'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm">{formatDate(o.cra_data)}</TableCell>
-                      <TableCell className="text-sm">
-                        {formatDate(o.envio_resultados_previsao)}
-                      </TableCell>
-                      <TableCell className="text-sm">{formatDate(o.liberacao_data)}</TableCell>
                     </TableRow>
                   ))
                 )}
