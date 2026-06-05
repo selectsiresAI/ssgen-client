@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSGen · Reformulação de layout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAFAF9;--card:#FFFFFF;--fg:#1C1917;--text:#44403C;--muted:#78716C;--muted-2:#A8A29E;
+  --border:#EBE7E2;--border-2:#F3F0EC;--wash:#FAF8F6;
+  --primary:#CE0E2D;--primary-d:#A50A23;--primary-soft:#FBE9EC;
+  --green:#3F8A66;--green-soft:#E8F2EC;--amber:#B7791F;--amber-soft:#FBF1DF;
+  --c1:#CE0E2D;--c2:#9A7B6B;--c3:#C99A4B;
+  --r:10px;--rs:7px;--f:"Geist",sans-serif;--fm:"Geist Mono",monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);font-family:var(--f);color:var(--text);-webkit-font-smoothing:antialiased;font-size:14px}
+.app{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+.sb{background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.sb-brand{display:flex;align-items:center;gap:11px;padding:18px 20px;border-bottom:1px solid var(--border)}
+.sb-mark{width:34px;height:34px;background:var(--primary);border-radius:9px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;flex-shrink:0}
+.sb-mark::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.28),transparent 60%)}
+.sb-mark span{color:#fff;font-weight:700;font-size:14px;letter-spacing:-.5px;z-index:1}
+.sb-brand b{font-weight:600;font-size:15px;color:var(--fg);display:block;line-height:1}
+.sb-brand small{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted-2)}
+.sb-nav{flex:1;overflow:auto;padding:14px 12px}
+.sb-grp{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted-2);font-weight:600;padding:14px 10px 7px}
+.sb-grp:first-child{padding-top:2px}
+.nav{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:var(--rs);color:var(--text);font-weight:500;font-size:13.5px;cursor:pointer;transition:.14s;border:1px solid transparent}
+.nav:hover{background:var(--wash)}
+.nav.on{background:var(--primary-soft);color:var(--primary);font-weight:600}
+.nav.on svg{stroke:var(--primary)}
+.nav svg{width:17px;height:17px;stroke:var(--muted);fill:none;stroke-width:1.8;flex-shrink:0;transition:.14s}
+.nav .new{margin-left:auto;font-size:9px;font-weight:700;letter-spacing:.5px;color:var(--primary);background:var(--primary-soft);border:1px solid #F3D2D8;padding:1px 6px;border-radius:20px}
+.nav.on .new{background:#fff}
+.sb-user{border-top:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:11px}
+.sb-av{width:34px;height:34px;border-radius:50%;background:var(--wash);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:600;color:var(--fg);font-size:13px}
+.sb-user b{display:block;font-size:13px;color:var(--fg);font-weight:600;line-height:1.2}
+.sb-user small{font-size:11px;color:var(--muted)}
+.main{display:flex;flex-direction:column;min-width:0}
+.tb{background:rgba(250,250,249,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);padding:0 30px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30}
+.tb h1{font-size:18px;font-weight:600;color:var(--fg);letter-spacing:-.2px}
+.tb h1 small{display:block;font-size:11.5px;font-weight:400;color:var(--muted);letter-spacing:0;margin-top:1px}
+.tb-r{display:flex;align-items:center;gap:10px}
+.search{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:8px 12px;width:230px;color:var(--muted)}
+.search svg{width:15px;height:15px;stroke:var(--muted);fill:none;stroke-width:1.8}
+.search input{border:0;outline:0;background:none;font-family:var(--f);font-size:13px;color:var(--fg);width:100%}
+.farmsel{display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:8px 12px;font-size:12.5px;color:var(--fg);font-weight:500}
+.farmsel svg{width:14px;height:14px;stroke:var(--primary);fill:none;stroke-width:1.9}
+.content{padding:26px 30px 50px;max-width:1320px;width:100%}
+.screen{display:none;animation:fade .3s ease}
+.screen.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 1px 2px rgba(0,0,0,.02)}
+.ch{padding:16px 20px;border-bottom:1px solid var(--border-2);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ch h3{font-size:13px;font-weight:600;color:var(--fg);display:flex;align-items:center;gap:9px}
+.ch h3::before{content:"";width:3px;height:14px;background:var(--primary);border-radius:2px}
+.cb{padding:18px 20px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;position:relative;overflow:hidden}
+.kpi::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--primary);opacity:.85}
+.kpi .lab{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:9px;display:flex;align-items:center;gap:7px}
+.kpi .lab svg{width:14px;height:14px;stroke:var(--primary);fill:none;stroke-width:1.8}
+.kpi .val{font-size:25px;font-weight:700;color:var(--fg);line-height:1;letter-spacing:-.5px}
+.kpi .delta{font-family:var(--fm);font-size:11px;margin-top:7px}
+.up{color:var(--green)}.dn{color:#C0633A}
+.grid2{display:grid;grid-template-columns:1.45fr 1fr;gap:14px;margin-bottom:14px}
+.grid2b{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.seg{display:flex;gap:2px;background:var(--wash);border:1px solid var(--border);padding:3px;border-radius:var(--rs);flex-wrap:wrap}
+.segb{font-family:var(--fm);font-size:11px;color:var(--muted);background:none;border:0;padding:5px 10px;border-radius:5px;cursor:pointer;transition:.14s}
+.segb:hover{color:var(--fg)}
+.segb.on{background:var(--card);color:var(--primary);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.dist{display:flex;align-items:flex-end;gap:10px;height:160px;padding:18px 4px 2px}
+.bar{flex:1;background:var(--primary-soft);border-top:2px solid var(--primary);border-radius:5px 5px 0 0;position:relative;transition:height .8s cubic-bezier(.2,.8,.2,1);min-height:4px}
+.bar span{position:absolute;top:-19px;left:0;right:0;text-align:center;font-family:var(--fm);font-size:10px;color:var(--muted)}
+.bar i{position:absolute;bottom:-20px;left:0;right:0;text-align:center;font-family:var(--fm);font-size:9px;color:var(--muted);font-style:normal}
+.t5row{display:grid;grid-template-columns:22px 1fr 60px auto;gap:12px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--border-2);cursor:pointer;transition:.12s;border-radius:6px}
+.t5row:hover{background:var(--wash)}.t5row:last-child{border-bottom:0}
+.t5pos{font-family:var(--fm);font-size:12px;color:var(--muted);text-align:center}
+.medal{width:19px;height:19px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:9px;color:#fff}
+.t5nm{font-weight:500;font-size:13px;color:var(--fg)}
+.t5nm small{display:block;font-family:var(--fm);font-size:10px;color:var(--muted);font-weight:400}
+.t5bar{height:6px;background:var(--border-2);border-radius:3px;overflow:hidden}
+.t5bar i{display:block;height:100%;background:var(--primary);border-radius:3px;opacity:.85}
+.t5v{font-family:var(--fm);font-size:13px;color:var(--fg);text-align:right;font-weight:500}
+.dfsum{font-family:var(--fm);font-size:11.5px;color:var(--muted);margin-bottom:13px;padding-bottom:12px;border-bottom:1px solid var(--border-2)}
+.dfsum b{color:var(--primary)}
+.dfrow{display:grid;grid-template-columns:1fr 76px 76px;gap:12px;align-items:center;padding:8px 4px;border-bottom:1px solid var(--border-2)}
+.dfrow:last-child{border:0}
+.dfnm{font-weight:500;font-size:13px;color:var(--fg)}
+.dfbar{height:6px;background:var(--border-2);border-radius:3px;overflow:hidden}
+.dfbar i{display:block;height:100%;background:var(--amber);border-radius:3px;opacity:.8}
+.dfv{font-family:var(--fm);font-size:11.5px;color:var(--text);text-align:right}.dfv b{color:var(--fg)}
+.reb{display:grid;grid-template-columns:1.55fr 1fr;gap:14px}
+.rrow{display:grid;grid-template-columns:24px 1fr auto auto auto;gap:14px;align-items:center;padding:11px 12px;border-radius:var(--rs);cursor:pointer;transition:.13s;border:1px solid transparent}
+.rrow:hover{background:var(--wash)}
+.rrow.sel{background:var(--card);border-color:var(--primary);box-shadow:0 6px 18px -12px rgba(206,14,45,.45)}
+.rrow.sel .rpos{color:var(--primary)}
+.rpos{font-family:var(--fm);font-size:12px;color:var(--muted);text-align:center}
+.rname{font-weight:500;font-size:13.5px;color:var(--fg)}.rsire{font-size:11px;color:var(--muted);font-family:var(--fm)}
+.rstat{text-align:right}.rstat b{font-family:var(--fm);font-size:13px;color:var(--fg);display:block;font-weight:500}.rstat small{font-size:8.5px;letter-spacing:.6px;color:var(--muted-2);text-transform:uppercase}
+.prof-id{display:flex;align-items:center;gap:13px;margin-bottom:16px}
+.prof-av{width:48px;height:48px;border-radius:13px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0}
+.prof-id b{font-weight:600;font-size:16px;color:var(--fg);display:block}.prof-id span{font-size:12px;color:var(--muted);font-family:var(--fm)}
+.legend{display:flex;gap:16px;font-family:var(--fm);font-size:10px;color:var(--muted);justify-content:center;margin-top:4px;flex-wrap:wrap}
+.legend i{display:inline-flex;align-items:center;gap:5px}.legend i::before{content:"";width:9px;height:3px;border-radius:2px}
+.legend .an::before{background:var(--primary)}.legend .av::before{background:#CBC4BC}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.kv div{background:var(--wash);border:1px solid var(--border);border-radius:9px;padding:9px 11px}
+.kv small{font-size:8.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);display:block}
+.kv b{font-family:var(--fm);font-size:14px;color:var(--fg);font-weight:500}.kv .avg{font-family:var(--fm);font-size:9px;margin-left:5px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.chip{font-family:var(--fm);font-size:10.5px;padding:4px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:6px;border:1px solid}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%}
+.chip.free{background:var(--green-soft);color:var(--green);border-color:#D5E7DD}.chip.free::before{background:var(--green)}
+.chip.carr{background:var(--amber-soft);color:var(--amber);border-color:#F0E2C8}.chip.carr::before{background:var(--amber)}
+.btn{display:inline-flex;align-items:center;gap:7px;background:var(--primary);color:#fff;border:0;border-radius:var(--rs);padding:9px 14px;font-family:var(--f);font-size:13px;font-weight:500;cursor:pointer;transition:.14s}
+.btn:hover{background:var(--primary-d)}.btn svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:1.9}
+.btn.sm{padding:7px 11px;font-size:12px}
+.btn.ghost{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.btn.ghost svg{stroke:var(--text)}.btn.ghost:hover{background:var(--wash)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid var(--border-2);font-size:13px;color:var(--text);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td .mono,.mono{font-family:var(--fm)}
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:500;padding:2px 9px;border-radius:20px}
+.badge.ok{background:var(--green-soft);color:var(--green)}.badge.wait{background:var(--amber-soft);color:var(--amber)}.badge.done{background:var(--primary-soft);color:var(--primary)}
+.badge.conv{background:var(--wash);color:var(--text);border:1px solid var(--border)}.badge.sex{background:var(--primary-soft);color:var(--primary)}
+.preserved{display:flex;align-items:center;gap:9px;font-size:12px;background:var(--green-soft);border:1px solid #D5E7DD;color:var(--green);border-radius:var(--rs);padding:9px 13px;margin-bottom:16px;font-weight:500}
+.preserved svg{width:15px;height:15px;stroke:var(--green);fill:none;stroke-width:1.9}
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.scrollx{overflow-x:auto}
+.actbtn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--card);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;margin-right:4px}
+.actbtn svg{width:14px;height:14px;stroke:var(--text);fill:none;stroke-width:1.8}
+.actbtn.del:hover{border-color:var(--primary)}.actbtn.del:hover svg{stroke:var(--primary)}
+.n2{display:inline-flex;align-items:center;gap:8px;background:#EAF4FA;border:1px solid #CFE6F2;color:#2B6A8F;border-radius:20px;padding:6px 13px;font-family:var(--fm);font-size:11.5px}
+.n2 svg{width:14px;height:14px;stroke:#2B6A8F;fill:none;stroke-width:1.9}
+/* Prova */
+.pf-strip{padding:13px 20px;border-bottom:1px solid var(--border-2);display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.valid{display:inline-flex;align-items:center;gap:8px;background:var(--wash);border:1px solid var(--border);border-radius:20px;padding:6px 13px;font-family:var(--fm);font-size:11px;color:var(--text)}
+.valid b{color:var(--primary)}.valid::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green)}
+.dt{font-family:var(--fm);font-size:11px;color:var(--muted)}.dt b{color:var(--fg)}
+.pf-grid{display:grid;grid-template-columns:.96fr 1.04fr}
+.pf-left{padding:22px 24px;border-right:1px solid var(--border-2)}.pf-right{padding:22px 24px}
+.pf-name{font-weight:700;font-size:18px;color:var(--fg);letter-spacing:-.3px;line-height:1.12}
+.pf-id{font-family:var(--fm);font-size:11px;color:var(--text);line-height:1.85;margin-top:9px}
+.pf-id .k{color:var(--muted)}.pf-id b{color:var(--fg)}
+.pf-ngen{display:inline-block;margin-top:11px;font-weight:700;font-size:12px;color:var(--primary);border:1px solid var(--border);border-radius:7px;padding:4px 11px}
+.pf-sec{font-weight:600;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--fg);margin:20px 0 9px;padding-bottom:5px;border-bottom:1.5px solid var(--fg);display:flex;justify-content:space-between;align-items:baseline}
+.pf-sec .meta{font-family:var(--fm);font-weight:400;font-size:8.5px;letter-spacing:0;text-transform:none;color:var(--muted)}
+.pf-right .pf-sec:first-child{margin-top:0}
+.pf-ped{font-family:var(--fm);font-size:11px;line-height:1.9;color:var(--text)}
+.pf-ped .role{color:var(--primary);font-weight:500}.pf-ped .lact{color:var(--muted);display:block;padding-left:15px;font-size:10px}
+.pf-extra{font-family:var(--fm);font-size:11px;color:var(--fg);font-weight:500;background:var(--wash);border:1px solid var(--border);border-radius:7px;padding:7px 11px;margin-bottom:8px;display:flex;gap:14px;flex-wrap:wrap}
+.pf-extra span{color:var(--muted);font-weight:400}.pf-extra b{color:var(--primary)}
+.pf-prow{display:grid;grid-template-columns:minmax(0,1fr) 56px minmax(0,1fr);gap:8px;font-family:var(--fm);font-size:11px;padding:3.5px 0;align-items:baseline;border-bottom:1px solid var(--border-2)}
+.pf-prow:last-child{border:0}.pf-prow .nm{color:var(--text)}.pf-prow .vl{color:var(--fg);font-weight:500;text-align:right;white-space:nowrap}.pf-prow .nt{color:var(--muted);font-size:9.5px;text-align:right}
+.linhead{display:grid;grid-template-columns:1fr 150px 48px;gap:8px;margin:4px 0 6px}
+.linscale{grid-column:2;display:flex;justify-content:space-between;font-family:var(--fm);font-size:9px;color:var(--muted)}
+.linrow{display:grid;grid-template-columns:1fr 150px 48px;gap:8px;align-items:center;padding:2.5px 0}
+.linrow .lnm{font-family:var(--fm);font-size:10px;color:var(--text)}
+.lintrack{position:relative;height:11px;background:var(--wash);border:1px solid var(--border);border-radius:2px}
+.lintrack .mid{position:absolute;left:50%;top:-1px;bottom:-1px;width:1px;background:#CBC4BC}
+.lintrack i{position:absolute;top:1px;bottom:1px;background:var(--primary);border-radius:1px;opacity:.9}
+.linrow .lv{font-family:var(--fm);font-size:10px;color:var(--fg);text-align:right;font-weight:500}
+/* Stepper (Auditoria) */
+.stepper{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+.stepb{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;color:var(--text);background:var(--card);border:1px solid var(--border);border-radius:20px;padding:7px 13px;cursor:pointer;transition:.14s}
+.stepb:hover{background:var(--wash)}
+.stepb.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+.stepb .num{width:18px;height:18px;border-radius:50%;background:var(--wash);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;font-family:var(--fm);font-size:10px;font-weight:600}
+.stepb.on .num{background:rgba(255,255,255,.25);color:#fff}
+.info{display:flex;gap:11px;align-items:flex-start;background:var(--wash);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:16px;font-size:12.5px;line-height:1.55}
+.info svg{width:17px;height:17px;stroke:var(--primary);fill:none;stroke-width:1.9;flex-shrink:0;margin-top:1px}
+.pstat{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);border-radius:9px;padding:11px 13px;margin-bottom:8px}
+.pstat .l{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500}
+.pstat .l svg{width:15px;height:15px;fill:none;stroke-width:2}
+.pstat .pct{font-size:17px;font-weight:700;color:var(--fg)}
+.pstat .n{font-size:11px;color:var(--muted);font-family:var(--fm);text-align:right}
+.agbar{display:grid;grid-template-columns:170px 1fr 44px 44px;gap:8px;align-items:center;font-size:12px;padding:3px 0}
+.agbar .lab{font-family:var(--fm);text-align:right;color:var(--fg);overflow:hidden;text-overflow:ellipsis}
+.agbar .lab small{color:var(--muted)}
+.agtrack{height:18px;background:var(--primary-soft);border-radius:3px}
+.agbar .cnt{font-family:var(--fm);font-weight:600;text-align:right}
+.agbar .pc{font-family:var(--fm);font-size:10px;color:var(--muted);text-align:right}
+.statgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:14px}
+.statgrid div{background:var(--wash);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.statgrid small{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:block}
+.statgrid b{font-family:var(--fm);font-size:13px;color:var(--fg)}
+.empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
+@media(max-width:1000px){.app{grid-template-columns:1fr}.sb{display:none}.kpis,.grid4,.statgrid{grid-template-columns:1fr 1fr}.grid2,.grid2b,.grid3,.reb,.pf-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sb">
+    <div class="sb-brand"><div class="sb-mark"><span>SS</span></div><div><b>SSGen</b><small>Select Sires</small></div></div>
+    <nav class="sb-nav">
+      <div class="sb-grp">Visão geral</div>
+      <div class="nav on" data-s="dash"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard</div>
+      <div class="nav" data-s="painel"><svg viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>Painel Genômico<span class="new">NOVO</span></div>
+      <div class="sb-grp">Rebanho</div>
+      <div class="nav" data-s="rebanho"><svg viewBox="0 0 24 24"><path d="M3 7h18M3 12h18M3 17h18"/></svg>Rebanho</div>
+      <div class="nav" data-s="prova"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6"/></svg>Provas<span class="new">NOVO</span></div>
+      <div class="nav" data-s="auditoria"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>Auditoria Genética</div>
+      <div class="sb-grp">Operação</div>
+      <div class="nav" data-s="botijao"><svg viewBox="0 0 24 24"><path d="M9 2h6v4l3 14H6L9 6z"/><path d="M8 13h8"/></svg>Botijão Virtual</div>
+    </nav>
+    <div class="sb-user"><div class="sb-av">DC</div><div><b>Diego C.</b><small>Select Sires BR</small></div></div>
+  </aside>
+
+  <div class="main">
+    <header class="tb">
+      <h1 id="tbTitle">Dashboard<small id="tbSub">Ordens de serviço e downloads</small></h1>
+      <div class="tb-r">
+        <div class="farmsel"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l8-4 8 4v14"/><path d="M9 9h.01M9 13h.01M9 17h.01"/></svg>Fazenda Sape</div>
+        <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input placeholder="Buscar animal, brinco, touro…"></div>
+      </div>
+    </header>
+    <main class="content">
+
+      <!-- DASHBOARD -->
+      <section class="screen on" id="s-dash">
+        <div class="preserved"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Funções atuais preservadas — OS, status e download mantidos, apenas reestilizados.</div>
+        <div class="kpis">
+          <div class="kpi"><div class="lab"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"/></svg>OS abertas</div><div class="val">14</div><div class="delta up">▲ 3 esta semana</div></div>
+          <div class="kpi"><div class="lab"><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20"/></svg>Amostras processadas</div><div class="val">1.974</div><div class="delta up">▲ 212 no mês</div></div>
+          <div class="kpi"><div class="lab"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>Laudos disponíveis</div><div class="val">38</div><div class="delta up">▲ 9 novos</div></div>
+          <div class="kpi"><div class="lab"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Aguardando CDCB</div><div class="val">6</div><div class="delta dn">▼ aguardando base</div></div>
+        </div>
+        <div class="card"><div class="ch"><h3>Ordens de serviço</h3><button class="btn ghost"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>Exportar</button></div>
+          <div class="scrollx" style="padding:4px 8px"><table>
+            <thead><tr><th>OS</th><th>Fazenda</th><th>Amostras</th><th>Coleta</th><th>Status</th><th>Laudo</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">#2026-188</td><td>Fazenda Sape</td><td class="mono">312</td><td class="mono">28/04/26</td><td><span class="badge ok">Concluída</span></td><td><a class="mono" style="color:var(--primary)">Baixar PDF</a></td></tr>
+              <tr><td class="mono">#2026-187</td><td>Coop. Vale Verde</td><td class="mono">540</td><td class="mono">22/04/26</td><td><span class="badge ok">Concluída</span></td><td><a class="mono" style="color:var(--primary)">Baixar PDF</a></td></tr>
+              <tr><td class="mono">#2026-186</td><td>Sítio Boa Vista</td><td class="mono">96</td><td class="mono">19/04/26</td><td><span class="badge wait">Em análise</span></td><td class="mono" style="color:var(--muted-2)">—</td></tr>
+              <tr><td class="mono">#2026-185</td><td>Fazenda Aurora</td><td class="mono">208</td><td class="mono">11/04/26</td><td><span class="badge done">Liberada</span></td><td><a class="mono" style="color:var(--primary)">Baixar PDF</a></td></tr>
+            </tbody></table></div>
+        </div>
+      </section>
+
+      <!-- PAINEL -->
+      <section class="screen" id="s-painel">
+        <div class="kpis">
+          <div class="kpi"><div class="lab"><svg viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>GTPI Médio</div><div class="val">+2.687</div><div class="delta up">▲ +94 vs. base</div></div>
+          <div class="kpi"><div class="lab"><svg viewBox="0 0 24 24"><path d="M12 1v22M5 6h11a3 3 0 0 1 0 6H8a3 3 0 0 0 0 6h11"/></svg>NM$ Médio</div><div class="val">$921</div><div class="delta up">▲ +38</div></div>
+          <div class="kpi"><div class="lab"><svg viewBox="0 0 24 24"><path d="M20 8.5a5 5 0 0 0-9-3 5 5 0 0 0-9 3c0 5 9 11 9 11s9-6 9-11z"/></svg>HHP$ Médio</div><div class="val">$874</div><div class="delta up">▲ +51</div></div>
+          <div class="kpi"><div class="lab"><svg viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>Portadores HH</div><div class="val">6,3%</div><div class="delta dn">▼ monitorar</div></div>
+        </div>
+        <div class="grid2">
+          <div class="card"><div class="ch"><h3>Evolução genética por geração</h3>
+            <div class="seg" id="evoSeg" style="max-width:100%;flex-wrap:wrap">
+<button class="segb on" data-t="gtpi">GTPI</button><button class="segb" data-t="nm">NM$</button><button class="segb" data-t="hhp">HHP$</button><button class="segb" data-t="cm">CM$</button><button class="segb" data-t="fm">FM$</button><button class="segb" data-t="gm">GM$</button>
+<button class="segb" data-t="milk">Leite</button><button class="segb" data-t="fat">Gordura</button><button class="segb" data-t="fat_pct">Gord%</button><button class="segb" data-t="prot">Proteína</button><button class="segb" data-t="prot_pct">Prot%</button>
+<button class="segb" data-t="pl">PL</button><button class="segb" data-t="scs">SCS</button><button class="segb" data-t="dpr">DPR</button><button class="segb" data-t="hcr">HCR</button><button class="segb" data-t="ccr">CCR</button><button class="segb" data-t="liv">LIV</button><button class="segb" data-t="sce">SCE</button>
+<button class="segb" data-t="ptat">Tipo</button><button class="segb" data-t="udc">UDC</button><button class="segb" data-t="flc">FLC</button>
+<button class="segb" data-t="fsav">F.Sav</button><button class="segb" data-t="rfi">RFI</button><button class="segb" data-t="cfp">CFP</button><button class="segb" data-t="efc">EFC</button>
+<button class="segb" data-t="da">DA</button><button class="segb" data-t="ket">KET</button><button class="segb" data-t="mast">MAST</button><button class="segb" data-t="met">MET</button><button class="segb" data-t="rp">RP</button>
+<button class="segb" data-t="ssb">SSB</button><button class="segb" data-t="dsb">DSB</button><button class="segb" data-t="hliv">H.LIV</button><button class="segb" data-t="fi">FI</button><button class="segb" data-t="gl">GL</button>
+<button class="segb" data-t="sta">STA</button><button class="segb" data-t="str">STR</button><button class="segb" data-t="dfm">DFM</button><button class="segb" data-t="rua">RUA</button><button class="segb" data-t="rw">RW</button><button class="segb" data-t="rls">RLS</button><button class="segb" data-t="rlr">RLR</button><button class="segb" data-t="fta">FTA</button><button class="segb" data-t="fls">FLS</button>
+<button class="segb" data-t="fua">FUA</button><button class="segb" data-t="ruh">RUH</button><button class="segb" data-t="ruw">RUW</button><button class="segb" data-t="ucl">UCL</button><button class="segb" data-t="udp">UDP</button><button class="segb" data-t="ftp">FTP</button><button class="segb" data-t="rtp">RTP</button><button class="segb" data-t="ftl">FTL</button>
+<button class="segb" data-t="mf">MF</button><button class="segb" data-t="gfi">GFI</button>
+</div></div>
+            <div class="cb"><svg id="evo" viewBox="0 0 540 220" style="width:100%;height:auto"></svg></div></div>
+          <div class="card"><div class="ch"><h3 id="distTitle">Distribuição · GTPI</h3></div><div class="cb"><div class="dist" id="dist"></div></div></div>
+        </div>
+        <div class="grid2b">
+          <div class="card"><div class="ch"><h3>Top 5 por característica</h3>
+            <div class="seg" id="t5Seg"><button class="segb on" data-t="gtpi">GTPI</button><button class="segb" data-t="nm">NM$</button><button class="segb" data-t="hhp">HHP$</button><button class="segb" data-t="milk">Leite</button><button class="segb" data-t="dpr">DPR</button></div></div>
+            <div class="cb" id="top5"></div></div>
+          <div class="card"><div class="ch"><h3>Características de atenção</h3></div><div class="cb" id="defHerd"></div></div>
+        </div>
+      </section>
+
+      <!-- REBANHO -->
+      <section class="screen" id="s-rebanho">
+        <div class="preserved"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Filtros e exportação do Rebanho mantidos — adicionamos ranking interativo e perfil do animal vs. média do rebanho.</div>
+        <div class="reb">
+          <div class="card" style="display:flex;flex-direction:column;max-height:calc(100vh - 160px)"><div class="ch"><h3>Ranking do rebanho · 1.974 animais</h3>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="rankTrait" style="font-family:var(--fm);font-size:11px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--rs);background:var(--card);color:var(--fg);cursor:pointer">
+                <option value="gtpi">GTPI</option><option value="nm">NM$</option><option value="hhp">HHP$</option><option value="cm">CM$</option><option value="fm">FM$</option>
+                <option value="milk">Leite</option><option value="fat">Gordura</option><option value="prot">Proteína</option>
+                <option value="pl">PL</option><option value="dpr">DPR</option><option value="scs">SCS</option>
+                <option value="ptat">Tipo</option><option value="udc">UDC</option><option value="flc">FLC</option>
+              </select>
+              <button class="btn ghost sm"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>Exportar</button>
+            </div></div><div class="cb" id="rankList" style="overflow-y:auto;flex:1"></div></div>
+          <div class="card"><div class="ch"><h3>Perfil do animal</h3><button class="btn" id="goProva"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"/></svg>Ver prova</button></div>
+            <div class="cb">
+              <div class="prof-id"><div class="prof-av" id="pAv">V7</div><div><b id="pName"></b><span id="pSire"></span></div></div>
+              <div style="margin-bottom:8px">
+                <div class="seg" id="radarSeg" style="justify-content:center">
+                  <button class="segb on" data-r="indices">Índices</button><button class="segb" data-r="prod">Produção</button><button class="segb" data-r="func">Funcionais</button><button class="segb" data-r="tipo">Tipo</button><button class="segb" data-r="saude">Saúde</button>
+                </div>
+              </div>
+              <div style="display:flex;justify-content:center"><svg id="radar" width="260" height="220" viewBox="0 0 260 220"></svg></div>
+              <div class="legend"><i class="an">Animal</i><i class="av">Média do rebanho</i></div>
+              <div class="kv" id="pKv"></div><div class="chips" id="pHap"></div>
+            </div></div>
+        </div>
+      </section>
+
+      <!-- AUDITORIA GENÉTICA -->
+      <section class="screen" id="s-auditoria">
+        <div class="preserved"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Fluxo sequencial 1→7 preservado (Parentesco · Top Pais · Quartis · Progressão · Comparação · Quartis Índices · Distribuição), com exportação PDF por etapa e PT/EN/ES.</div>
+        <div class="stepper" id="agStepper"></div>
+        <div id="agBody"></div>
+      </section>
+
+      <!-- BOTIJÃO VIRTUAL -->
+      <section class="screen" id="s-botijao">
+        <div class="preserved"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Botijão Virtual mantido integralmente — doses, tipos, distribuição por categoria, controle de N₂ e exportação XLSX. Apenas reestilizado.</div>
+        <div class="kpis">
+          <div class="kpi"><div class="lab"><svg viewBox="0 0 24 24"><path d="M9 2h6v4l3 14H6L9 6z"/></svg>Total de doses</div><div class="val" id="bkTotal">85</div><div class="delta">7 touros</div></div>
+          <div class="kpi"><div class="lab"><svg viewBox="0 0 24 24"><path d="M9 2h6v4l3 14H6L9 6z"/></svg>Convencional</div><div class="val" id="bkConv">55</div><div class="delta">doses</div></div>
+          <div class="kpi"><div class="lab"><svg viewBox="0 0 24 24"><path d="M9 2h6v4l3 14H6L9 6z"/></svg>Sexado</div><div class="val" id="bkSex">30</div><div class="delta">doses</div></div>
+          <div class="kpi"><div class="lab"><svg viewBox="0 0 24 24"><path d="M12 1v22M5 6h11a3 3 0 0 1 0 6H8a3 3 0 0 0 0 6h11"/></svg>Valor total</div><div class="val" id="bkVal">R$ 8.140</div><div class="delta">estoque</div></div>
+        </div>
+        <div class="grid4">
+          <div class="card"><div class="cb"><div class="kv" style="margin:0;grid-template-columns:1fr"><div><small>Novilhas</small><b id="bkNov">22</b></div></div></div></div>
+          <div class="card"><div class="cb"><div class="kv" style="margin:0;grid-template-columns:1fr"><div><small>Primíparas</small><b id="bkPrim">16</b></div></div></div></div>
+          <div class="card"><div class="cb"><div class="kv" style="margin:0;grid-template-columns:1fr"><div><small>Secundíparas</small><b id="bkSec">8</b></div></div></div></div>
+          <div class="card"><div class="cb"><div class="kv" style="margin:0;grid-template-columns:1fr"><div><small>Multíparas</small><b id="bkMult">10</b></div></div></div></div>
+        </div>
+        <div class="card">
+          <div class="ch"><h3>Estoque do botijão</h3>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <span class="n2"><svg viewBox="0 0 24 24"><path d="M12 2v6M5 10l7 4 7-4M5 14l7 4 7-4"/></svg>Último N₂: 28/04/26 · 32 L</span>
+              <button class="btn ghost sm"><svg viewBox="0 0 24 24"><path d="M12 2v6M5 10l7 4 7-4"/></svg>Abastecer N₂</button>
+              <button class="btn ghost sm"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Atualizar estoque</button>
+              <button class="btn ghost sm"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>Exportar</button>
+              <button class="btn sm"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Adicionar touro</button>
+            </div>
+          </div>
+          <div class="scrollx" style="padding:4px 8px"><table id="bkTable">
+            <thead><tr><th>NAAB</th><th>Nome</th><th>Empresa</th><th>Tipo</th><th>Doses</th><th>Preço</th><th>Nov</th><th>Prim</th><th>Secund</th><th>Mult</th><th>Doad.</th><th>Interm.</th><th>Recept.</th><th>Ações</th></tr></thead>
+            <tbody id="bkBody"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- PROVA -->
+      <section class="screen" id="s-prova">
+        <div class="toolbar" style="justify-content:space-between">
+          <div style="display:flex;gap:9px;align-items:center">
+            <div class="search" style="width:280px"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input placeholder="Buscar por nome, brinco ou CDCB…" id="pfSearch"></div>
+            <div class="seg"><button class="segb on">Todas</button><button class="segb">Com prova</button><button class="segb">Sem prova</button></div>
+          </div>
+          <div style="display:flex;gap:9px;align-items:center">
+            <span id="pfSelCount" style="font-family:var(--fm);font-size:12px;color:var(--muted)">0 selecionadas</span>
+            <button class="btn ghost sm" id="pfSelAll"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Selecionar todas</button>
+            <button class="btn sm" id="pfCatalog" style="opacity:.4;pointer-events:none"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6"/></svg>Gerar Catálogo PDF</button>
+          </div>
+        </div>
+        <div class="seg" id="pfViewSeg" style="margin-bottom:14px;width:fit-content">
+          <button class="segb on" data-v="detail">Prova Detalhada</button>
+          <button class="segb" data-v="pdf">Preview PDF</button>
+        </div>
+        <div style="display:grid;grid-template-columns:340px 1fr;gap:14px">
+          <div class="card" style="max-height:calc(100vh - 220px);overflow:hidden;display:flex;flex-direction:column">
+            <div class="ch"><h3>Fêmeas · <span id="pfTotal">8</span></h3></div>
+            <div style="overflow-y:auto;flex:1" id="pfList"></div>
+          </div>
+          <div id="pfViewContainer">
+          <div class="card" id="pfDetail" style="display:block">
+            <div class="pf-strip">
+              <div class="valid">Validade técnica: <b>4 meses</b> — até a próxima atualização da prova</div>
+              <div style="display:flex;gap:10px;align-items:center"><span class="dt">Base <b>04/26 CDCB-S</b> · próxima <b>Ago/2026</b></span><button class="btn"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>PDF</button></div>
+            </div>
+            <div class="pf-grid">
+              <div class="pf-left">
+                <div class="pf-name" id="pfAnimalName">S-S-I STAGGER BAELUM-ET</div>
+                <div class="pf-id" id="pfAnimalId">
+                  <div><b>HO840329657664</b> · 99% RHA-I</div><div>TR TP TC TM TL TD TE</div>
+                  <div><span class="k">Born</span> 2/12/25 · <span class="k">aAa</span> 243 · <span class="k">DMS</span> N/A</div>
+                  <div><span class="k">Criador</span> Select Sires, Inc., Plain City, OH</div>
+                  <div><span class="k">Beta-Casein</span> A2A2 · <span class="k">GFI</span> 12.9%</div>
+                  <div><span class="k">Kappa-Casein</span> BB · <span class="k">Beta-Lactoglobulin</span> AA</div>
+                  <div><span class="k">Haplótipos</span> HH1 HH2T HH3T HH4T HH5T HH6T</div>
+                </div>
+                <span class="pf-ngen">N×GEN</span>
+                <div class="pf-sec">Pedigree</div><div class="pf-ped" id="pfPed"></div>
+                <div class="pf-sec">Avaliação Linear <span class="meta">PTA Tipo</span></div><div id="pfLin"></div>
+              </div>
+              <div class="pf-right" id="pfRight"></div>
+            </div>
+          </div>
+          <!-- PDF Preview -->
+          <div id="pfPdfPreview" style="display:none">
+            <div class="card" style="background:#fff;max-width:680px;margin:0 auto;box-shadow:0 4px 24px rgba(0,0,0,.12);border-radius:6px;overflow:hidden">
+              <div style="background:var(--primary);color:#fff;padding:16px 24px;display:flex;justify-content:space-between;align-items:center">
+                <div style="display:flex;align-items:center;gap:12px"><div style="width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">SS</div><div><b style="font-size:15px;display:block">SSGen · Prova Genômica</b><span style="font-size:10px;opacity:.8">Select Sires do Brasil</span></div></div>
+                <div style="text-align:right;font-size:10px;opacity:.8"><div>Base CDCB-S 04/2026</div><div>Validade: Ago/2026</div></div>
+              </div>
+              <div style="padding:20px 24px">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+                  <div><div style="font-size:18px;font-weight:700;color:var(--fg);letter-spacing:-.3px" id="pdfName">S-S-I STAGGER BAELUM-ET</div>
+                    <div style="font-family:var(--fm);font-size:11px;color:var(--muted);margin-top:4px" id="pdfMeta">HO840329657664 · 99% RHA-I · Born 2/12/25 · aAa 243</div></div>
+                  <span style="font-weight:700;font-size:12px;color:var(--primary);border:1px solid var(--border);border-radius:7px;padding:4px 11px">N×GEN</span>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+                  <div style="border:1px solid var(--border);border-radius:8px;padding:12px">
+                    <div style="font-weight:600;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--fg);margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid var(--fg)">Índices Econômicos</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px" id="pdfIndices"></div>
+                  </div>
+                  <div style="border:1px solid var(--border);border-radius:8px;padding:12px">
+                    <div style="font-weight:600;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--fg);margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid var(--fg)">Produção &amp; Saúde</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px" id="pdfProdHealth"></div>
+                  </div>
+                </div>
+                <div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:16px">
+                  <div style="font-weight:600;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--fg);margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid var(--fg)">Pedigree</div>
+                  <div style="font-family:var(--fm);font-size:10.5px;line-height:1.8;color:var(--text)" id="pdfPed"></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+                  <div style="border:1px solid var(--border);border-radius:8px;padding:12px">
+                    <div style="font-weight:600;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--fg);margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid var(--fg)">Avaliação Linear</div>
+                    <div id="pdfLinear" style="font-size:10px"></div>
+                  </div>
+                  <div style="border:1px solid var(--border);border-radius:8px;padding:12px">
+                    <div style="font-weight:600;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--fg);margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid var(--fg)">Haplótipos</div>
+                    <div id="pdfHaps" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px"></div>
+                    <div style="font-weight:600;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--fg);margin:14px 0 8px;padding-bottom:4px;border-bottom:1.5px solid var(--fg)">Proteínas do Leite</div>
+                    <div style="font-family:var(--fm);font-size:10.5px;color:var(--text);line-height:1.8">Beta-Casein: <b>A2A2</b><br>Kappa-Casein: <b>BB</b><br>Beta-Lactoglobulin: <b>AA</b></div>
+                  </div>
+                </div>
+                <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;justify-content:space-between;font-family:var(--fm);font-size:9px;color:var(--muted)">
+                  <span>Gerado em 05/06/2026 · SSGen Select Sires do Brasil</span>
+                  <span>Dados: CDCB-S 04/2026 · Zoetis Wellness 04/2026</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          </div>
+        </div>
+      </section>
+
+
+    </main>
+  </div>
+</div>
+
+<script>
+const herd=[
+ {id:"7240",name:"Sape Vitória 7240",sire:"7HO15264",gtpi:2890,nm:948,hhp:948,milk:2140,dpr:2.4,pl:6.8,scs:2.71,haps:[["HH1","free"],["HH3","free"],["HH4","free"],["HCD","free"],["Brachy","free"],["BLAD","free"]]},
+ {id:"7102",name:"Sape Estrela 7102",sire:"7HO14921",gtpi:2841,nm:933,hhp:912,milk:1980,dpr:1.9,pl:6.2,scs:2.78,haps:[["HH1","free"],["HH3","carr"],["HH4","free"],["HCD","free"],["Brachy","free"],["BLAD","free"]]},
+ {id:"6988",name:"Sape Diamante 6988",sire:"7HO15102",gtpi:2812,nm:905,hhp:889,milk:2260,dpr:0.8,pl:5.4,scs:2.92,haps:[["HH1","free"],["HH3","free"],["HH4","carr"],["HCD","free"],["Brachy","free"],["BLAD","free"]]},
+ {id:"7311",name:"Sape Princesa 7311",sire:"7HO15264",gtpi:2776,nm:884,hhp:901,milk:1840,dpr:2.7,pl:7.1,scs:2.65,haps:[["HH1","free"],["HH3","free"],["HH4","free"],["HCD","carr"],["Brachy","free"],["BLAD","free"]]},
+ {id:"6754",name:"Sape Aurora 6754",sire:"7HO14758",gtpi:2729,nm:861,hhp:855,milk:2010,dpr:1.2,pl:5.9,scs:2.81,haps:[["HH1","carr"],["HH3","free"],["HH4","free"],["HCD","free"],["Brachy","free"],["BLAD","free"]]},
+ {id:"7420",name:"Sape Joia 7420",sire:"7HO15388",gtpi:2698,nm:842,hhp:838,milk:1760,dpr:2.1,pl:6.4,scs:2.74,haps:[["HH1","free"],["HH3","free"],["HH4","free"],["HCD","free"],["Brachy","free"],["BLAD","free"]]},
+ {id:"6602",name:"Sape Pérola 6602",sire:"7HO14921",gtpi:2654,nm:818,hhp:826,milk:1920,dpr:0.6,pl:5.1,scs:2.95,haps:[["HH1","free"],["HH3","carr"],["HH4","free"],["HCD","free"],["Brachy","carr"],["BLAD","free"]]},
+ {id:"7188",name:"Sape Rainha 7188",sire:"7HO15102",gtpi:2611,nm:799,hhp:804,milk:1690,dpr:2.9,pl:7.4,scs:2.62,haps:[["HH1","free"],["HH3","free"],["HH4","free"],["HCD","free"],["Brachy","free"],["BLAD","free"]]},
+];
+const HAVG={gtpi:2687,nm:921,hhp:874,cm:860,fm:890,gm:760,milk:1950,fat:72,fat_pct:0.15,prot:54,prot_pct:0.08,dpr:1.7,pl:6.0,scs:2.80,hcr:1.5,ccr:1.4,liv:2.4,sce:2.0,ptat:0.46,udc:0.40,flc:-0.70,fsav:20,rfi:-60,cfp:120,efc:72,da:-0.1,ket:0.0,mast:4.4,met:1.6,rp:0.6,ssb:5.0,dsb:4.6,hliv:1.8,fi:1.4,gl:-0.5,sta:0.52,str:0.42,dfm:0.18,rua:0.92,rw:0.38,rls:0.21,rlr:0.64,fta:0.24,fls:0.36,fua:0.76,ruh:0.44,ruw:0.82,ucl:0.30,udp:0.16,ftp:0.66,rtp:0.28,ftl:0.34,mf:8.8,gfi:10.8};
+const radarGroups={
+  indices:{label:"Índices",traits:["gtpi","nm","hhp","cm","fm","gm"],names:["GTPI","NM$","HHP$","CM$","FM$","GM$"],max:[3200,1100,1100,1050,1050,900]},
+  prod:{label:"Produção",traits:["milk","fat","prot","fat_pct","prot_pct"],names:["Leite","Gord","Prot","G%","P%"],max:[2800,120,80,0.35,0.15]},
+  func:{label:"Funcionais",traits:["pl","dpr","scs","hcr","ccr","liv"],names:["PL","DPR","SCS","HCR","CCR","LIV"],max:[9,4,1,3,3,4],inv:[0,0,1,0,0,0]},
+  tipo:{label:"Tipo",traits:["ptat","udc","flc","sta","dfm","fua"],names:["PTAT","UDC","FLC","STA","DFM","FUA"],max:[1,0.8,0,1,0.4,1.2],offset:[0,0,1.2,0,0,0]},
+  saude:{label:"Saúde",traits:["mast","met","rp","da","ket","hliv"],names:["MAST","MET","RP","DA","KET","H.LIV"],max:[7,3,1.2,0.5,0.5,3.5]}
+};
+let radarMode='indices';
+let rankTrait='gtpi';
+const trend={years:["2019","2020","2021","2022","2023","2024","2025"],
+gtpi:[2310,2398,2467,2541,2602,2671,2734],nm:[712,748,791,829,861,898,936],hhp:[610,648,698,742,789,838,874],cm:[680,718,762,801,841,878,905],fm:[695,731,778,818,860,898,933],gm:[580,612,648,688,725,762,798],
+milk:[1480,1560,1655,1742,1820,1908,1985],fat:[48,52,58,64,72,80,88],fat_pct:[0.08,0.10,0.12,0.14,0.16,0.18,0.20],prot:[38,42,46,51,55,59,62],prot_pct:[0.04,0.05,0.06,0.07,0.08,0.09,0.10],
+pl:[3.8,4.2,4.6,5.1,5.5,6.0,6.4],scs:[2.92,2.89,2.86,2.83,2.80,2.77,2.74],dpr:[0.4,0.6,0.9,1.1,1.4,1.7,2.0],hcr:[0.8,1.0,1.2,1.4,1.5,1.7,1.9],ccr:[0.6,0.8,1.0,1.2,1.4,1.6,1.8],liv:[1.2,1.5,1.8,2.1,2.4,2.7,3.0],sce:[2.4,2.3,2.2,2.1,2.0,1.9,1.8],
+ptat:[0.22,0.28,0.34,0.40,0.46,0.52,0.58],udc:[0.18,0.24,0.30,0.35,0.40,0.44,0.48],flc:[-0.90,-0.84,-0.78,-0.74,-0.70,-0.66,-0.62],
+fsav:[12,14,16,18,20,23,27],rfi:[-42,-48,-52,-56,-60,-66,-73],cfp:[82,88,96,104,118,138,160],efc:[48,52,58,64,72,82,92],
+da:[-0.4,-0.3,-0.2,-0.2,-0.1,-0.1,0.0],ket:[-0.3,-0.2,-0.2,-0.1,-0.1,0.0,0.0],mast:[2.8,3.2,3.6,4.0,4.4,4.8,5.3],met:[0.8,1.0,1.2,1.4,1.6,1.8,2.1],rp:[0.2,0.3,0.4,0.5,0.6,0.7,0.8],
+ssb:[6.2,5.9,5.6,5.3,5.0,4.7,4.4],dsb:[5.8,5.5,5.2,4.9,4.6,4.3,4.0],hliv:[0.8,1.0,1.2,1.5,1.8,2.1,2.4],fi:[0.6,0.8,1.0,1.2,1.4,1.6,1.9],gl:[-1.2,-1.0,-0.8,-0.6,-0.5,-0.4,-0.3],
+sta:[0.30,0.35,0.40,0.46,0.52,0.58,0.65],str:[0.20,0.25,0.30,0.36,0.42,0.48,0.55],dfm:[0.10,0.12,0.14,0.16,0.18,0.20,0.22],rua:[0.60,0.68,0.76,0.84,0.92,1.00,1.10],rw:[0.22,0.26,0.30,0.34,0.38,0.42,0.48],rls:[0.10,0.12,0.15,0.18,0.21,0.24,0.28],rlr:[0.40,0.46,0.52,0.58,0.64,0.72,0.82],fta:[0.12,0.15,0.18,0.21,0.24,0.27,0.30],fls:[0.20,0.24,0.28,0.32,0.36,0.40,0.45],
+fua:[0.50,0.56,0.62,0.68,0.76,0.84,0.92],ruh:[0.28,0.32,0.36,0.40,0.44,0.50,0.58],ruw:[0.52,0.58,0.66,0.74,0.82,0.92,1.02],ucl:[0.14,0.18,0.22,0.26,0.30,0.34,0.38],udp:[0.08,0.10,0.12,0.14,0.16,0.18,0.20],ftp:[0.38,0.44,0.50,0.58,0.66,0.74,0.83],rtp:[0.12,0.16,0.20,0.24,0.28,0.32,0.38],ftl:[0.18,0.22,0.26,0.30,0.34,0.38,0.42],
+mf:[6.2,6.8,7.4,8.1,8.8,9.6,10.4],gfi:[8.4,9.0,9.6,10.2,10.8,11.6,12.4]
+};
+const medalColor=["#C99A4B","#A9A9A9","#B07A4B","#CBC4BC","#CBC4BC"];
+let sel=0,evoT='gtpi',t5T='gtpi',agStep=0;
+function initials(n){const p=n.split(' ');return (p[1]?p[1][0]:p[0][0])+(n.match(/\d/)?n.match(/\d/)[0]:'');}
+function fmt(t,v){
+  const dec=['dpr','pl','ptat','udc','flc','hcr','ccr','liv','sce','fat_pct','prot_pct','da','ket','met','rp','gl','sta','str','dfm','rua','rw','rls','rlr','fta','fls','fua','ruh','ruw','ucl','udp','ftp','rtp','ftl'];
+  if(['nm','hhp','cm','fm','gm'].includes(t))return '$'+v;
+  if(t==='scs')return typeof v==='number'?v.toFixed(2):v;
+  if(dec.includes(t))return (v>0?'+':'')+((typeof v==='number')?v.toFixed(2):v);
+  if(['mf','gfi','mast','ssb','dsb','hliv','fi'].includes(t))return (typeof v==='number')?v.toFixed(1):v;
+  return (v>0?'+':'')+v;
+}
+
+const titles={dash:["Dashboard","Ordens de serviço e downloads"],painel:["Painel Genômico","Visão analítica do lote genotipado"],rebanho:["Rebanho","Ranking e perfil dos animais"],prova:["Prova Individual","Formato oficial Select Sires"],botijao:["Botijão Virtual","Estoque, doses e nitrogênio"],auditoria:["Auditoria Genética","Fluxo sequencial 1→7 · Fazenda Sape"],admin:["Administração","Usuários, fazendas e permissões"]};
+function go(s){
+  document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('on',n.dataset.s===s));
+  document.querySelectorAll('.screen').forEach(sc=>sc.classList.toggle('on',sc.id==='s-'+s));
+  document.getElementById('tbTitle').childNodes[0].nodeValue=titles[s][0];
+  document.getElementById('tbSub').textContent=titles[s][1];
+  if(s==='painel'){drawEvo(evoT);buildDist();}
+  if(s==='auditoria'){renderStepper();renderAG();}
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('.nav').forEach(n=>n.onclick=()=>go(n.dataset.s));
+document.getElementById('goProva').onclick=()=>go('prova');
+
+/* ---------- Rebanho ---------- */
+const traitLabel={gtpi:"GTPI",nm:"NM$",hhp:"HHP$",cm:"CM$",fm:"FM$",gm:"GM$",milk:"Leite",fat:"Gordura",prot:"Proteína",pl:"PL",dpr:"DPR",scs:"SCS",ptat:"Tipo",udc:"UDC",flc:"FLC"};
+function buildRank(){
+  const t=rankTrait;const inv=(t==='scs'||t==='flc');
+  const sorted=herd.map((a,i)=>({...a,_i:i})).sort((x,y)=>inv?x[t]-y[t]:y[t]-x[t]);
+  document.getElementById('rankList').innerHTML=sorted.map((a,i)=>`<div class="rrow ${a._i===sel?'sel':''}" data-i="${a._i}" style="grid-template-columns:24px 1fr auto auto"><div class="rpos">${i+1}</div><div><div class="rname">${a.name}</div><div class="rsire">${a.sire} · ${a.id}</div></div><div class="rstat"><b>${fmt(t,a[t])}</b><small>${traitLabel[t]||t.toUpperCase()}</small></div><div class="rstat"><b>$${a.nm}</b><small>NM$</small></div></div>`).join('');
+  document.querySelectorAll('#rankList .rrow').forEach(r=>r.onclick=()=>{sel=+r.dataset.i;renderReb();});
+}
+document.getElementById('rankTrait').onchange=function(){rankTrait=this.value;buildRank();};
+function drawRadar(a){
+  const grp=radarGroups[radarMode];if(!grp)return;
+  const svg=document.getElementById('radar');const cx=130,cy=108,R=78;const names=grp.names;const N=names.length;let g='';
+  function norm(val,idx){
+    const mx=grp.max[idx];const off=(grp.offset||[])[idx]||0;const inv=(grp.inv||[])[idx];
+    let v=(val+off)/(mx+off);if(inv)v=1-v;return Math.max(.05,Math.min(1,v));
+  }
+  [.33,.66,1].forEach(t=>{let p=names.map((_,k)=>{const an=-Math.PI/2+k*2*Math.PI/N;return (cx+Math.cos(an)*R*t)+','+(cy+Math.sin(an)*R*t);}).join(' ');g+=`<polygon points="${p}" fill="none" stroke="#EBE7E2" stroke-width="1"/>`;});
+  names.forEach((nm,k)=>{const an=-Math.PI/2+k*2*Math.PI/N;g+=`<line x1="${cx}" y1="${cy}" x2="${cx+Math.cos(an)*R}" y2="${cy+Math.sin(an)*R}" stroke="#F3F0EC" stroke-width="1"/>`;const lx=cx+Math.cos(an)*(R+14),ly=cy+Math.sin(an)*(R+14)+3;g+=`<text x="${lx}" y="${ly}" font-family="Geist Mono" font-size="9" fill="#78716C" text-anchor="middle">${nm}</text>`;});
+  const polyA=grp.traits.map((t,k)=>{const v=norm(HAVG[t]||0,k);const an=-Math.PI/2+k*2*Math.PI/N;return (cx+Math.cos(an)*R*v)+','+(cy+Math.sin(an)*R*v);}).join(' ');
+  g+=`<polygon points="${polyA}" fill="rgba(140,130,120,.07)" stroke="#CBC4BC" stroke-width="1.5" stroke-dasharray="3 3"/>`;
+  const polyB=grp.traits.map((t,k)=>{const v=norm(a[t]||0,k);const an=-Math.PI/2+k*2*Math.PI/N;return (cx+Math.cos(an)*R*v)+','+(cy+Math.sin(an)*R*v);}).join(' ');
+  g+=`<polygon points="${polyB}" fill="rgba(206,14,45,.10)" stroke="#CE0E2D" stroke-width="1.75"/>`;
+  grp.traits.forEach((t,k)=>{const v=norm(a[t]||0,k);const an=-Math.PI/2+k*2*Math.PI/N;g+=`<circle cx="${cx+Math.cos(an)*R*v}" cy="${cy+Math.sin(an)*R*v}" r="2.6" fill="#CE0E2D"/>`;});
+  svg.innerHTML=g;
+}
+document.querySelectorAll('#radarSeg .segb').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#radarSeg .segb').forEach(x=>x.classList.remove('on'));b.classList.add('on');radarMode=b.dataset.r;renderReb();
+});
+function kvCell(label,t,av,hv){const inv=['scs','flc','da','ket','rfi','ssb','dsb','gl'].includes(t);const better=inv?(av<hv):(av>hv);const arrow=av===hv?'':(better?'▲':'▼');return `<div><small>${label}</small><b>${fmt(t,av)}</b><span class="avg ${better?'up':'dn'}">méd ${fmt(t,hv)} ${arrow}</span></div>`;}
+function renderReb(){
+  const a=herd[sel];
+  document.querySelectorAll('#rankList .rrow').forEach(r=>r.classList.toggle('sel',+r.dataset.i===sel));
+  document.getElementById('pAv').textContent=initials(a.name);
+  document.getElementById('pName').textContent=a.name;
+  document.getElementById('pSire').textContent=a.sire+' · Filha';
+  drawRadar(a);
+  const grp=radarGroups[radarMode];
+  document.getElementById('pKv').innerHTML=grp.traits.map(t=>{
+    const label=grp.names[grp.traits.indexOf(t)];return kvCell(label,t,a[t]||0,HAVG[t]||0);
+  }).join('');
+  document.getElementById('pHap').innerHTML=a.haps.map(h=>`<span class="chip ${h[1]}">${h[0]} · ${h[1]==='free'?'Livre':'Portador'}</span>`).join('');
+}
+
+/* ---------- Painel ---------- */
+function drawEvo(t){
+  const svg=document.getElementById('evo');const W=540,H=220,pl=46,pr=18,pt=18,pb=30;const data=trend[t],ys=trend.years;
+  const mn=Math.min(...data),mx=Math.max(...data);const lo=mn-(mx-mn)*.25,hi=mx+(mx-mn)*.15;
+  const x=i=>pl+i*(W-pl-pr)/(ys.length-1);const y=v=>pt+(1-(v-lo)/(hi-lo))*(H-pt-pb);let g='';
+  for(let k=0;k<=3;k++){const gv=lo+(hi-lo)*k/3;const gy=y(gv);g+=`<line x1="${pl}" y1="${gy}" x2="${W-pr}" y2="${gy}" stroke="#F3F0EC" stroke-width="1"/>`;g+=`<text x="${pl-8}" y="${gy+3}" font-family="Geist Mono" font-size="9" fill="#78716C" text-anchor="end">${Math.round(gv)}</text>`;}
+  ys.forEach((yr,i)=>g+=`<text x="${x(i)}" y="${H-10}" font-family="Geist Mono" font-size="9" fill="#78716C" text-anchor="middle">${yr}</text>`);
+  const pts=data.map((v,i)=>x(i)+','+y(v));
+  g+=`<polygon points="${pl},${H-pb} ${pts.join(' ')} ${W-pr},${H-pb}" fill="rgba(206,14,45,.06)"/>`;
+  g+=`<polyline points="${pts.join(' ')}" fill="none" stroke="#CE0E2D" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  data.forEach((v,i)=>g+=`<circle cx="${x(i)}" cy="${y(v)}" r="3" fill="#fff" stroke="#CE0E2D" stroke-width="1.75"/>`);
+  const li=data.length-1;g+=`<text x="${x(li)}" y="${y(data[li])-9}" font-family="Geist Mono" font-size="10" fill="#1C1917" text-anchor="end" font-weight="500">${fmt(t,data[li])}</text>`;
+  svg.innerHTML=g;
+}
+function buildDist(t){
+  t=t||evoT;
+  const tl={gtpi:"GTPI",nm:"NM$",hhp:"HHP$",cm:"CM$",fm:"FM$",gm:"GM$",milk:"Leite",fat:"Gordura",fat_pct:"Gord%",prot:"Proteína",prot_pct:"Prot%",pl:"PL",dpr:"DPR",scs:"SCS",hcr:"HCR",ccr:"CCR",liv:"LIV",sce:"SCE",ptat:"Tipo",udc:"UDC",flc:"FLC",fsav:"F.Sav",rfi:"RFI",cfp:"CFP",efc:"EFC",da:"DA",ket:"KET",mast:"MAST",met:"MET",rp:"RP",ssb:"SSB",dsb:"DSB",hliv:"H.LIV",fi:"FI",gl:"GL",sta:"STA",str:"STR",dfm:"DFM",rua:"RUA",rw:"RW",rls:"RLS",rlr:"RLR",fta:"FTA",fls:"FLS",fua:"FUA",ruh:"RUH",ruw:"RUW",ucl:"UCL",udp:"UDP",ftp:"FTP",rtp:"RTP",ftl:"FTL",mf:"MF",gfi:"GFI"};
+  document.getElementById('distTitle').textContent='Distribuição · '+(tl[t]||t.toUpperCase());
+  const vals=trend[t];if(!vals)return;
+  const last=vals[vals.length-1];const mn=Math.min(...vals),mx=Math.max(...vals);
+  const range=mx-mn||1;const nBins=5;const step=range/nBins;
+  const bins=Array(nBins).fill(0);
+  // simulate distribution around last value
+  const sd=range*0.3;
+  for(let i=0;i<1974;i++){const v=last+(Math.random()-0.5)*2*range*0.6;const bi=Math.min(nBins-1,Math.max(0,Math.floor((v-mn+step*0.5)/step)));bins[bi]++;}
+  const labels=[];for(let i=0;i<nBins;i++){const lo=mn+i*step;labels.push(fmt(t,Math.round(lo*100)/100));}
+  const m=Math.max(...bins);
+  document.getElementById('dist').innerHTML=bins.map((v,i)=>`<div class="bar" style="height:${v/m*100}%"><span>${v}</span><i>${labels[i]}</i></div>`).join('');
+  setTimeout(()=>document.querySelectorAll('#dist .bar').forEach((b,i)=>b.style.height=bins[i]/m*100+'%'),50);
+}
+function buildTop5(t){
+  const sorted=[...herd].map((a,idx)=>({...a,idx})).sort((x,y)=>t==='scs'?x[t]-y[t]:y[t]-x[t]).slice(0,5);const mx=Math.max(...sorted.map(a=>a[t]));
+  document.getElementById('top5').innerHTML=sorted.map((a,i)=>`<div class="t5row" data-i="${a.idx}"><div class="t5pos">${i<3?`<span class="medal" style="background:${medalColor[i]}">${i+1}</span>`:i+1}</div><div class="t5nm">${a.name}<small>${a.sire}</small></div><div class="t5bar"><i style="width:${a[t]/mx*100}%"></i></div><div class="t5v">${fmt(t,a[t])}</div></div>`).join('');
+  document.querySelectorAll('#top5 .t5row').forEach(r=>r.onclick=()=>{sel=+r.dataset.i;renderReb();go('rebanho');});
+}
+function buildDefects(){
+  // Características de atenção: traits where herd average is below ideal
+  const attention=[
+    ["SCS","Células Somáticas",HAVG.scs,2.50,"↓ menor é melhor"],
+    ["FLC","Escore Pernas/Pés",HAVG.flc,0.00,"↑ maior é melhor"],
+    ["DPR","Taxa Prenhez Filhas",HAVG.dpr,2.50,"↑ maior é melhor"],
+    ["RFI","Feed Intake Residual",HAVG.rfi,-80,"↓ menor é melhor"],
+    ["GL","Gestation Length",HAVG.gl,0.00,"↓ menor é melhor"],
+    ["DFM","Dairy Form",HAVG.dfm,0.30,"↑ maior é melhor"],
+  ];
+  const sorted=attention.sort((a,b)=>{const gapA=Math.abs(a[2]-a[3]);const gapB=Math.abs(b[2]-b[3]);return gapB-gapA;});
+  const maxGap=Math.max(...sorted.map(a=>Math.abs(a[2]-a[3])));
+  let h=`<div class="dfsum">Características do rebanho que estão <b>abaixo do ideal</b> e merecem atenção na seleção de touros</div>`;
+  h+=sorted.map(d=>{
+    const gap=Math.abs(d[2]-d[3]);const w=Math.max(12,gap/maxGap*100);
+    return `<div class="dfrow" style="grid-template-columns:1fr 76px 1fr"><div class="dfnm">${d[0]}<div style="font-size:10px;color:var(--muted);font-weight:400">${d[1]}</div></div><div class="dfbar"><i style="width:${w}%"></i></div><div class="dfv"><b>${typeof d[2]==='number'?d[2].toFixed(2):d[2]}</b> → ideal ${typeof d[3]==='number'?d[3].toFixed(2):d[3]}<div style="font-size:9px;color:var(--muted)">${d[4]}</div></div></div>`;
+  }).join('');
+  document.getElementById('defHerd').innerHTML=h;
+}
+document.querySelectorAll('#evoSeg .segb').forEach(b=>b.onclick=()=>{document.querySelectorAll('#evoSeg .segb').forEach(x=>x.classList.remove('on'));b.classList.add('on');evoT=b.dataset.t;drawEvo(evoT);buildDist(evoT);});
+document.querySelectorAll('#t5Seg .segb').forEach(b=>b.onclick=()=>{document.querySelectorAll('#t5Seg .segb').forEach(x=>x.classList.remove('on'));b.classList.add('on');t5T=b.dataset.t;buildTop5(t5T);});
+
+/* ---------- Botijão ---------- */
+const bk=[
+ {naab:"7HO15264",nome:"S-S-I Stagger Baelum-ET",emp:"Select Sires",tipo:"Convencional",doses:24,preco:85,Nov:6,Prim:8,Sec:4,Mult:6,Doa:0,Int:0,Rec:0},
+ {naab:"7HO14921",nome:"Sdg-Ph Delux Dominance",emp:"Select Sires",tipo:"Sexado",doses:18,preco:140,Nov:10,Prim:4,Sec:2,Mult:2,Doa:0,Int:0,Rec:0},
+ {naab:"7HO15102",nome:"Welcome-Tel Taos Hayk",emp:"Select Sires",tipo:"Convencional",doses:19,preco:78,Nov:2,Prim:2,Sec:1,Mult:1,Doa:4,Int:4,Rec:5},
+ {naab:"7HO15388",nome:"Ocd Gameday Soy",emp:"GenEx",tipo:"Sexado",doses:12,preco:120,Nov:4,Prim:2,Sec:1,Mult:1,Doa:0,Int:0,Rec:4},
+ {naab:"250HO16021",nome:"Peak Altahotrod",emp:"Alta",tipo:"Convencional",doses:12,preco:72,Nov:0,Prim:0,Sec:0,Mult:0,Doa:3,Int:5,Rec:4},
+];
+function buildBotijao(){
+  const total=bk.reduce((s,i)=>s+i.doses,0);
+  const conv=bk.filter(i=>i.tipo==='Convencional').reduce((s,i)=>s+i.doses,0);
+  const sex=bk.filter(i=>i.tipo==='Sexado').reduce((s,i)=>s+i.doses,0);
+  const val=bk.reduce((s,i)=>s+i.preco*i.doses,0);
+  const sum=k=>bk.reduce((s,i)=>s+i[k],0);
+  document.getElementById('bkTotal').textContent=total;
+  document.getElementById('bkConv').textContent=conv;
+  document.getElementById('bkSex').textContent=sex;
+  document.getElementById('bkVal').textContent='R$ '+val.toLocaleString('pt-BR');
+  document.getElementById('bkNov').textContent=sum('Nov');
+  document.getElementById('bkPrim').textContent=sum('Prim');
+  document.getElementById('bkSec').textContent=sum('Sec');
+  document.getElementById('bkMult').textContent=sum('Mult');
+  document.querySelector('#s-botijao .kpi .delta').textContent=bk.length+' touros';
+  document.getElementById('bkBody').innerHTML=bk.map(i=>`<tr>
+    <td class="mono">${i.naab}</td><td>${i.nome}</td><td>${i.emp}</td>
+    <td><span class="badge ${i.tipo==='Sexado'?'sex':'conv'}">${i.tipo}</span></td>
+    <td class="mono">${i.doses}</td><td class="mono">R$ ${i.preco}</td>
+    <td class="mono">${i.Nov}</td><td class="mono">${i.Prim}</td><td class="mono">${i.Sec}</td><td class="mono">${i.Mult}</td>
+    <td class="mono">${i.Doa}</td><td class="mono">${i.Int}</td><td class="mono">${i.Rec}</td>
+    <td><span class="actbtn" title="Editar"><svg viewBox="0 0 24 24"><path d="M11 4H4v16h16v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></span><span class="actbtn" title="Duplicar"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span><span class="actbtn del" title="Remover"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></span></td>
+  </tr>`).join('');
+}
+
+/* ---------- Prova ---------- */
+const proof={
+ ped:[["role","Pai:","Ocd Hayk Stagger-ET"],["role","Mãe:","Badger Ssi Dominanc 6001-ET"],["lact","","1-11 3X 305d 25.410M 5.3% 1352F 3.8% 969P"],["role","Avô:","Sdg-Ph Delux Dominance-ET"],["role","Avó:","Badger Ssi Rashan 17470-ET"],["lact","","3-02 3X 305d 32.250M 5.7% 1.841F 3.5% 1.136P"],["lact","","Filhas: Badger Shf Cirrs 39462-P-ET (VG-85-VG-MS)"],["lact","","1-10 3X 338d 33.830M 4.4% 1.499F 3.5% 1.200P"],["role","Bisavô:","S-S-I Renegade Rashan-ET"],["role","Bisavó:","Badger Ssi 15631 16330-ET"],["lact","","4-04 3X 305d 31.530M 4.6% 1.461F 3.3% 1.046P"],["role","PGS:","Welcome-Tel Taos Hayk-ET"],["role","PGD:","Ocd Gameday Soy 64855-ET (VG-86-VG-MS-DOM)"]],
+ lin:[["Estatura",0.69,"T"],["Caract. Leiteira",0.20,"D"],["Força",0.55,"S"],["Profundidade Corporal",0.50,"D"],["Largura de Garupa",0.48,"W"],["Ângulo de Garupa",1.10,"S"],["Pernas Tras. V. Lateral",0.25,"S"],["Pernas Tras. V. Trás",0.82,"H"],["Ângulo do Casco",0.28,"L"],["Escore de Pernas e Pés",0.45,"L"],["Úbere Anterior, Inserção",1.02,"S"],["Altura Úbere Posterior",0.58,"H"],["Largura Úbere Posterior",1.11,"W"],["Ligamento Central",0.35,"W"],["Profundidade de Úbere",0.16,"S"],["Coloc. Tetos Anteriores",0.83,"C"],["Coloc. Tetos Post. V. Lateral",0.27,"C"],["Comprimento de Tetos",0.37,"S"]],
+ sections:[
+  {t:"Produção",meta:"(PTA-lbs) · 04/26 CDCB-S Gen. Eval.",rows:[["Leite","+897","80% C / 0 F / 0 R"],["Proteína","+62","% Proteína +0.12"],["Gordura","+122","% Gordura +0.31"],["CFP","+184",""],["ML$","+$1.124","72%C"],["MQ$","+$1.180","Mérito Fluido $ +$996"],["GM$","+$1.093","Veloc. Ord. 7.07 / 62%C"],["Feed Saved","+27","46%C"],["RFI","-73","26%C"]]},
+  {t:"Tipo",meta:"(PTA) · 04/26 CDCB-S/HA Gen. Eval.",rows:[["GTPI","+3547","Age Adjusted Avg. N/A"],["Tipo","+0.64","79% Conf / 0 D / 0 H"],["UDC","+0.48","CPC +0.28"],["FLC","-0.73",""]]},
+  {t:"Aptidão",meta:"",rows:[["HHP$®","+$1.309",""],["Células Somáticas","2.65","76%C"],["Vida Produtiva","+5.7","75%C"],["Permanência","+1.2","72%C"],["Livability Novilhas","+0.2","62%C"],["Índice Prenhez Filhas","+0.6","74%C"],["Heifer Conception Rate","+1.9","73%C · 0 Filhas"],["Cow Conception Rate","+2.0","74%C · 0 Filhas"],["Índice de Fertilidade","+1.9","74%C"]]},
+  {t:"Bem Estar",meta:"",rows:[["Mastite","+5.3","72%C · 0 Filhas"],["Metrite","+2.1","69%C · 0 Filhas"],["Ret. de Placenta","+0.8","69%C · 0 Filhas"],["Desp. Abomaso.","-0.2","71%C · 0 Filhas"],["Cetose","-0.2","68%C · 0 Filhas"],["Febre de leite","-0.2","61%C · 0 Filhas"]]},
+  {t:"Avaliação Facilidade",meta:"(% DBH)",rows:[["Facilidade de Parto do Touro","1.6","63%C · 0 Obs"],["Fac. de Parto das Filhas","1.7","57%C · 0 Filhas"],["Mortes ao Nascer - Touros","4.4","61%C · 0 Obs"],["Mortes ao Nascer - Filhas","3.4","56%C · 0 Filhas"],["Duração Gestação","-0.7","73%C · 0 Filhas"],["Início do primeiro parto","+7.0","72%C · 0 Filhas"]]},
+ ]};
+function renderProof(){
+  document.getElementById('pfPed').innerHTML=proof.ped.map(p=>p[0]==='lact'?`<span class="lact">${p[2]}</span>`:`<div><span class="role">${p[1]}</span> ${p[2]}</div>`).join('');
+  let lh=`<div class="linhead"><div class="linscale"><span>-2</span><span>-1</span><span>0</span><span>+1</span><span>+2</span></div></div>`;
+  lh+=proof.lin.map(l=>{const v=l[1];const half=Math.min(Math.abs(v)/2,1)*50;const left=v>=0?50:50-half;return `<div class="linrow"><div class="lnm">${l[0]}</div><div class="lintrack"><div class="mid"></div><i style="left:${left}%;width:${half}%"></i></div><div class="lv">${v.toFixed(2)} ${l[2]}</div></div>`;}).join('');
+  document.getElementById('pfLin').innerHTML=lh;
+  document.getElementById('pfRight').innerHTML=proof.sections.map(s=>{let h=`<div class="pf-sec">${s.t}${s.meta?`<span class="meta">${s.meta}</span>`:''}</div>`;if(s.extra)h+=`<div class="pf-extra">${s.extra.map(e=>{const p=e.split(' ');return `<span>${p[0]}</span> <b>${p.slice(1).join(' ')}</b>`;}).join('')}</div>`;h+=s.rows.map(r=>`<div class="pf-prow"><div class="nm">${r[0]}</div><div class="vl">${r[1]}</div><div class="nt">${r[2]}</div></div>`).join('');return h;}).join('');
+}
+
+/* ---------- Auditoria Genética (stepper 1→7) ---------- */
+const agSteps=[{n:0,t:"Parentesco"},{n:1,t:"Top Pais"},{n:3,t:"Progressão"},{n:6,t:"Distribuição"}];
+function renderStepper(){
+  document.getElementById('agStepper').innerHTML=agSteps.map((s,i)=>`<div class="stepb ${i===agStep?'on':''}" data-i="${i}"><span class="num">${i+1}</span>${s.t}</div>`).join('');
+  document.querySelectorAll('#agStepper .stepb').forEach(b=>b.onclick=()=>{agStep=+b.dataset.i;renderStepper();renderAG();});
+}
+function infoBox(txt){return `<div class="info"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><div>${txt}</div></div>`;}
+function agLineSVG(vals,years,r2){
+  const W=520,H=200,pl=44,pr=16,pt=16,pb=28;const mn=Math.min(...vals),mx=Math.max(...vals);const lo=mn-(mx-mn)*.3,hi=mx+(mx-mn)*.2;
+  const x=i=>pl+i*(W-pl-pr)/(years.length-1);const y=v=>pt+(1-(v-lo)/(hi-lo))*(H-pt-pb);let g='';
+  for(let k=0;k<=3;k++){const gv=lo+(hi-lo)*k/3;const gy=y(gv);g+=`<line x1="${pl}" y1="${gy}" x2="${W-pr}" y2="${gy}" stroke="#F3F0EC"/><text x="${pl-7}" y="${gy+3}" font-family="Geist Mono" font-size="9" fill="#78716C" text-anchor="end">${Math.round(gv)}</text>`;}
+  years.forEach((yr,i)=>g+=`<text x="${x(i)}" y="${H-9}" font-family="Geist Mono" font-size="9" fill="#78716C" text-anchor="middle">${yr}</text>`);
+  // trend line
+  const n=vals.length;const xs=vals.map((_,i)=>i);const mxn=xs.reduce((a,b)=>a+b,0)/n,myn=vals.reduce((a,b)=>a+b,0)/n;
+  let cov=0,vx=0;xs.forEach((xv,i)=>{cov+=(xv-mxn)*(vals[i]-myn);vx+=(xv-mxn)**2;});const sl=cov/vx,ic=myn-sl*mxn;
+  g+=`<line x1="${x(0)}" y1="${y(ic)}" x2="${x(n-1)}" y2="${y(ic+sl*(n-1))}" stroke="#3F8A66" stroke-width="2" stroke-dasharray="5 5"/>`;
+  const pts=vals.map((v,i)=>x(i)+','+y(v));
+  g+=`<polyline points="${pts.join(' ')}" fill="none" stroke="#CE0E2D" stroke-width="2" stroke-linejoin="round"/>`;
+  vals.forEach((v,i)=>g+=`<circle cx="${x(i)}" cy="${y(v)}" r="3" fill="#fff" stroke="#CE0E2D" stroke-width="1.6"/>`);
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">${g}</svg>`;
+}
+function agRadarSVG(axes,A,B){
+  const cx=160,cy=150,R=110;let g='';const N=axes.length;
+  [.25,.5,.75,1].forEach(t=>{let p=axes.map((_,k)=>{const an=-Math.PI/2+k*2*Math.PI/N;return (cx+Math.cos(an)*R*t)+','+(cy+Math.sin(an)*R*t);}).join(' ');g+=`<polygon points="${p}" fill="none" stroke="#EBE7E2"/>`;});
+  axes.forEach((nm,k)=>{const an=-Math.PI/2+k*2*Math.PI/N;g+=`<line x1="${cx}" y1="${cy}" x2="${cx+Math.cos(an)*R}" y2="${cy+Math.sin(an)*R}" stroke="#F3F0EC"/>`;const lx=cx+Math.cos(an)*(R+16),ly=cy+Math.sin(an)*(R+16)+3;g+=`<text x="${lx}" y="${ly}" font-family="Geist Mono" font-size="9" fill="#78716C" text-anchor="middle">${nm}</text>`;});
+  const poly=arr=>arr.map((v,k)=>{const an=-Math.PI/2+k*2*Math.PI/N;const vv=Math.max(.05,v/100);return (cx+Math.cos(an)*R*vv)+','+(cy+Math.sin(an)*R*vv);}).join(' ');
+  g+=`<polygon points="${poly(B)}" fill="rgba(154,123,107,.12)" stroke="#9A7B6B" stroke-width="2" stroke-dasharray="6 6"/>`;
+  g+=`<polygon points="${poly(A)}" fill="rgba(206,14,45,.16)" stroke="#CE0E2D" stroke-width="2"/>`;
+  return `<svg viewBox="0 0 320 300" style="width:100%;height:auto;max-width:340px">${g}</svg>`;
+}
+function agHistSVG(bins){
+  const W=520,H=200,pl=36,pr=12,pt=12,pb=24;const mx=Math.max(...bins.map(b=>b.n));let g='';
+  const bw=(W-pl-pr)/bins.length;
+  bins.forEach((b,i)=>{const h=(b.n/mx)*(H-pt-pb);const x=pl+i*bw;const y=H-pb-h;
+    const col=b.z<0.5?'#CE0E2D':b.z<1.5?'#C99A4B':'#9A7B6B';
+    g+=`<rect x="${x+1}" y="${y}" width="${bw-2}" height="${h}" rx="2" fill="${col}" opacity="${b.z<0.5?'.9':'.6'}"/>`;});
+  g+=`<line x1="${pl}" y1="${H-pb}" x2="${W-pr}" y2="${H-pb}" stroke="#EBE7E2"/>`;
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">${g}</svg>`;
+}
+function gauss(n,mean,sd,lo,hi){const out=[];const step=(hi-lo)/n;for(let i=0;i<n;i++){const mid=lo+(i+.5)*step;const z=Math.abs((mid-mean)/sd);const v=Math.round(280*Math.exp(-0.5*((mid-mean)/sd)**2));out.push({n:v,z});}return out;}
+function renderAG(){
+  const b=document.getElementById('agBody');
+  const which=agSteps[agStep].n;
+  if(which===0){
+    b.innerHTML=infoBox("<b>Como interpretar.</b> <span style='color:var(--primary)'>Não informado</span>: parentesco ausente no registro. <span style='color:var(--green)'>Informado</span>: pai/avô materno preenchidos. Passe sobre cada bloco para a ação recomendada.")+
+      '<div class="grid3">'+[["Pai (Sire)",8,92],["Avô Materno (MGS)",19,81],["Bisavô Materno (MMGS)",34,66]].map(([t,ni,inf])=>`<div class="card"><div class="ch"><h3>${t}</h3></div><div class="cb">
+        <div class="pstat"><div class="l" style="color:var(--amber)"><svg viewBox="0 0 24 24" stroke="currentColor"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>Não informado</div><div><div class="pct">${ni}%</div><div class="n">${Math.round(1974*ni/100)} animais</div></div></div>
+        <div class="pstat"><div class="l" style="color:var(--green)"><svg viewBox="0 0 24 24" stroke="currentColor"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Informado</div><div><div class="pct">${inf}%</div><div class="n">${Math.round(1974*inf/100)} animais</div></div></div>
+      </div></div>`).join('')+'</div>';
+  } else if(which===1){
+    const sires=[["7HO15264","Stagger Baelum",312],["7HO14921","Delux Dominance",244],["7HO15102","Taos Hayk",201],["7HO15388","Gameday Soy",176],["250HO16021","Altahotrod",132]];
+    const mgs=[["7HO13988","Renegade",288],["7HO14102","Parfect",233],["7HO14500","Lionel",190],["7HO14760","Achiever",155],["7HO15001","Copyright",121]];
+    const block=(title,rows)=>{const mx=Math.max(...rows.map(r=>r[2]));const tot=rows.reduce((s,r)=>s+r[2],0);return `<div class="card"><div class="ch"><h3>${title}</h3></div><div class="cb">${rows.map(r=>`<div class="agbar"><div class="lab"><small>${r[1]}</small> ${r[0]}</div><div class="agtrack" style="width:${r[2]/mx*100}%"></div><div class="cnt">${r[2]}</div><div class="pc">${(r[2]/tot*100).toFixed(1)}%</div></div>`).join('')}</div></div>`;};
+    b.innerHTML=`<div class="toolbar"><div class="seg"><button class="segb on">Todas</button><button class="segb">Novilha</button><button class="segb">Primípara</button><button class="segb">Multípara</button></div><div class="seg"><button class="segb on">Superior</button><button class="segb">Intermediário</button><button class="segb">Inferior</button></div><div class="seg"><button class="segb on">Top 20</button><button class="segb">30</button><button class="segb">50</button></div></div><div class="grid2b">${block("Top Sires",sires)}${block("Top Maternal Grandsires",mgs)}</div>`;
+  } else if(which===2){
+    const rows=[["HHP$","hhp",1974,494,884,612],["TPI","tpi",1974,494,2841,2433],["NM$","nm",1974,494,948,612],["PTAM","ptam",1974,494,2140,1180],["PL","pl",1974,494,7.1,4.2],["SCS","scs",1974,494,2.62,2.95]];
+    b.innerHTML=infoBox("Médias do <b>Top 25%</b> vs <b>Bottom 25%</b> por característica (rebanho ordenado em cada PTA). Use para dimensionar o gap genético interno.")+`<div class="card"><div class="ch"><h3>Quartis — Visão geral</h3><button class="btn ghost sm"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"/></svg>PDF</button></div><div class="scrollx" style="padding:4px 8px"><table><thead><tr><th>PTA</th><th>N total</th><th>Top N</th><th>Média Top</th><th>Bottom N</th><th>Média Bottom</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${r[0]}</b></td><td class="mono">${r[2]}</td><td class="mono">${r[3]}</td><td class="mono" style="color:var(--green)">${r[4]}</td><td class="mono">${r[5]}</td><td class="mono" style="color:var(--primary)">${r[6]}</td></tr>`).join('')}</tbody></table></div></div>`;
+  } else if(which===3){
+    const yrs=trend.years;
+    const cards=[["HHP$",[612,668,712,758,801,852,884]],["TPI",[2433,2511,2588,2655,2712,2780,2841]],["NM$",[612,652,701,742,789,841,884]]];
+    b.innerHTML=`<div class="toolbar"><div class="chips" style="margin:0">${["HHP$","TPI","NM$","PTAM","PL","DPR","SCS"].map((p,i)=>`<span class="chip ${i<3?'free':''}" style="${i<3?'':'opacity:.5'}">${p}</span>`).join('')}</div></div><div class="grid3">${cards.map(c=>`<div class="card"><div class="ch"><h3>Progressão · ${c[0]}</h3></div><div class="cb"><div style="font-size:11px;color:var(--green);font-family:var(--fm);margin-bottom:6px">Tendência R²=0.99 · +${Math.round((c[1][6]-c[1][0])/6)}/ano</div>${agLineSVG(c[1],yrs)}</div></div>`).join('')}</div>`;
+  } else if(which===4){
+    const axes=["HHP$","PTAM","CFP","FI","PL","SCS","UDC"];
+    const A=[88,72,65,55,80,40,70],B=[62,55,48,40,60,55,52];
+    const traits=[["HHP$",884,612,272],["PTAM",2140,1180,960],["CFP",184,96,88],["FI",1.9,0.6,1.3],["PL",7.1,4.2,2.9]];
+    b.innerHTML=`<div class="toolbar"><div><span style="font-size:11px;color:var(--muted);font-weight:600;margin-right:8px">Grupo A</span><span class="chip free">Novilha</span></div><div><span style="font-size:11px;color:var(--muted);font-weight:600;margin-right:8px">Grupo B</span><span class="chip" style="background:var(--wash);border-color:var(--border);color:var(--text)">Primípara</span></div></div>
+    <div class="grid2b"><div class="card"><div class="ch"><h3>Tabela comparativa</h3></div><div class="scrollx" style="padding:4px 8px"><table><thead><tr><th>Grupo</th>${traits.map(t=>`<th>${t[0]}</th>`).join('')}</tr></thead><tbody>
+      <tr><td><b>Novilha</b></td>${traits.map(t=>`<td class="mono">${t[1]}</td>`).join('')}</tr>
+      <tr><td><b>Primípara</b></td>${traits.map(t=>`<td class="mono">${t[2]}</td>`).join('')}</tr>
+      <tr style="background:var(--wash)"><td><b>Change</b></td>${traits.map(t=>`<td class="mono" style="color:var(--green)">+${t[3]}</td>`).join('')}</tr>
+    </tbody></table></div></div>
+    <div class="card"><div class="ch"><h3>Rate of Change (Novilha vs Primípara)</h3></div><div class="cb" style="display:flex;flex-direction:column;align-items:center">${agRadarSVG(axes,A,B)}<div class="legend"><i class="an">Novilha</i><i class="av">Primípara</i></div></div></div></div>`;
+  } else if(which===5){
+    const traits=["HHP$","TPI","NM$","CM$","FM$","GM$","PTAM","PL","DPR","SCS"];
+    const top=[884,2841,948,905,933,920,2140,7.1,2.4,2.62];const bot=[612,2433,612,588,601,595,1180,4.2,0.6,2.95];
+    b.innerHTML=`<div class="toolbar"><div class="seg"><button class="segb on">Índice A · HHP$</button></div><div class="seg"><button class="segb on">Índice B · NM$</button></div><button class="btn ghost sm"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"/></svg>PDF</button></div>
+    <div class="card"><div class="ch"><h3>Quartis por Índice</h3></div><div class="scrollx" style="padding:4px 8px"><table><thead><tr><th>Índice</th><th>Grupo</th>${traits.map(t=>`<th>${t}</th>`).join('')}</tr></thead><tbody>
+      <tr><td>HHP$</td><td>Top 25%</td>${top.map(v=>`<td class="mono">${v}</td>`).join('')}</tr>
+      <tr><td>HHP$</td><td>Bottom 25%</td>${bot.map(v=>`<td class="mono">${v}</td>`).join('')}</tr>
+      <tr style="background:var(--wash)"><td><b>Δ</b></td><td><b>Difference</b></td>${top.map((v,i)=>`<td class="mono" style="color:var(--green)">+${(v-bot[i]).toFixed(v<10?1:0)}</td>`).join('')}</tr>
+    </tbody></table></div></div>`;
+  } else if(which===6){
+    const mk=(label,mean,sd,lo,hi,unit)=>{const bins=gauss(22,mean,sd,lo,hi);return `<div class="card"><div class="ch"><h3>Distribuição · ${label}</h3><button class="btn ghost sm"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"/></svg>PDF</button></div><div class="cb">
+      <div class="statgrid"><div><small>Média</small><b>${mean}</b></div><div><small>Mediana</small><b>${mean}</b></div><div><small>Desv. Pad.</small><b>${sd}</b></div><div><small>CV%</small><b>${(sd/mean*100).toFixed(1)}%</b></div><div><small>Mín–Máx</small><b>${lo}–${hi}</b></div><div><small>Q1–Q3</small><b>${Math.round(mean-sd*.6)}–${Math.round(mean+sd*.6)}</b></div></div>
+      ${agHistSVG(bins)}
+      <div class="legend" style="margin-top:10px"><i style="--c:var(--primary)"><span style="width:9px;height:9px;border-radius:2px;background:var(--primary);display:inline-block"></span> Perto da média</i><i><span style="width:9px;height:9px;border-radius:2px;background:#C99A4B;display:inline-block"></span> Moderado</i><i><span style="width:9px;height:9px;border-radius:2px;background:#9A7B6B;display:inline-block"></span> Distante</i></div>
+    </div></div>`;};
+    b.innerHTML=`<div class="toolbar"><button class="btn ghost sm">Selecionar PTAs ▾</button><div class="chips" style="margin:0"><span class="chip free">HHP$</span><span class="chip free">TPI</span></div></div><div class="grid2b">${mk("HHP$",612,180,150,1050)}${mk("TPI",2588,210,1980,3120)}</div>`;
+  }
+}
+
+/* ---------- Provas (lista + seleção) ---------- */
+const pfSelected=new Set();
+let pfActive=0;
+function buildProofList(){
+  const list=document.getElementById('pfList');
+  document.getElementById('pfTotal').textContent=herd.length;
+  list.innerHTML=herd.map((a,i)=>`<div class="rrow ${i===pfActive?'sel':''}" data-pi="${i}" style="grid-template-columns:28px 1fr auto auto;padding:10px 14px">
+    <label style="display:flex;align-items:center;cursor:pointer" onclick="event.stopPropagation()">
+      <input type="checkbox" class="pf-chk" data-ci="${i}" ${pfSelected.has(i)?'checked':''} style="accent-color:var(--primary);width:15px;height:15px;cursor:pointer">
+    </label>
+    <div><div class="rname" style="font-size:13px">${a.name}</div><div class="rsire">${a.sire} · Brinco ${a.id}</div></div>
+    <div class="rstat"><b style="font-size:12px">+${a.gtpi}</b><small>GTPI</small></div>
+    <div class="rstat"><b style="font-size:12px">$${a.nm}</b><small>NM$</small></div>
+  </div>`).join('');
+  list.querySelectorAll('.rrow').forEach(r=>{
+    r.onclick=()=>{pfActive=+r.dataset.pi;buildProofList();renderProof();};
+  });
+  list.querySelectorAll('.pf-chk').forEach(cb=>{
+    cb.onchange=()=>{
+      const idx=+cb.dataset.ci;
+      if(cb.checked) pfSelected.add(idx); else pfSelected.delete(idx);
+      updatePfSelCount();
+    };
+  });
+  updatePfSelCount();
+}
+function updatePfSelCount(){
+  document.getElementById('pfSelCount').textContent=pfSelected.size+' selecionada'+(pfSelected.size!==1?'s':'');
+  const btn=document.getElementById('pfCatalog');
+  if(pfSelected.size>0){btn.style.opacity='1';btn.style.pointerEvents='auto';}
+  else{btn.style.opacity='.4';btn.style.pointerEvents='none';}
+}
+document.getElementById('pfSelAll').onclick=()=>{
+  if(pfSelected.size===herd.length){pfSelected.clear();}
+  else{herd.forEach((_,i)=>pfSelected.add(i));}
+  buildProofList();
+};
+document.getElementById('pfCatalog').onclick=()=>{
+  const names=Array.from(pfSelected).map(i=>herd[i].name).join(', ');
+  alert('Gerar catálogo PDF com '+pfSelected.size+' fêmea(s):\n'+names);
+};
+document.getElementById('pfSearch').oninput=function(){
+  const q=this.value.toUpperCase();
+  document.querySelectorAll('#pfList .rrow').forEach(r=>{
+    const i=+r.dataset.pi;
+    const a=herd[i];
+    const match=!q||a.name.toUpperCase().includes(q)||a.id.includes(q)||a.sire.toUpperCase().includes(q);
+    r.style.display=match?'':'none';
+  });
+};
+
+/* ---------- PDF Preview ---------- */
+document.querySelectorAll('#pfViewSeg .segb').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#pfViewSeg .segb').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  const v=b.dataset.v;
+  document.getElementById('pfDetail').style.display=v==='detail'?'block':'none';
+  document.getElementById('pfPdfPreview').style.display=v==='pdf'?'block':'none';
+  if(v==='pdf') renderPdfPreview();
+});
+function renderPdfPreview(){
+  const a=herd[pfActive];
+  document.getElementById('pdfName').textContent=a?a.name:'S-S-I STAGGER BAELUM-ET';
+  document.getElementById('pdfMeta').textContent=`HO840329657664 · 99% RHA-I · Born 2/12/25 · aAa 243`;
+  const kv=(label,val)=>`<div style="background:var(--wash);border-radius:6px;padding:6px 8px"><div style="font-size:8px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">${label}</div><div style="font-family:var(--fm);font-size:13px;font-weight:600;color:var(--fg)">${val}</div></div>`;
+  document.getElementById('pdfIndices').innerHTML=[
+    kv('GTPI','+'+(a?a.gtpi:2890)),kv('NM$','$'+(a?a.nm:948)),kv('HHP$','$'+(a?a.hhp:948)),
+    kv('CM$','$860'),kv('FM$','$890'),kv('GM$','$760')
+  ].join('');
+  document.getElementById('pdfProdHealth').innerHTML=[
+    kv('Leite','+'+(a?a.milk:2140)),kv('PL','+'+(a?a.pl:6.8)),kv('DPR','+'+(a?a.dpr:2.4)),
+    kv('SCS',(a?a.scs:2.71)),kv('Tipo','+0.64'),kv('UDC','+0.48')
+  ].join('');
+  document.getElementById('pdfPed').innerHTML=proof.ped.slice(0,7).map(p=>
+    p[0]==='lact'?`<div style="padding-left:14px;color:var(--muted);font-size:9.5px">${p[2]}</div>`
+    :`<div><span style="color:var(--primary);font-weight:500">${p[1]}</span> ${p[2]}</div>`
+  ).join('');
+  const linData=proof.lin.slice(0,10);
+  document.getElementById('pdfLinear').innerHTML=linData.map(l=>{
+    const v=l[1];const half=Math.min(Math.abs(v)/2,1)*50;const left=v>=0?50:50-half;
+    return `<div style="display:grid;grid-template-columns:1fr 120px 36px;gap:6px;align-items:center;padding:2px 0"><div style="font-family:var(--fm);font-size:9px;color:var(--text)">${l[0]}</div><div style="position:relative;height:9px;background:var(--wash);border:1px solid var(--border);border-radius:2px"><div style="position:absolute;left:50%;top:-1px;bottom:-1px;width:1px;background:#CBC4BC"></div><i style="position:absolute;top:1px;bottom:1px;background:var(--primary);border-radius:1px;opacity:.9;left:${left}%;width:${half}%"></i></div><div style="font-family:var(--fm);font-size:9px;color:var(--fg);text-align:right;font-weight:500">${v.toFixed(2)}</div></div>`;
+  }).join('');
+  document.getElementById('pdfHaps').innerHTML=(a?a.haps:[]).map(h=>
+    `<span class="chip ${h[1]}" style="font-size:9.5px;padding:3px 8px">${h[0]} · ${h[1]==='free'?'Livre':'Portador'}</span>`
+  ).join('');
+}
+
+go('dash');
+buildRank();renderReb();buildTop5('gtpi');buildDefects();buildProofList();renderProof();buildBotijao();drawEvo('gtpi');buildDist('gtpi');
+</script>
+</body>
+</html>
