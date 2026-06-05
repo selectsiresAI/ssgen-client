@@ -1,7 +1,6 @@
 import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
 import type { DemoAnimal } from '@/data/demoData'
-import { proof, fmt } from '@/data/demoData'
+import { proof } from '@/data/demoData'
 
 const PRIMARY = [206, 14, 45] as const // #CE0E2D
 const FG = [28, 28, 28] as const
@@ -174,53 +173,56 @@ export function generateProofPdf(animal: DemoAnimal) {
 }
 
 export function generateCatalogPdf(animals: DemoAnimal[]) {
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
-  // Header
-  doc.setFillColor(...PRIMARY)
-  doc.rect(0, 0, 297, 20, 'F')
-  doc.setTextColor(255, 255, 255)
-  doc.setFontSize(14)
-  doc.setFont('helvetica', 'bold')
-  doc.text('Select Sires · Catálogo Genômico', 14, 13)
-  doc.setFontSize(9)
-  doc.setFont('helvetica', 'normal')
-  doc.text(`${animals.length} fêmeas · Gerado ${new Date().toLocaleDateString('pt-BR')}`, 283, 13, { align: 'right' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
-  const head = [['#', 'Nome', 'Brinco', 'Pai', 'HHP$', 'GTPI', 'NM$', 'Leite', 'Gord', 'Prot', 'PL', 'DPR', 'SCS', 'PTAT', 'UDC', 'FLC', 'Haplótipos']]
-  const body = animals.map((a, i) => [
-    i + 1,
-    a.name,
-    a.id,
-    a.sire,
-    fmt('hhp', a.hhp),
-    fmt('gtpi', a.gtpi),
-    fmt('nm', a.nm),
-    fmt('milk', a.milk),
-    fmt('fat', a.fat),
-    fmt('prot', a.prot),
-    fmt('pl', a.pl),
-    fmt('dpr', a.dpr),
-    a.scs.toFixed(2),
-    fmt('ptat', a.ptat),
-    fmt('udc', a.udc),
-    fmt('flc', a.flc),
-    a.haps.map((h) => `${h[0]}:${h[1] === 'free' ? 'L' : 'P'}`).join(' '),
-  ])
+  animals.forEach((animal, idx) => {
+    if (idx > 0) doc.addPage()
 
-  autoTable(doc, {
-    startY: 25,
-    head,
-    body,
-    styles: { fontSize: 7, cellPadding: 1.5, font: 'helvetica' },
-    headStyles: { fillColor: [...PRIMARY], textColor: 255, fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: [248, 248, 248] },
-    columnStyles: {
-      0: { cellWidth: 8 },
-      1: { cellWidth: 38 },
-      4: { fontStyle: 'bold' },
-      5: { fontStyle: 'bold' },
-    },
+    // Cover header with catalog info
+    doc.setFillColor(...PRIMARY)
+    doc.rect(0, 0, 210, 28, 'F')
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(16)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Select Sires', 14, 12)
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Catálogo Genômico · Fêmea ${idx + 1} de ${animals.length}`, 14, 19)
+    doc.text(`Gerado: ${new Date().toLocaleDateString('pt-BR')}`, 196, 12, { align: 'right' })
+    doc.text('Base CDCB-S · 04/2026', 196, 19, { align: 'right' })
+
+    // Animal name
+    doc.setTextColor(...FG)
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.text(animal.name, 14, 38)
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(...MUTED)
+    doc.text(`HO840329657664 · 99% RHA-I · Brinco ${animal.id} · Pai: ${animal.sire}`, 14, 44)
+
+    // Indices
+    let y = drawIndices(doc, animal, 50)
+    y += 2
+
+    // Pedigree + Linear side by side
+    drawPedigree(doc, y)
+    drawLinear(doc, y)
+    const maxPedY = Math.max(y + proof.ped.length * 3.5 + 4, y + proof.lin.length * 3.5 + 4)
+
+    // Sections
+    drawSections(doc, maxPedY + 4)
+
+    // Haplotypes footer on last page of this animal
+    const pageH = doc.internal.pageSize.getHeight()
+    doc.setFontSize(7)
+    doc.setTextColor(...MUTED)
+    doc.text(
+      animal.haps.map((h) => `${h[0]}: ${h[1] === 'free' ? 'Livre' : 'Portador'}`).join(' · '),
+      14,
+      pageH - 12,
+    )
   })
 
-  doc.save(`catalogo-genomico-${new Date().toISOString().split('T')[0]}.pdf`)
+  doc.save(`catalogo-genomico-${animals.length}-femeas-${new Date().toISOString().split('T')[0]}.pdf`)
 }

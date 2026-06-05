@@ -235,6 +235,40 @@
   border-bottom: 0;
 }
 
+.ss-table-herd {
+  min-width: 1400px;
+}
+
+.ss-table-herd th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--ss-primary);
+  color: #fff;
+  border-bottom: none;
+  padding: 9px 12px;
+  font-size: 10.5px;
+  letter-spacing: .4px;
+}
+
+.ss-table-herd th:hover {
+  background: #b00c28;
+}
+
+.ss-table-herd td {
+  font-size: 12px;
+  padding: 8px 12px;
+}
+
+.ss-table-herd tbody tr:hover {
+  background: var(--ss-wash);
+}
+
+.ss-herd-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ss-border) transparent;
+}
+
 .ss-mono {
   font-family: var(--ss-mono);
 }

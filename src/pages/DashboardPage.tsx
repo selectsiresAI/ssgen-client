@@ -1,5 +1,5 @@
-import { Clock, Download, FileText, Plus, Search } from 'lucide-react'
-import { useState } from 'react'
+import { ArrowDown, ArrowUp, ArrowUpDown, Clock, Download, FileText, Plus, Search } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { KpiCard } from '@/components/KpiCard'
 import { useDashboard, useOrders, useFemalesFull } from '@/hooks/useApi'
 import { api, type FemaleFull } from '@/lib/api'
@@ -44,16 +44,39 @@ function fmtCell(key: string, val: unknown): string {
   return String(val)
 }
 
+type SortDir = 'asc' | 'desc' | null
+
 export function DashboardPage() {
   const { data } = useDashboard()
   const { data: ordersData } = useOrders({ page: 1 })
   const orders = ordersData?.data ?? []
   const [herdPage, setHerdPage] = useState(1)
   const [herdSearch, setHerdSearch] = useState('')
+  const [sortCol, setSortCol] = useState<string | null>(null)
+  const [sortDir, setSortDir] = useState<SortDir>(null)
   const { data: femalesData } = useFemalesFull({ page: herdPage, search: herdSearch })
-  const females = femalesData?.data ?? []
+  const rawFemales = femalesData?.data ?? []
   const totalFemales = femalesData?.total ?? 0
   const totalPages = Math.max(1, Math.ceil(totalFemales / (femalesData?.per_page ?? 50)))
+
+  const females = useMemo(() => {
+    if (!sortCol || !sortDir) return rawFemales
+    return [...rawFemales].sort((a, b) => {
+      const av = a[sortCol as keyof FemaleFull]
+      const bv = b[sortCol as keyof FemaleFull]
+      if (av == null && bv == null) return 0
+      if (av == null) return 1
+      if (bv == null) return -1
+      const cmp = typeof av === 'number' && typeof bv === 'number' ? av - bv : String(av).localeCompare(String(bv))
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+  }, [rawFemales, sortCol, sortDir])
+
+  const toggleSort = (key: string) => {
+    if (sortCol !== key) { setSortCol(key); setSortDir('desc') }
+    else if (sortDir === 'desc') setSortDir('asc')
+    else { setSortCol(null); setSortDir(null) }
+  }
 
   const exportFemales = async () => {
     const result = await api.getFemalesFull({ per_page: '9999' })
@@ -111,9 +134,20 @@ export function DashboardPage() {
             <button className="ss-button ss-button-ghost ss-button-sm" type="button" onClick={() => void exportFemales()}><Download />Exportar XLSX</button>
           </div>
         </div>
-        <div className="overflow-x-auto px-2 py-1">
-          <table className="ss-table">
-            <thead><tr>{herdCols.map((c) => <th key={c.key}>{c.label}</th>)}</tr></thead>
+        <div className="ss-herd-scroll overflow-auto" style={{ maxHeight: 'calc(100vh - 260px)' }}>
+          <table className="ss-table ss-table-herd">
+            <thead>
+              <tr>
+                {herdCols.map((c) => (
+                  <th key={c.key} onClick={() => toggleSort(String(c.key))} className="cursor-pointer select-none">
+                    <span className="inline-flex items-center gap-1">
+                      {c.label}
+                      {sortCol === String(c.key) ? (sortDir === 'desc' ? <ArrowDown className="h-3 w-3" /> : <ArrowUp className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-30" />}
+                    </span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
             <tbody>
               {females.length > 0 ? females.map((f) => (
                 <tr key={f.id}>
