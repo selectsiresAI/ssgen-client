@@ -82,7 +82,7 @@ Deno.serve(async (req: Request) => {
       .from("females")
       .select(selectCols, { count: "exact" })
       .in("client_id", clientIds)
-      .order("name", { ascending: true })
+      .order("nm_dollar", { ascending: false, nullsFirst: false })
       .range(from, to);
 
     // Filter by service order: find genomic_result_ids for that SO

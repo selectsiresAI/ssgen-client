@@ -57,7 +57,7 @@ Deno.serve(async (req: Request) => {
 
     const [femalesRes, genotypedRes, ordersProgressRes, ordersCompleteRes, recentResultsRes, clientsRes] = await Promise.all([
       platformDb.from("females").select("id", { count: "exact", head: true }).in("client_id", clientIds).is("deleted_at", null),
-      platformDb.from("females").select("id", { count: "exact", head: true }).in("client_id", clientIds).not("genomic_result_id", "is", null).is("deleted_at", null),
+      platformDb.from("females").select("id", { count: "exact", head: true }).in("client_id", clientIds).not("cdcb_id", "is", null).is("deleted_at", null),
       platformDb.from("service_orders").select("id", { count: "exact", head: true }).in("client_id", clientIds).not("etapa_atual", "in", '("Faturamento")').is("deleted_at", null),
       platformDb.from("service_orders").select("id", { count: "exact", head: true }).in("client_id", clientIds).eq("etapa_atual", "Faturamento").is("deleted_at", null),
       platformDb.from("genomic_results").select("id", { count: "exact", head: true }).in("client_id", clientIds).eq("visivel_ssgen", true),
