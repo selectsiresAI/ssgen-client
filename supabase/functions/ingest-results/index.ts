@@ -282,13 +282,13 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // Download file from Tracker storage
-    const trackerDb = createClient(
-      Deno.env.get("TRACKER_URL")!,
-      Deno.env.get("TRACKER_SERVICE_ROLE_KEY")!,
+    // Download file from Platform storage
+    const platformStorage = createClient(
+      Deno.env.get("PLATFORM_URL")!,
+      Deno.env.get("PLATFORM_SERVICE_ROLE_KEY")!,
     );
 
-    const { data: fileData, error: dlError } = await trackerDb.storage
+    const { data: fileData, error: dlError } = await platformStorage.storage
       .from("order-results")
       .download(file_path);
 
