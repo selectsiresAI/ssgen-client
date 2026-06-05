@@ -85,7 +85,7 @@ export const HAVG: Record<string, number> = {
 }
 
 export const radarGroups: Record<string, RadarGroup> = {
-  indices: { label: 'Índices', traits: ['gtpi', 'nm', 'hhp', 'cm', 'fm', 'gm'], names: ['GTPI', 'NM$', 'HHP$', 'CM$', 'FM$', 'GM$'], max: [3200, 1100, 1100, 1050, 1050, 900] },
+  indices: { label: 'Índices', traits: ['hhp', 'gtpi', 'nm', 'cm', 'fm', 'gm'], names: ['HHP$', 'GTPI', 'NM$', 'CM$', 'FM$', 'GM$'], max: [1100, 3200, 1100, 1050, 1050, 900] },
   prod: { label: 'Produção', traits: ['milk', 'fat', 'prot', 'fat_pct', 'prot_pct'], names: ['Leite', 'Gord', 'Prot', 'G%', 'P%'], max: [2800, 120, 80, 0.35, 0.15] },
   func: { label: 'Funcionais', traits: ['pl', 'dpr', 'scs', 'hcr', 'ccr', 'liv'], names: ['PL', 'DPR', 'SCS', 'HCR', 'CCR', 'LIV'], max: [9, 4, 1, 3, 3, 4], inv: [0, 0, 1, 0, 0, 0] },
   tipo: { label: 'Tipo', traits: ['ptat', 'udc', 'flc', 'sta', 'dfm', 'fua'], names: ['PTAT', 'UDC', 'FLC', 'STA', 'DFM', 'FUA'], max: [1, 0.8, 0, 1, 0.4, 1.2], offset: [0, 0, 1.2, 0, 0, 0] },
@@ -94,7 +94,7 @@ export const radarGroups: Record<string, RadarGroup> = {
 
 export const trend = {
   years: ['2019', '2020', '2021', '2022', '2023', '2024', '2025'],
-  gtpi: [2310, 2398, 2467, 2541, 2602, 2671, 2734], nm: [712, 748, 791, 829, 861, 898, 936], hhp: [610, 648, 698, 742, 789, 838, 874], cm: [680, 718, 762, 801, 841, 878, 905], fm: [695, 731, 778, 818, 860, 898, 933], gm: [580, 612, 648, 688, 725, 762, 798],
+  hhp: [610, 648, 698, 742, 789, 838, 874], gtpi: [2310, 2398, 2467, 2541, 2602, 2671, 2734], nm: [712, 748, 791, 829, 861, 898, 936], cm: [680, 718, 762, 801, 841, 878, 905], fm: [695, 731, 778, 818, 860, 898, 933], gm: [580, 612, 648, 688, 725, 762, 798],
   milk: [1480, 1560, 1655, 1742, 1820, 1908, 1985], fat: [48, 52, 58, 64, 72, 80, 88], fat_pct: [0.08, 0.10, 0.12, 0.14, 0.16, 0.18, 0.20], prot: [38, 42, 46, 51, 55, 59, 62], prot_pct: [0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10],
   pl: [3.8, 4.2, 4.6, 5.1, 5.5, 6.0, 6.4], scs: [2.92, 2.89, 2.86, 2.83, 2.80, 2.77, 2.74], dpr: [0.4, 0.6, 0.9, 1.1, 1.4, 1.7, 2.0], hcr: [0.8, 1.0, 1.2, 1.4, 1.5, 1.7, 1.9], ccr: [0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8], liv: [1.2, 1.5, 1.8, 2.1, 2.4, 2.7, 3.0], sce: [2.4, 2.3, 2.2, 2.1, 2.0, 1.9, 1.8],
   ptat: [0.22, 0.28, 0.34, 0.40, 0.46, 0.52, 0.58], udc: [0.18, 0.24, 0.30, 0.35, 0.40, 0.44, 0.48], flc: [-0.90, -0.84, -0.78, -0.74, -0.70, -0.66, -0.62],
@@ -107,7 +107,7 @@ export const trend = {
 }
 
 export const traitLabel: Record<string, string> = {
-  gtpi: 'GTPI', nm: 'NM$', hhp: 'HHP$', cm: 'CM$', fm: 'FM$', gm: 'GM$', milk: 'Leite',
+  hhp: 'HHP$', gtpi: 'GTPI', nm: 'NM$', cm: 'CM$', fm: 'FM$', gm: 'GM$', milk: 'Leite',
   fat: 'Gordura', fat_pct: 'Gord%', prot: 'Proteína', prot_pct: 'Prot%', pl: 'PL', dpr: 'DPR',
   scs: 'SCS', hcr: 'HCR', ccr: 'CCR', liv: 'LIV', sce: 'SCE', ptat: 'Tipo', udc: 'UDC',
   flc: 'FLC', fsav: 'F.Sav', rfi: 'RFI', cfp: 'CFP', efc: 'EFC', da: 'DA', ket: 'KET',

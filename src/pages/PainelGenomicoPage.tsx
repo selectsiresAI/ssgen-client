@@ -7,12 +7,12 @@ import { SegmentedControl } from '@/components/SegmentedControl'
 import { demoHerd, fmt, HAVG, traitLabel, trend } from '@/data/demoData'
 
 const trendKeys = Object.keys(trend).filter((k) => k !== 'years')
-const topTraits = ['gtpi', 'nm', 'hhp', 'milk', 'dpr']
+const topTraits = ['hhp', 'gtpi', 'nm', 'milk', 'dpr']
 const medalColor = ['#C99A4B', '#A9A9A9', '#B07A4B', '#CBC4BC', '#CBC4BC']
 
 export function PainelGenomicoPage() {
-  const [trait, setTrait] = useState('gtpi')
-  const [topTrait, setTopTrait] = useState('gtpi')
+  const [trait, setTrait] = useState('hhp')
+  const [topTrait, setTopTrait] = useState('hhp')
   const trendRecord = trend as Record<string, number[] | string[]>
   const ranked = useMemo(() => demoHerd.slice().sort((a, b) => Number(b[topTrait]) - Number(a[topTrait])).slice(0, 5), [topTrait])
   const attention = [
@@ -28,9 +28,9 @@ export function PainelGenomicoPage() {
   return (
     <div>
       <div className="ss-grid-kpis">
+        <KpiCard icon={HeartPulse} label="HHP$ Médio" value="$874" delta="▲ +51" />
         <KpiCard icon={Activity} label="GTPI Médio" value="+2.687" delta="▲ +94 vs. base" />
         <KpiCard icon={DollarSign} label="NM$ Médio" value="$921" delta="▲ +38" />
-        <KpiCard icon={HeartPulse} label="HHP$ Médio" value="$874" delta="▲ +51" />
         <KpiCard icon={AlertTriangle} label="Portadores HH" value="6,3%" delta="▼ monitorar" deltaType="down" />
       </div>
       <div className="ss-grid-2">

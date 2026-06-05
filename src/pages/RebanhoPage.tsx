@@ -6,12 +6,12 @@ import { SegmentedControl } from '@/components/SegmentedControl'
 import { demoHerd, fmt, HAVG, initials, radarGroups, traitLabel } from '@/data/demoData'
 import { useFemalesFull } from '@/hooks/useApi'
 
-const rankTraits = ['gtpi', 'nm', 'hhp', 'milk', 'fat', 'prot', 'pl', 'dpr', 'scs', 'ptat', 'udc', 'flc']
+const rankTraits = ['hhp', 'gtpi', 'nm', 'milk', 'fat', 'prot', 'pl', 'dpr', 'scs', 'ptat', 'udc', 'flc']
 
 export function RebanhoPage() {
   const navigate = useNavigate()
   useFemalesFull({ page: 1 })
-  const [trait, setTrait] = useState('gtpi')
+  const [trait, setTrait] = useState('hhp')
   const [selected, setSelected] = useState(0)
   const [radar, setRadar] = useState('indices')
   const sorted = useMemo(() => demoHerd.map((animal, idx) => ({ animal, idx })).sort((a, b) => (trait === 'scs' || trait === 'flc') ? Number(a.animal[trait]) - Number(b.animal[trait]) : Number(b.animal[trait]) - Number(a.animal[trait])), [trait])
@@ -38,7 +38,7 @@ export function RebanhoPage() {
                 <div className="text-center font-mono text-xs text-[var(--ss-muted)]">{i + 1}</div>
                 <div><div className="text-[13.5px] font-medium text-[var(--ss-fg)]">{row.name}</div><div className="font-mono text-[11px] text-[var(--ss-muted)]">{row.sire} · {row.id}</div></div>
                 <div className="text-right"><b className="block font-mono text-[13px] font-medium text-[var(--ss-fg)]">{fmt(trait, Number(row[trait]))}</b><small className="text-[8.5px] uppercase tracking-[.6px] text-[var(--ss-muted-2)]">{traitLabel[trait]}</small></div>
-                <div className="text-right"><b className="block font-mono text-[13px] font-medium text-[var(--ss-fg)]">${row.nm}</b><small className="text-[8.5px] uppercase tracking-[.6px] text-[var(--ss-muted-2)]">NM$</small></div>
+                <div className="text-right"><b className="block font-mono text-[13px] font-medium text-[var(--ss-fg)]">${row.hhp}</b><small className="text-[8.5px] uppercase tracking-[.6px] text-[var(--ss-muted-2)]">HHP$</small></div>
               </button>
             ))}
           </div>

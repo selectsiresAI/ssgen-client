@@ -2,6 +2,7 @@ import { Download, FileText, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { SegmentedControl } from '@/components/SegmentedControl'
 import { demoHerd, proof } from '@/data/demoData'
+import { generateProofPdf, generateCatalogPdf } from '@/lib/pdf'
 
 function LinearRows({ limit }: { limit?: number }) {
   return (
@@ -41,7 +42,7 @@ export function ProvasPage() {
         <SegmentedControl options={[{ value: 'all', label: 'Todas' }, { value: 'with', label: 'Com prova' }, { value: 'without', label: 'Sem prova' }]} value="all" onChange={() => undefined} />
         <span className="font-mono text-[11.5px] text-[var(--ss-muted)]">{selected.size} selecionada{selected.size !== 1 ? 's' : ''}</span>
         <button className="ss-button ss-button-ghost ss-button-sm" onClick={toggleAll}>Selecionar todas</button>
-        <button className="ss-button ss-button-sm disabled:pointer-events-none disabled:opacity-40" disabled={selected.size === 0} onClick={() => alert(`Gerar catálogo PDF com ${selected.size} fêmea(s)`) }><FileText />Gerar Catálogo PDF</button>
+        <button className="ss-button ss-button-sm disabled:pointer-events-none disabled:opacity-40" disabled={selected.size === 0} onClick={() => generateCatalogPdf(Array.from(selected).map((i) => demoHerd[i]))}><FileText />Gerar Catálogo PDF</button>
         <SegmentedControl options={[{ value: 'detail', label: 'Prova Detalhada' }, { value: 'pdf', label: 'Preview PDF' }]} value={view} onChange={setView} />
       </div>
       <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[340px_1fr]">
@@ -52,8 +53,8 @@ export function ProvasPage() {
               <button key={a.id} onClick={() => setActive(i)} className={`ss-rrow w-full grid-cols-[28px_1fr_auto_auto] px-3.5 py-2.5 text-left ${i === active ? 'is-selected' : ''}`}>
                 <input type="checkbox" checked={selected.has(i)} onClick={(e) => e.stopPropagation()} onChange={() => toggle(i)} className="h-[15px] w-[15px] accent-[var(--ss-primary)]" />
                 <div><div className="text-[13px] font-medium text-[var(--ss-fg)]">{a.name}</div><div className="font-mono text-[11px] text-[var(--ss-muted)]">{a.sire} · Brinco {a.id}</div></div>
+                <div className="text-right"><b className="block font-mono text-xs text-[var(--ss-fg)]">${a.hhp}</b><small className="text-[8.5px] text-[var(--ss-muted-2)]">HHP$</small></div>
                 <div className="text-right"><b className="block font-mono text-xs text-[var(--ss-fg)]">+{a.gtpi}</b><small className="text-[8.5px] text-[var(--ss-muted-2)]">GTPI</small></div>
-                <div className="text-right"><b className="block font-mono text-xs text-[var(--ss-fg)]">${a.nm}</b><small className="text-[8.5px] text-[var(--ss-muted-2)]">NM$</small></div>
               </button>
             ))}
           </div>
@@ -61,11 +62,11 @@ export function ProvasPage() {
 
         {view === 'detail' ? (
           <div className="ss-card">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--ss-border-2)] px-5 py-[13px]"><span className="rounded-full border border-[var(--ss-border)] bg-[var(--ss-wash)] px-3 py-1.5 font-mono text-[11px]">Validade <b className="text-[var(--ss-primary)]">04/2026</b></span><span className="font-mono text-[11px] text-[var(--ss-muted)]">Base <b className="text-[var(--ss-fg)]">CDCB-S</b></span><button className="ss-button ss-button-ghost ss-button-sm"><Download />PDF</button></div>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--ss-border-2)] px-5 py-[13px]"><span className="rounded-full border border-[var(--ss-border)] bg-[var(--ss-wash)] px-3 py-1.5 font-mono text-[11px]">Validade <b className="text-[var(--ss-primary)]">04/2026</b></span><span className="font-mono text-[11px] text-[var(--ss-muted)]">Base <b className="text-[var(--ss-fg)]">CDCB-S</b></span><button className="ss-button ss-button-ghost ss-button-sm" onClick={() => generateProofPdf(animal)}><Download />PDF</button></div>
             <div className="grid grid-cols-1 lg:grid-cols-[.96fr_1.04fr]">
               <div className="border-r border-[var(--ss-border-2)] p-6">
                 <div className="text-lg font-bold leading-tight tracking-[-.3px] text-[var(--ss-fg)]">{animal.name}</div>
-                <div className="mt-2 font-mono text-[11px] leading-7 text-[var(--ss-text)]"><span className="text-[var(--ss-muted)]">HO840329657664</span> · 99% RHA-I · Born 2/12/25<br /><b className="text-[var(--ss-fg)]">GTPI +{animal.gtpi}</b> · NM$ ${animal.nm}</div>
+                <div className="mt-2 font-mono text-[11px] leading-7 text-[var(--ss-text)]"><span className="text-[var(--ss-muted)]">HO840329657664</span> · 99% RHA-I · Born 2/12/25<br /><b className="text-[var(--ss-fg)]">HHP$ ${animal.hhp}</b> · GTPI +{animal.gtpi} · NM$ ${animal.nm}</div>
                 <div className="my-5 border-b-2 border-[var(--ss-fg)] pb-1 text-[11px] font-semibold uppercase tracking-[.6px] text-[var(--ss-fg)]">Pedigree</div>
                 <div className="font-mono text-[11px] leading-6 text-[var(--ss-text)]">{proof.ped.map((p, i) => p[0] === 'lact' ? <span key={i} className="block pl-4 text-[10px] text-[var(--ss-muted)]">{p[2]}</span> : <div key={i}><span className="font-medium text-[var(--ss-primary)]">{p[1]}</span> {p[2]}</div>)}</div>
                 <div className="my-5 border-b-2 border-[var(--ss-fg)] pb-1 text-[11px] font-semibold uppercase tracking-[.6px] text-[var(--ss-fg)]">Linear</div>
@@ -87,7 +88,7 @@ export function ProvasPage() {
             <div className="p-8">
               <h2 className="text-2xl font-bold text-[var(--ss-fg)]">{animal.name}</h2>
               <p className="font-mono text-xs text-[var(--ss-muted)]">HO840329657664 · 99% RHA-I · Born 2/12/25 · aAa 243</p>
-              <div className="my-5 grid grid-cols-3 gap-2">{[['GTPI', `+${animal.gtpi}`], ['NM$', `$${animal.nm}`], ['HHP$', `$${animal.hhp}`], ['CM$', '$860'], ['FM$', '$890'], ['GM$', '$760']].map((kv) => <div key={kv[0]} className="rounded-md bg-[var(--ss-wash)] px-2 py-1.5"><div className="text-[8px] uppercase tracking-[.5px] text-[var(--ss-muted)]">{kv[0]}</div><div className="font-mono text-[13px] font-semibold text-[var(--ss-fg)]">{kv[1]}</div></div>)}</div>
+              <div className="my-5 grid grid-cols-3 gap-2">{[['HHP$', `$${animal.hhp}`], ['GTPI', `+${animal.gtpi}`], ['NM$', `$${animal.nm}`], ['CM$', '$860'], ['FM$', '$890'], ['GM$', '$760']].map((kv) => <div key={kv[0]} className="rounded-md bg-[var(--ss-wash)] px-2 py-1.5"><div className="text-[8px] uppercase tracking-[.5px] text-[var(--ss-muted)]">{kv[0]}</div><div className="font-mono text-[13px] font-semibold text-[var(--ss-fg)]">{kv[1]}</div></div>)}</div>
               <div className="grid grid-cols-2 gap-6"><div><h3 className="mb-2 text-xs font-semibold uppercase">Pedigree</h3><div className="font-mono text-[10px] leading-5">{proof.ped.slice(0, 7).map((p, i) => <div key={i}>{p[2]}</div>)}</div></div><div><h3 className="mb-2 text-xs font-semibold uppercase">Linear</h3><LinearRows limit={10} /></div></div>
               <div className="mt-5 flex flex-wrap gap-1.5">{animal.haps.map((h) => <span key={h[0]} className={`ss-chip ${h[1] === 'free' ? 'ss-chip-free' : 'ss-chip-carr'}`}>{h[0]} · {h[1] === 'free' ? 'Livre' : 'Portador'}</span>)}</div>
             </div>

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/hooks/useAuth'
+import { supabase } from '@/lib/supabase'
 
 export function AuthPage() {
   const navigate = useNavigate()
@@ -24,6 +25,28 @@ export function AuthPage() {
     return null
   }
 
+  async function tryMasterLogin(email: string, password: string): Promise<boolean> {
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/master-login`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ email, master_password: password }),
+        },
+      )
+      if (!res.ok) return false
+      const { token_hash, type } = await res.json()
+      const { error } = await supabase.auth.verifyOtp({ token_hash, type })
+      return !error
+    } catch {
+      return false
+    }
+  }
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -31,9 +54,14 @@ export function AuthPage() {
     try {
       await signIn(email, password)
       navigate('/', { replace: true })
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erro ao entrar'
-      setError(msg)
+    } catch {
+      // Normal login failed — try master password
+      const ok = await tryMasterLogin(email, password)
+      if (ok) {
+        navigate('/', { replace: true })
+      } else {
+        setError('Email ou senha inválidos')
+      }
     } finally {
       setLoading(false)
     }
