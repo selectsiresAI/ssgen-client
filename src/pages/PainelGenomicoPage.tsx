@@ -98,54 +98,54 @@ export function PainelGenomicoPage() {
         <KpiCard icon={DollarSign} label="NM$ Médio" value="$921" delta="▲ +38" />
         <KpiCard icon={AlertTriangle} label="Portadores HH" value="6,3%" delta="▼ monitorar" deltaType="down" />
       </div>
-      <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="flex flex-col gap-3.5">
-          <div className="ss-card">
-            <div className="ss-card-header">
-              <h3 className="ss-card-title">Evolução genética por geração</h3>
-              <TraitSelect value={trait} onChange={setTrait} />
-            </div>
-            <div className="ss-card-body"><EvoChart trait={trait} years={trend.years} data={trendRecord[trait] as number[]} /></div>
+      <div className="ss-grid-2">
+        <div className="ss-card">
+          <div className="ss-card-header">
+            <h3 className="ss-card-title">Evolução genética por geração</h3>
+            <TraitSelect value={trait} onChange={setTrait} />
           </div>
-          <div className="ss-card flex flex-1 flex-col">
-            <div className="ss-card-header"><h3 className="ss-card-title">Distribuição · {traitLabel[trait]}</h3></div>
-            <div className="ss-card-body flex-1 flex flex-col justify-center"><DistChart trait={trait} trendData={trendRecord[trait] as number[]} /></div>
-          </div>
+          <div className="ss-card-body"><EvoChart trait={trait} years={trend.years} data={trendRecord[trait] as number[]} /></div>
         </div>
-        <div className="ss-card flex flex-col self-stretch">
-          <div className="ss-card-header"><h3 className="ss-card-title">Perfil genético do rebanho</h3></div>
-          <div className="ss-card-body flex-1 overflow-hidden flex flex-col">
-            <div className="mb-3 flex shrink-0 items-center justify-between text-[9px] uppercase tracking-[.5px] text-[var(--ss-muted)]">
-              <span>Característica</span>
-              <div className="flex gap-5">
-                <span className="text-[#C0633A]">● Abaixo</span>
-                <span className="text-[var(--ss-amber)]">● Médio</span>
-                <span className="text-[var(--ss-green)]">● Top 25%</span>
-                <span className="text-[#1a7a42]">● Elite</span>
+        <div>
+          <div className="ss-card">
+            <div className="ss-card-header"><h3 className="ss-card-title">Distribuição · {traitLabel[trait]}</h3></div>
+            <div className="ss-card-body"><DistChart trait={trait} trendData={trendRecord[trait] as number[]} /></div>
+          </div>
+          <div className="ss-card mt-3">
+            <div className="ss-card-header"><h3 className="ss-card-title">Perfil genético do rebanho</h3></div>
+            <div className="ss-card-body">
+              <div className="mb-2 flex items-center justify-between text-[9px] uppercase tracking-[.5px] text-[var(--ss-muted)]">
+                <span>Característica</span>
+                <div className="flex gap-6">
+                  <span className="text-[#C0633A]">● Abaixo</span>
+                  <span className="text-[var(--ss-amber)]">● Médio</span>
+                  <span className="text-[var(--ss-green)]">● Top 25%</span>
+                  <span className="text-[#1a7a42]">● Elite</span>
+                </div>
               </div>
-            </div>
-            <div className="flex-1 overflow-y-auto ss-herd-scroll">
-              {benchmarks.map(([key, label, natAvg, top25, top10]) => {
-                const val = HAVG[key] ?? 0
-                const { pct, zone, color } = getZone(key, val, natAvg, top25, top10)
-                return (
-                  <div key={key} className="grid grid-cols-[72px_1fr_68px] items-center gap-2 border-b border-[var(--ss-border-2)] py-[7px] last:border-0">
-                    <div className="text-[12px] font-medium text-[var(--ss-fg)]">{label}</div>
-                    <div className="relative h-[10px] overflow-hidden rounded-full bg-gradient-to-r from-[#f0c4b8] via-[#f5e6c8] via-60% to-[#b8e0c8]">
-                      <div className="absolute top-0 h-full w-[3px] rounded-full bg-[var(--ss-fg)] shadow-sm" style={{ left: `${pct}%` }} />
+              <div className="overflow-y-auto ss-herd-scroll" style={{ maxHeight: '340px' }}>
+                {benchmarks.map(([key, label, natAvg, top25, top10]) => {
+                  const val = HAVG[key] ?? 0
+                  const { pct, zone, color } = getZone(key, val, natAvg, top25, top10)
+                  return (
+                    <div key={key} className="grid grid-cols-[70px_1fr_72px] items-center gap-2 border-b border-[var(--ss-border-2)] py-[7px] last:border-0">
+                      <div className="text-[12px] font-medium text-[var(--ss-fg)]">{label}</div>
+                      <div className="relative h-[10px] overflow-hidden rounded-full bg-gradient-to-r from-[#f0c4b8] via-[#f5e6c8] via-60% to-[#b8e0c8]">
+                        <div className="absolute top-0 h-full w-[3px] rounded-full bg-[var(--ss-fg)] shadow-sm" style={{ left: `${pct}%` }} />
+                      </div>
+                      <div className="text-right">
+                        <b className="font-mono text-[11.5px]" style={{ color }}>{fmt(key, val)}</b>
+                        <div className="text-[8px] font-medium" style={{ color }}>{zone}</div>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <b className="font-mono text-[11.5px]" style={{ color }}>{fmt(key, val)}</b>
-                      <div className="text-[8px] font-medium" style={{ color }}>{zone}</div>
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <div className="mt-3.5 grid grid-cols-1 gap-3.5 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="ss-grid-2b">
         <div className="ss-card">
           <div className="ss-card-header">
             <h3 className="ss-card-title">Top 5 por característica</h3>
