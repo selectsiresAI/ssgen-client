@@ -46,21 +46,21 @@ function drawIndices(doc: jsPDF, animal: DemoAnimal, y: number): number {
     ['GM$', `$${animal.gm}`],
   ]
   const w = 29
-  const h = 10
+  const h = 11
   indices.forEach(([label, val], i) => {
     const x = 14 + i * (w + 1)
     doc.setFillColor(245, 245, 245)
-    doc.roundedRect(x, y, w, h, 1, 1, 'F')
+    doc.roundedRect(x, y, w, h, 1.5, 1.5, 'F')
     doc.setFontSize(6.5)
     doc.setTextColor(...MUTED)
-    doc.text(label, x + w / 2, y + 3.5, { align: 'center' })
-    doc.setFontSize(9)
+    doc.text(label, x + w / 2, y + 4, { align: 'center' })
+    doc.setFontSize(9.5)
     doc.setTextColor(...FG)
     doc.setFont('helvetica', 'bold')
-    doc.text(val, x + w / 2, y + 8.5, { align: 'center' })
+    doc.text(val, x + w / 2, y + 9, { align: 'center' })
     doc.setFont('helvetica', 'normal')
   })
-  return y + h + 2
+  return y + h + 5
 }
 
 function drawPedigree(doc: jsPDF, y: number): number {

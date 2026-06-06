@@ -155,7 +155,37 @@ export function BotijaoPage() {
 
   return (
     <div>
-      <div className="ss-preserved"><Droplets className="h-[15px] w-[15px]" />CRUD localStorage, exportação, nitrogênio e atualização de estoque preservados.</div>
+      <div className="ss-card mb-3.5">
+        <div className="ss-card-header">
+          <h3 className="ss-card-title">Buscar touros no banco Select Sires</h3>
+          <button className="ss-button ss-button-sm" onClick={() => setShowAdd(true)}><Plus />Adicionar ao botijão</button>
+        </div>
+        <div className="ss-card-body">
+          <div className="mb-3 flex items-center gap-2">
+            <Input placeholder="Buscar por NAAB ou nome do touro..." value={addBullSearch} onChange={(e) => setAddBullSearch(e.target.value)} className="w-[360px]" />
+            <span className="font-mono text-[11px] text-[var(--ss-muted)]">{filteredBulls.length} resultados</span>
+          </div>
+          {addBullSearch && (
+            <div className="max-h-[220px] overflow-auto rounded-md border border-[var(--ss-border)]">
+              <table className="ss-table">
+                <thead><tr><th>NAAB</th><th>Nome</th><th>Raça</th><th>Filhas</th><th></th></tr></thead>
+                <tbody>
+                  {filteredBulls.map((b) => (
+                    <tr key={b.code}>
+                      <td className="ss-mono">{b.code}</td>
+                      <td>{b.name ?? '—'}</td>
+                      <td>{b.breed ?? '—'}</td>
+                      <td className="ss-mono">{b.daughters_count}</td>
+                      <td><button className="ss-button ss-button-sm ss-button-ghost" onClick={() => { setAddSelectedBull(b); setShowAdd(true) }}><Plus className="h-3.5 w-3.5" />Adicionar</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {!addBullSearch && <p className="text-center text-[12px] text-[var(--ss-muted)]">Digite o NAAB ou nome do touro para buscar no banco de dados</p>}
+        </div>
+      </div>
       <div className="ss-grid-kpis">
         <KpiCard icon={Droplets} label="Total doses" value={stats.total} delta={`${stats.totalTouros} touros`} />
         <KpiCard icon={Droplets} label="Convencional" value={stats.convencional} delta="doses disponíveis" />
