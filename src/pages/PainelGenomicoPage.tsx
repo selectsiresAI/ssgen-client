@@ -10,22 +10,60 @@ const medalColor = ['#C99A4B', '#A9A9A9', '#B07A4B', '#CBC4BC', '#CBC4BC']
 
 // National benchmarks (simulated) — [trait, nationalAvg, top25, top10]
 const benchmarks: [string, string, number, number, number][] = [
+  // Índices
   ['hhp', 'HHP$', 680, 850, 950],
   ['gtpi', 'GTPI', 2450, 2650, 2800],
   ['nm', 'NM$', 720, 880, 960],
+  ['cm', 'CM$', 650, 830, 920],
+  ['fm', 'FM$', 670, 860, 940],
+  ['gm', 'GM$', 560, 730, 810],
+  // Produção
   ['milk', 'Leite', 1500, 1900, 2200],
   ['fat', 'Gordura', 55, 70, 85],
+  ['fat_pct', 'Gord%', 0.08, 0.14, 0.20],
   ['prot', 'Proteína', 40, 52, 62],
+  ['prot_pct', 'Prot%', 0.04, 0.07, 0.10],
+  ['cfp', 'CFP', 80, 115, 155],
+  ['fsav', 'F.Sav', 10, 18, 25],
+  ['rfi', 'RFI', -40, -58, -72],
+  ['efc', 'EFC', 45, 68, 88],
+  // Funcionais
   ['pl', 'PL', 4.0, 5.8, 7.0],
   ['dpr', 'DPR', 0.5, 1.5, 2.5],
   ['scs', 'SCS', 2.90, 2.78, 2.70],
+  ['hcr', 'HCR', 0.6, 1.4, 2.0],
+  ['ccr', 'CCR', 0.5, 1.3, 1.9],
+  ['liv', 'LIV', 1.0, 2.2, 3.2],
+  ['hliv', 'H.LIV', 0.6, 1.6, 2.4],
+  ['fi', 'FI', 0.5, 1.2, 1.8],
+  ['gl', 'GL', -0.2, -0.5, -0.8],
+  // Parto
+  ['sce', 'SCE', 2.5, 2.0, 1.7],
+  ['ssb', 'SSB', 6.5, 5.0, 4.2],
+  ['dsb', 'DSB', 6.0, 4.6, 3.8],
+  ['mf', 'MF', 6.0, 8.5, 10.5],
+  // Tipo
   ['ptat', 'Tipo', 0.20, 0.40, 0.55],
   ['udc', 'UDC', 0.15, 0.35, 0.48],
   ['flc', 'FLC', -0.90, -0.72, -0.60],
+  ['sta', 'STA', 0.25, 0.48, 0.65],
+  ['str', 'STR', 0.18, 0.38, 0.52],
+  ['dfm', 'DFM', 0.08, 0.16, 0.22],
+  ['rua', 'RUA', 0.50, 0.85, 1.10],
+  ['fua', 'FUA', 0.40, 0.72, 0.95],
+  ['ruw', 'RUW', 0.45, 0.78, 1.02],
+  ['ftp', 'FTP', 0.30, 0.60, 0.82],
+  // Saúde
+  ['mast', 'MAST', 2.5, 4.0, 5.5],
+  ['met', 'MET', 0.6, 1.4, 2.2],
+  ['rp', 'RP', 0.2, 0.5, 0.8],
+  ['da', 'DA', -0.5, -0.1, 0.0],
+  ['ket', 'KET', -0.4, -0.1, 0.0],
+  ['gfi', 'GFI', 7.5, 10.2, 12.5],
 ]
 
 function getZone(trait: string, val: number, natAvg: number, _top25: number, top10: number): { pct: number; zone: string; color: string } {
-  const inv = ['scs', 'flc'].includes(trait)
+  const inv = ['scs', 'flc', 'rfi', 'gl', 'sce', 'ssb', 'dsb', 'da', 'ket'].includes(trait)
   const range = inv ? natAvg - top10 : top10 - natAvg
   if (range === 0) return { pct: 50, zone: 'Médio', color: 'var(--ss-amber)' }
   const raw = inv ? (natAvg - val) / range : (val - natAvg) / range
@@ -60,36 +98,38 @@ export function PainelGenomicoPage() {
         <KpiCard icon={DollarSign} label="NM$ Médio" value="$921" delta="▲ +38" />
         <KpiCard icon={AlertTriangle} label="Portadores HH" value="6,3%" delta="▼ monitorar" deltaType="down" />
       </div>
-      <div className="ss-grid-2">
-        <div className="ss-card">
-          <div className="ss-card-header">
-            <h3 className="ss-card-title">Evolução genética por geração</h3>
-            <TraitSelect value={trait} onChange={setTrait} />
-          </div>
-          <div className="ss-card-body"><EvoChart trait={trait} years={trend.years} data={trendRecord[trait] as number[]} /></div>
-        </div>
-        <div>
+      <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="flex flex-col gap-3.5">
           <div className="ss-card">
-            <div className="ss-card-header"><h3 className="ss-card-title">Distribuição · {traitLabel[trait]}</h3></div>
-            <div className="ss-card-body"><DistChart trait={trait} trendData={trendRecord[trait] as number[]} /></div>
+            <div className="ss-card-header">
+              <h3 className="ss-card-title">Evolução genética por geração</h3>
+              <TraitSelect value={trait} onChange={setTrait} />
+            </div>
+            <div className="ss-card-body"><EvoChart trait={trait} years={trend.years} data={trendRecord[trait] as number[]} /></div>
           </div>
-          <div className="ss-card mt-3">
-            <div className="ss-card-header"><h3 className="ss-card-title">Perfil genético do rebanho</h3></div>
-            <div className="ss-card-body">
-              <div className="mb-2 flex items-center justify-between text-[9px] uppercase tracking-[.5px] text-[var(--ss-muted)]">
-                <span>Característica</span>
-                <div className="flex gap-6">
-                  <span className="text-[#C0633A]">● Abaixo</span>
-                  <span className="text-[var(--ss-amber)]">● Médio</span>
-                  <span className="text-[var(--ss-green)]">● Top 25%</span>
-                  <span className="text-[#1a7a42]">● Elite</span>
-                </div>
+          <div className="ss-card flex flex-1 flex-col">
+            <div className="ss-card-header"><h3 className="ss-card-title">Distribuição · {traitLabel[trait]}</h3></div>
+            <div className="ss-card-body flex-1 flex flex-col justify-center"><DistChart trait={trait} trendData={trendRecord[trait] as number[]} /></div>
+          </div>
+        </div>
+        <div className="ss-card flex flex-col self-stretch">
+          <div className="ss-card-header"><h3 className="ss-card-title">Perfil genético do rebanho</h3></div>
+          <div className="ss-card-body flex-1 overflow-hidden flex flex-col">
+            <div className="mb-3 flex shrink-0 items-center justify-between text-[9px] uppercase tracking-[.5px] text-[var(--ss-muted)]">
+              <span>Característica</span>
+              <div className="flex gap-5">
+                <span className="text-[#C0633A]">● Abaixo</span>
+                <span className="text-[var(--ss-amber)]">● Médio</span>
+                <span className="text-[var(--ss-green)]">● Top 25%</span>
+                <span className="text-[#1a7a42]">● Elite</span>
               </div>
+            </div>
+            <div className="flex-1 overflow-y-auto ss-herd-scroll">
               {benchmarks.map(([key, label, natAvg, top25, top10]) => {
                 const val = HAVG[key] ?? 0
                 const { pct, zone, color } = getZone(key, val, natAvg, top25, top10)
                 return (
-                  <div key={key} className="grid grid-cols-[70px_1fr_72px] items-center gap-2 border-b border-[var(--ss-border-2)] py-[7px] last:border-0">
+                  <div key={key} className="grid grid-cols-[72px_1fr_68px] items-center gap-2 border-b border-[var(--ss-border-2)] py-[7px] last:border-0">
                     <div className="text-[12px] font-medium text-[var(--ss-fg)]">{label}</div>
                     <div className="relative h-[10px] overflow-hidden rounded-full bg-gradient-to-r from-[#f0c4b8] via-[#f5e6c8] via-60% to-[#b8e0c8]">
                       <div className="absolute top-0 h-full w-[3px] rounded-full bg-[var(--ss-fg)] shadow-sm" style={{ left: `${pct}%` }} />
@@ -105,7 +145,7 @@ export function PainelGenomicoPage() {
           </div>
         </div>
       </div>
-      <div className="ss-grid-2b">
+      <div className="mt-3.5 grid grid-cols-1 gap-3.5 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="ss-card">
           <div className="ss-card-header">
             <h3 className="ss-card-title">Top 5 por característica</h3>
