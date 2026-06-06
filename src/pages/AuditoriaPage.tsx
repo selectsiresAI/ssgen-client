@@ -107,7 +107,7 @@ function DistribuicaoStep() {
               <TraitSelect value={trait} onChange={(v) => changeChart(idx, v)} />
             </div>
             <div className="ss-card-body">
-              <DistChart trait={trait} trendData={data} />
+              <DistChart trait={trait} trendData={data} height={360} />
             </div>
           </div>
         )

@@ -3,9 +3,10 @@ import { traitLabel } from '@/data/demoData'
 interface DistChartProps {
   trait: string
   trendData: number[]
+  height?: number
 }
 
-export function DistChart({ trait, trendData }: DistChartProps) {
+export function DistChart({ trait, trendData, height }: DistChartProps) {
   const min = Math.min(...trendData)
   const max = Math.max(...trendData)
   const span = Math.max(max - min, 1)
@@ -18,7 +19,7 @@ export function DistChart({ trait, trendData }: DistChartProps) {
 
   return (
     <div>
-      <div className="flex h-40 items-end gap-2.5 px-1 pb-5 pt-[18px]">
+      <div className="flex items-end gap-2.5 px-1 pb-5 pt-[18px]" style={{ height: height ? `${height}px` : '160px' }}>
         {bins.map((bin) => (
           <div
             key={bin.label}
