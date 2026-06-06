@@ -1,4 +1,4 @@
-import { AlertTriangle, Check, Download, Info, Plus, X } from 'lucide-react'
+import { AlertTriangle, Check, Download, Info } from 'lucide-react'
 import { useState } from 'react'
 import { EvoChart } from '@/components/charts/EvoChart'
 import { DistChart } from '@/components/charts/DistChart'
@@ -16,18 +16,22 @@ function PStat({ label, pct, count, tone }: { label: string; pct: number; count:
   )
 }
 
+const defaultTraits = ['hhp', 'gtpi', 'nm']
+
 function ProgressaoStep() {
   const trendRecord = trend as Record<string, number[] | string[]>
-  const [charts, setCharts] = useState<string[]>(['hhp', 'gtpi', 'nm'])
+  const [count, setCount] = useState(3)
+  const [charts, setCharts] = useState<string[]>(defaultTraits)
 
-  const addChart = () => {
-    const available = Object.keys(traitLabel).find((k) => !charts.includes(k) && trendRecord[k])
-    if (available) setCharts([...charts, available])
-  }
-
-  const removeChart = (idx: number) => {
-    if (charts.length <= 1) return
-    setCharts(charts.filter((_, i) => i !== idx))
+  const handleCount = (n: number) => {
+    const clamped = Math.max(1, Math.min(10, n))
+    setCount(clamped)
+    if (clamped > charts.length) {
+      const available = Object.keys(traitLabel).filter((k) => !charts.includes(k) && trendRecord[k])
+      setCharts([...charts, ...available.slice(0, clamped - charts.length)])
+    } else {
+      setCharts(charts.slice(0, clamped))
+    }
   }
 
   const changeChart = (idx: number, val: string) => {
@@ -36,6 +40,12 @@ function ProgressaoStep() {
 
   return (
     <div className="flex flex-col gap-3.5">
+      <div className="flex items-center gap-3">
+        <label className="text-[12px] font-medium text-[var(--ss-fg)]">Gráficos visíveis:</label>
+        <select value={count} onChange={(e) => handleCount(Number(e.target.value))} className="rounded-[7px] border border-[var(--ss-border)] bg-white px-2.5 py-1.5 font-mono text-[11.5px] text-[var(--ss-fg)] outline-none">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <option key={n} value={n}>{n}</option>)}
+        </select>
+      </div>
       {charts.map((trait, idx) => {
         const data = trendRecord[trait] as number[] | undefined
         if (!data) return null
@@ -44,27 +54,17 @@ function ProgressaoStep() {
           <div key={`${trait}-${idx}`} className="ss-card">
             <div className="ss-card-header">
               <h3 className="ss-card-title">Progressão · {traitLabel[trait] ?? trait.toUpperCase()}</h3>
-              <div className="flex items-center gap-2">
-                <TraitSelect value={trait} onChange={(v) => changeChart(idx, v)} />
-                {charts.length > 1 && (
-                  <button type="button" onClick={() => removeChart(idx)} className="flex h-[28px] w-[28px] items-center justify-center rounded-md border border-[var(--ss-border)] text-[var(--ss-muted)] hover:bg-[var(--ss-wash)] hover:text-[var(--ss-fg)]">
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                )}
-              </div>
+              <TraitSelect value={trait} onChange={(v) => changeChart(idx, v)} />
             </div>
             <div className="ss-card-body">
               <div className="mb-2 font-mono text-[11px] text-[var(--ss-green)]">
                 Tendência R²=0.99 · {gain >= 0 ? '+' : ''}{gain}/ano · Último: {fmt(trait, data[data.length - 1])}
               </div>
-              <EvoChart trait={trait} years={trend.years} data={data} height={280} />
+              <EvoChart trait={trait} years={trend.years} data={data} height={200} />
             </div>
           </div>
         )
       })}
-      <button type="button" onClick={addChart} className="ss-button ss-button-ghost flex items-center gap-2 self-start">
-        <Plus className="h-4 w-4" />Adicionar gráfico
-      </button>
     </div>
   )
 }
