@@ -2,31 +2,38 @@ import jsPDF from 'jspdf'
 import type { DemoAnimal } from '@/data/demoData'
 import { proof } from '@/data/demoData'
 
-const PRIMARY = [206, 14, 45] as const // #CE0E2D
+const PRIMARY = [206, 14, 45] as const
 const FG = [28, 28, 28] as const
 const MUTED = [140, 140, 140] as const
 
-function drawHeader(doc: jsPDF, animal: DemoAnimal) {
+// Compact spacings to fit everything on one page
+const LH_PED = 3      // pedigree line height
+const LH_LIN = 3      // linear line height
+const LH_ROW = 3.2    // section row height
+const SEC_GAP = 1.5    // gap between sections
+const SEC_HEAD = 4     // section header height
+
+function drawHeader(doc: jsPDF, animal: DemoAnimal, subtitle?: string) {
   doc.setFillColor(...PRIMARY)
-  doc.rect(0, 0, 210, 28, 'F')
+  doc.rect(0, 0, 210, 20, 'F')
   doc.setTextColor(255, 255, 255)
-  doc.setFontSize(16)
+  doc.setFontSize(13)
   doc.setFont('helvetica', 'bold')
-  doc.text('Select Sires', 14, 12)
-  doc.setFontSize(9)
+  doc.text('Select Sires', 14, 10)
+  doc.setFontSize(8)
   doc.setFont('helvetica', 'normal')
-  doc.text('Prova Genômica Individual', 14, 19)
-  doc.text(`Gerado: ${new Date().toLocaleDateString('pt-BR')}`, 196, 12, { align: 'right' })
-  doc.text('Base CDCB-S · 04/2026', 196, 19, { align: 'right' })
+  doc.text(subtitle ?? 'Prova Genômica Individual', 14, 16)
+  doc.text(`Gerado: ${new Date().toLocaleDateString('pt-BR')}`, 196, 10, { align: 'right' })
+  doc.text('Base CDCB-S · 04/2026', 196, 16, { align: 'right' })
 
   doc.setTextColor(...FG)
-  doc.setFontSize(14)
+  doc.setFontSize(12)
   doc.setFont('helvetica', 'bold')
-  doc.text(animal.name, 14, 38)
-  doc.setFontSize(9)
+  doc.text(animal.name, 14, 28)
+  doc.setFontSize(8)
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(...MUTED)
-  doc.text(`HO840329657664 · 99% RHA-I · Brinco ${animal.id} · Pai: ${animal.sire}`, 14, 44)
+  doc.text(`HO840329657664 · 99% RHA-I · Brinco ${animal.id} · Pai: ${animal.sire}`, 14, 33)
 }
 
 function drawIndices(doc: jsPDF, animal: DemoAnimal, y: number): number {
@@ -39,33 +46,34 @@ function drawIndices(doc: jsPDF, animal: DemoAnimal, y: number): number {
     ['GM$', `$${animal.gm}`],
   ]
   const w = 29
+  const h = 10
   indices.forEach(([label, val], i) => {
-    const x = 14 + i * (w + 2)
+    const x = 14 + i * (w + 1)
     doc.setFillColor(245, 245, 245)
-    doc.roundedRect(x, y, w, 14, 1, 1, 'F')
-    doc.setFontSize(7)
+    doc.roundedRect(x, y, w, h, 1, 1, 'F')
+    doc.setFontSize(6.5)
     doc.setTextColor(...MUTED)
-    doc.text(label, x + w / 2, y + 5, { align: 'center' })
-    doc.setFontSize(10)
+    doc.text(label, x + w / 2, y + 3.5, { align: 'center' })
+    doc.setFontSize(9)
     doc.setTextColor(...FG)
     doc.setFont('helvetica', 'bold')
-    doc.text(val, x + w / 2, y + 11, { align: 'center' })
+    doc.text(val, x + w / 2, y + 8.5, { align: 'center' })
     doc.setFont('helvetica', 'normal')
   })
-  return y + 18
+  return y + h + 2
 }
 
 function drawPedigree(doc: jsPDF, y: number): number {
-  doc.setFontSize(9)
+  doc.setFontSize(8)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(...FG)
   doc.text('PEDIGREE', 14, y)
   doc.setDrawColor(...FG)
-  doc.setLineWidth(0.4)
+  doc.setLineWidth(0.3)
   doc.line(14, y + 1, 100, y + 1)
-  y += 5
+  y += 4
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(8)
+  doc.setFontSize(7)
   for (const p of proof.ped) {
     if (p[0] === 'lact') {
       doc.setTextColor(...MUTED)
@@ -76,69 +84,64 @@ function drawPedigree(doc: jsPDF, y: number): number {
       doc.setTextColor(...FG)
       doc.text(` ${p[2]}`, 16 + doc.getTextWidth(`${p[1]} `), y)
     }
-    y += 3.5
-    if (y > 275) break
+    y += LH_PED
   }
-  return y + 2
+  return y + 1
 }
 
 function drawLinear(doc: jsPDF, startY: number): number {
-  doc.setFontSize(9)
+  doc.setFontSize(8)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(...FG)
   doc.text('LINEAR', 106, startY)
   doc.setDrawColor(...FG)
-  doc.setLineWidth(0.4)
+  doc.setLineWidth(0.3)
   doc.line(106, startY + 1, 196, startY + 1)
-  let y = startY + 5
+  let y = startY + 4
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(7)
+  doc.setFontSize(6.5)
   for (const [name, val] of proof.lin) {
     doc.setTextColor(...FG)
     doc.text(String(name), 106, y)
-    // bar
     const barX = 150
-    const barW = 30
+    const barW = 28
     const mid = barX + barW / 2
     doc.setFillColor(240, 240, 240)
-    doc.rect(barX, y - 2, barW, 2.5, 'F')
+    doc.rect(barX, y - 1.8, barW, 2, 'F')
     doc.setDrawColor(200, 200, 200)
-    doc.line(mid, y - 2, mid, y + 0.5)
+    doc.line(mid, y - 1.8, mid, y + 0.2)
     const v = Number(val)
     const half = Math.min(Math.abs(v) / 2, 1) * (barW / 2)
     const bx = v >= 0 ? mid : mid - half
     doc.setFillColor(...PRIMARY)
-    doc.rect(bx, y - 2, half, 2.5, 'F')
+    doc.rect(bx, y - 1.8, half, 2, 'F')
     doc.setTextColor(...FG)
-    doc.text(v.toFixed(2), 184, y, { align: 'right' })
-    y += 3.5
-    if (y > 275) break
+    doc.text(v.toFixed(2), 182, y, { align: 'right' })
+    y += LH_LIN
   }
-  return y + 2
+  return y + 1
 }
 
 function drawSections(doc: jsPDF, startY: number) {
   let y = startY
   for (const section of proof.sections) {
-    if (y > 255) { doc.addPage(); y = 20 }
-    doc.setFontSize(9)
+    doc.setFontSize(8)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(...FG)
     doc.text(section.t.toUpperCase(), 14, y)
     if (section.meta) {
-      doc.setFontSize(7)
+      doc.setFontSize(6)
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(...MUTED)
       doc.text(section.meta, 196, y, { align: 'right' })
     }
     doc.setDrawColor(...FG)
-    doc.setLineWidth(0.4)
+    doc.setLineWidth(0.3)
     doc.line(14, y + 1, 196, y + 1)
-    y += 5
+    y += SEC_HEAD
     doc.setFont('helvetica', 'normal')
-    doc.setFontSize(8)
+    doc.setFontSize(7)
     for (const row of section.rows) {
-      if (y > 280) { doc.addPage(); y = 20 }
       doc.setTextColor(...FG)
       doc.text(row[0], 16, y)
       doc.setFont('helvetica', 'bold')
@@ -146,83 +149,45 @@ function drawSections(doc: jsPDF, startY: number) {
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(...MUTED)
       doc.text(row[2], 114, y)
-      y += 3.8
+      y += LH_ROW
     }
-    y += 3
+    y += SEC_GAP
   }
+  return y
 }
 
-export function generateProofPdf(animal: DemoAnimal) {
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-  drawHeader(doc, animal)
-  let y = drawIndices(doc, animal, 50)
-  y += 2
-  drawPedigree(doc, y)
-  drawLinear(doc, y)
-  const maxPedY = Math.max(y + proof.ped.length * 3.5 + 4, y + proof.lin.length * 3.5 + 4)
-  drawSections(doc, maxPedY + 4)
-  // Haplotypes footer
-  doc.setFontSize(7)
+function drawOnePage(doc: jsPDF, animal: DemoAnimal, subtitle?: string) {
+  drawHeader(doc, animal, subtitle)
+  let y = drawIndices(doc, animal, 36)
+  const pedLinY = y
+  drawPedigree(doc, pedLinY)
+  const linEndY = drawLinear(doc, pedLinY)
+  const pedEndY = pedLinY + proof.ped.length * LH_PED + 5
+  const contentY = Math.max(pedEndY, linEndY) + 1
+  const secEndY = drawSections(doc, contentY)
+
+  // Haplotypes
+  const hapY = Math.max(secEndY + 2, 278)
+  doc.setFontSize(6.5)
   doc.setTextColor(...MUTED)
   doc.text(
     animal.haps.map((h) => `${h[0]}: ${h[1] === 'free' ? 'Livre' : 'Portador'}`).join(' · '),
     14,
-    285,
+    Math.min(hapY, 288),
   )
+}
+
+export function generateProofPdf(animal: DemoAnimal) {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  drawOnePage(doc, animal)
   doc.save(`prova-${animal.name.replace(/\s+/g, '-')}.pdf`)
 }
 
 export function generateCatalogPdf(animals: DemoAnimal[]) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-
   animals.forEach((animal, idx) => {
     if (idx > 0) doc.addPage()
-
-    // Cover header with catalog info
-    doc.setFillColor(...PRIMARY)
-    doc.rect(0, 0, 210, 28, 'F')
-    doc.setTextColor(255, 255, 255)
-    doc.setFontSize(16)
-    doc.setFont('helvetica', 'bold')
-    doc.text('Select Sires', 14, 12)
-    doc.setFontSize(9)
-    doc.setFont('helvetica', 'normal')
-    doc.text(`Catálogo Genômico · Fêmea ${idx + 1} de ${animals.length}`, 14, 19)
-    doc.text(`Gerado: ${new Date().toLocaleDateString('pt-BR')}`, 196, 12, { align: 'right' })
-    doc.text('Base CDCB-S · 04/2026', 196, 19, { align: 'right' })
-
-    // Animal name
-    doc.setTextColor(...FG)
-    doc.setFontSize(14)
-    doc.setFont('helvetica', 'bold')
-    doc.text(animal.name, 14, 38)
-    doc.setFontSize(9)
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(...MUTED)
-    doc.text(`HO840329657664 · 99% RHA-I · Brinco ${animal.id} · Pai: ${animal.sire}`, 14, 44)
-
-    // Indices
-    let y = drawIndices(doc, animal, 50)
-    y += 2
-
-    // Pedigree + Linear side by side
-    drawPedigree(doc, y)
-    drawLinear(doc, y)
-    const maxPedY = Math.max(y + proof.ped.length * 3.5 + 4, y + proof.lin.length * 3.5 + 4)
-
-    // Sections
-    drawSections(doc, maxPedY + 4)
-
-    // Haplotypes footer on last page of this animal
-    const pageH = doc.internal.pageSize.getHeight()
-    doc.setFontSize(7)
-    doc.setTextColor(...MUTED)
-    doc.text(
-      animal.haps.map((h) => `${h[0]}: ${h[1] === 'free' ? 'Livre' : 'Portador'}`).join(' · '),
-      14,
-      pageH - 12,
-    )
+    drawOnePage(doc, animal, `Catálogo Genômico · Fêmea ${idx + 1} de ${animals.length}`)
   })
-
   doc.save(`catalogo-genomico-${animals.length}-femeas-${new Date().toISOString().split('T')[0]}.pdf`)
 }
