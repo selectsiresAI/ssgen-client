@@ -88,9 +88,27 @@ export function BotijaoPage() {
 
   const filteredBulls = useMemo(() => {
     const source = allBulls.length > 0 ? allBulls : demoItems().map((i) => i.touro)
-    if (!addBullSearch) return source.slice(0, 20)
-    const lower = addBullSearch.toLowerCase()
-    return source.filter((b) => b.name?.toLowerCase().includes(lower) || b.code.toLowerCase().includes(lower)).slice(0, 20)
+    if (!addBullSearch) return source.slice(0, 30)
+    const q = addBullSearch.trim().toLowerCase()
+    return source.filter((b) => {
+      const code = b.code.toLowerCase()
+      const name = (b.name ?? '').toLowerCase()
+      // Direct match on code or name
+      if (code.includes(q) || name.includes(q)) return true
+      // Smart NAAB match: user types "15264" → find "7HO15264"
+      // Extract number after H/HO in the NAAB
+      const naabMatch = code.match(/^(\d+)h[o]?(\d+)$/i)
+      if (naabMatch) {
+        const prefix = naabMatch[1]  // "7"
+        const suffix = naabMatch[2]  // "15264"
+        // Match if query is just the suffix number, or prefix+H, etc.
+        if (suffix.includes(q) || prefix.includes(q)) return true
+        // User types "7H" or "7HO" or "7ho15"
+        const qNorm = q.replace(/\s+/g, '')
+        if (code.startsWith(qNorm)) return true
+      }
+      return false
+    }).slice(0, 30)
   }, [allBulls, addBullSearch])
 
   const stats = useMemo(() => {

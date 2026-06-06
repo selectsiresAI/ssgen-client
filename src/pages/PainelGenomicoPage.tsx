@@ -8,26 +8,39 @@ import { demoHerd, fmt, HAVG, traitLabel, trend } from '@/data/demoData'
 
 const medalColor = ['#C99A4B', '#A9A9A9', '#B07A4B', '#CBC4BC', '#CBC4BC']
 
+// National benchmarks (simulated) — [trait, nationalAvg, top25, top10]
+const benchmarks: [string, string, number, number, number][] = [
+  ['hhp', 'HHP$', 680, 850, 950],
+  ['gtpi', 'GTPI', 2450, 2650, 2800],
+  ['nm', 'NM$', 720, 880, 960],
+  ['milk', 'Leite', 1500, 1900, 2200],
+  ['fat', 'Gordura', 55, 70, 85],
+  ['prot', 'Proteína', 40, 52, 62],
+  ['pl', 'PL', 4.0, 5.8, 7.0],
+  ['dpr', 'DPR', 0.5, 1.5, 2.5],
+  ['scs', 'SCS', 2.90, 2.78, 2.70],
+  ['ptat', 'Tipo', 0.20, 0.40, 0.55],
+  ['udc', 'UDC', 0.15, 0.35, 0.48],
+  ['flc', 'FLC', -0.90, -0.72, -0.60],
+]
+
+function getZone(trait: string, val: number, natAvg: number, _top25: number, top10: number): { pct: number; zone: string; color: string } {
+  const inv = ['scs', 'flc'].includes(trait)
+  const range = inv ? natAvg - top10 : top10 - natAvg
+  if (range === 0) return { pct: 50, zone: 'Médio', color: 'var(--ss-amber)' }
+  const raw = inv ? (natAvg - val) / range : (val - natAvg) / range
+  const pct = Math.max(2, Math.min(98, 50 + raw * 50))
+  if (pct >= 82) return { pct, zone: 'Elite', color: '#1a7a42' }
+  if (pct >= 62) return { pct, zone: 'Top 25%', color: 'var(--ss-green)' }
+  if (pct >= 42) return { pct, zone: 'Médio', color: 'var(--ss-amber)' }
+  return { pct, zone: 'Abaixo', color: '#C0633A' }
+}
+
 export function PainelGenomicoPage() {
   const [trait, setTrait] = useState('hhp')
   const [topTrait, setTopTrait] = useState('hhp')
   const trendRecord = trend as Record<string, number[] | string[]>
   const ranked = useMemo(() => demoHerd.slice().sort((a, b) => Number(b[topTrait]) - Number(a[topTrait])).slice(0, 5), [topTrait])
-
-  // Herd stats for selected trait
-  const herdStats = useMemo(() => {
-    const vals = demoHerd.map((a) => Number(a[trait])).filter((v) => !isNaN(v))
-    if (vals.length === 0) return null
-    const sorted = [...vals].sort((a, b) => a - b)
-    const mean = vals.reduce((s, v) => s + v, 0) / vals.length
-    const median = sorted.length % 2 === 0 ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2 : sorted[Math.floor(sorted.length / 2)]
-    const sd = Math.sqrt(vals.reduce((s, v) => s + (v - mean) ** 2, 0) / vals.length)
-    const min = sorted[0]
-    const max = sorted[sorted.length - 1]
-    const q1 = sorted[Math.floor(sorted.length * 0.25)]
-    const q3 = sorted[Math.floor(sorted.length * 0.75)]
-    return { mean, median, sd, cv: sd / Math.abs(mean) * 100, min, max, q1, q3, n: vals.length }
-  }, [trait])
 
   const attention = [
     ['SCS', 'Células Somáticas', HAVG.scs, 2.50, '↓ menor é melhor'],
@@ -60,31 +73,36 @@ export function PainelGenomicoPage() {
             <div className="ss-card-header"><h3 className="ss-card-title">Distribuição · {traitLabel[trait]}</h3></div>
             <div className="ss-card-body"><DistChart trait={trait} trendData={trendRecord[trait] as number[]} /></div>
           </div>
-          {herdStats && (
-            <div className="ss-card mt-3">
-              <div className="ss-card-header"><h3 className="ss-card-title">Estatísticas do rebanho · {traitLabel[trait]}</h3></div>
-              <div className="ss-card-body">
-                <div className="grid grid-cols-4 gap-2">
-                  {[
-                    ['Média', fmt(trait, herdStats.mean)],
-                    ['Mediana', fmt(trait, herdStats.median)],
-                    ['Desv. Pad.', herdStats.sd.toFixed(2)],
-                    ['CV%', `${herdStats.cv.toFixed(1)}%`],
-                    ['Mínimo', fmt(trait, herdStats.min)],
-                    ['Máximo', fmt(trait, herdStats.max)],
-                    ['Q1', fmt(trait, herdStats.q1)],
-                    ['Q3', fmt(trait, herdStats.q3)],
-                  ].map(([label, val]) => (
-                    <div key={label} className="rounded-[8px] border border-[var(--ss-border)] bg-[var(--ss-wash)] px-2.5 py-2">
-                      <small className="block text-[8.5px] uppercase tracking-[.5px] text-[var(--ss-muted)]">{label}</small>
-                      <b className="font-mono text-[13px] text-[var(--ss-fg)]">{val}</b>
-                    </div>
-                  ))}
+          <div className="ss-card mt-3">
+            <div className="ss-card-header"><h3 className="ss-card-title">Perfil genético do rebanho</h3></div>
+            <div className="ss-card-body">
+              <div className="mb-2 flex items-center justify-between text-[9px] uppercase tracking-[.5px] text-[var(--ss-muted)]">
+                <span>Característica</span>
+                <div className="flex gap-6">
+                  <span className="text-[#C0633A]">● Abaixo</span>
+                  <span className="text-[var(--ss-amber)]">● Médio</span>
+                  <span className="text-[var(--ss-green)]">● Top 25%</span>
+                  <span className="text-[#1a7a42]">● Elite</span>
                 </div>
-                <div className="mt-2.5 text-center font-mono text-[10px] text-[var(--ss-muted)]">{herdStats.n} animais · Méd. rebanho {fmt(trait, HAVG[trait] ?? 0)}</div>
               </div>
+              {benchmarks.map(([key, label, natAvg, top25, top10]) => {
+                const val = HAVG[key] ?? 0
+                const { pct, zone, color } = getZone(key, val, natAvg, top25, top10)
+                return (
+                  <div key={key} className="grid grid-cols-[70px_1fr_72px] items-center gap-2 border-b border-[var(--ss-border-2)] py-[7px] last:border-0">
+                    <div className="text-[12px] font-medium text-[var(--ss-fg)]">{label}</div>
+                    <div className="relative h-[10px] overflow-hidden rounded-full bg-gradient-to-r from-[#f0c4b8] via-[#f5e6c8] via-60% to-[#b8e0c8]">
+                      <div className="absolute top-0 h-full w-[3px] rounded-full bg-[var(--ss-fg)] shadow-sm" style={{ left: `${pct}%` }} />
+                    </div>
+                    <div className="text-right">
+                      <b className="font-mono text-[11.5px]" style={{ color }}>{fmt(key, val)}</b>
+                      <div className="text-[8px] font-medium" style={{ color }}>{zone}</div>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
-          )}
+          </div>
         </div>
       </div>
       <div className="ss-grid-2b">
