@@ -1,9 +1,10 @@
-import { AlertTriangle, Check, Download, Info } from 'lucide-react'
+import { AlertTriangle, Check, Download, Info, Plus, X } from 'lucide-react'
 import { useState } from 'react'
 import { EvoChart } from '@/components/charts/EvoChart'
 import { DistChart } from '@/components/charts/DistChart'
 import { SegmentedControl } from '@/components/SegmentedControl'
-import { agSteps, trend } from '@/data/demoData'
+import { TraitSelect } from '@/components/TraitSelect'
+import { agSteps, fmt, trend, traitLabel } from '@/data/demoData'
 import { useAuditoria } from '@/hooks/useApi'
 
 function PStat({ label, pct, count, tone }: { label: string; pct: number; count: number; tone: 'amber' | 'green' }) {
@@ -11,6 +12,59 @@ function PStat({ label, pct, count, tone }: { label: string; pct: number; count:
     <div className="mb-2 flex items-center justify-between rounded-[9px] border border-[var(--ss-border)] px-[13px] py-[11px]">
       <div className={`flex items-center gap-2 text-[13px] font-medium ${tone === 'green' ? 'text-[var(--ss-green)]' : 'text-[var(--ss-amber)]'}`}>{tone === 'green' ? <Check className="h-[15px] w-[15px]" /> : <AlertTriangle className="h-[15px] w-[15px]" />}{label}</div>
       <div><div className="text-right text-[17px] font-bold text-[var(--ss-fg)]">{pct}%</div><div className="text-right font-mono text-[11px] text-[var(--ss-muted)]">{count} animais</div></div>
+    </div>
+  )
+}
+
+function ProgressaoStep() {
+  const trendRecord = trend as Record<string, number[] | string[]>
+  const [charts, setCharts] = useState<string[]>(['hhp', 'gtpi', 'nm'])
+
+  const addChart = () => {
+    const available = Object.keys(traitLabel).find((k) => !charts.includes(k) && trendRecord[k])
+    if (available) setCharts([...charts, available])
+  }
+
+  const removeChart = (idx: number) => {
+    if (charts.length <= 1) return
+    setCharts(charts.filter((_, i) => i !== idx))
+  }
+
+  const changeChart = (idx: number, val: string) => {
+    setCharts(charts.map((c, i) => (i === idx ? val : c)))
+  }
+
+  return (
+    <div className="flex flex-col gap-3.5">
+      {charts.map((trait, idx) => {
+        const data = trendRecord[trait] as number[] | undefined
+        if (!data) return null
+        const gain = Math.round((data[data.length - 1] - data[0]) / (data.length - 1))
+        return (
+          <div key={`${trait}-${idx}`} className="ss-card">
+            <div className="ss-card-header">
+              <h3 className="ss-card-title">Progressão · {traitLabel[trait] ?? trait.toUpperCase()}</h3>
+              <div className="flex items-center gap-2">
+                <TraitSelect value={trait} onChange={(v) => changeChart(idx, v)} />
+                {charts.length > 1 && (
+                  <button type="button" onClick={() => removeChart(idx)} className="flex h-[28px] w-[28px] items-center justify-center rounded-md border border-[var(--ss-border)] text-[var(--ss-muted)] hover:bg-[var(--ss-wash)] hover:text-[var(--ss-fg)]">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="ss-card-body">
+              <div className="mb-2 font-mono text-[11px] text-[var(--ss-green)]">
+                Tendência R²=0.99 · {gain >= 0 ? '+' : ''}{gain}/ano · Último: {fmt(trait, data[data.length - 1])}
+              </div>
+              <EvoChart trait={trait} years={trend.years} data={data} height={280} />
+            </div>
+          </div>
+        )
+      })}
+      <button type="button" onClick={addChart} className="ss-button ss-button-ghost flex items-center gap-2 self-start">
+        <Plus className="h-4 w-4" />Adicionar gráfico
+      </button>
     </div>
   )
 }
@@ -36,7 +90,7 @@ export function AuditoriaPage() {
         <div className="ss-grid-3">{[['Pai (Sire)', 8, 92], ['Avô Materno (MGS)', 19, 81], ['Bisavô Materno (MMGS)', 34, 66]].map((row) => <div key={row[0]} className="ss-card"><div className="ss-card-header"><h3 className="ss-card-title">{row[0]}</h3></div><div className="ss-card-body"><PStat label="Não informado" pct={Number(row[1])} count={Math.round(1974 * Number(row[1]) / 100)} tone="amber" /><PStat label="Informado" pct={Number(row[2])} count={Math.round(1974 * Number(row[2]) / 100)} tone="green" /></div></div>)}</div>
       </>}
       {step === 1 && <><div className="mb-3.5 flex flex-wrap gap-2"><SegmentedControl options={['Todas', 'Novilha', 'Primípara', 'Multípara'].map((x) => ({ value: x, label: x }))} value="Todas" onChange={() => undefined} /><SegmentedControl options={['Superior', 'Intermediário', 'Inferior'].map((x) => ({ value: x, label: x }))} value="Superior" onChange={() => undefined} /><SegmentedControl options={['Top 20', '30', '50'].map((x) => ({ value: x, label: x }))} value="Top 20" onChange={() => undefined} /></div><div className="ss-grid-2b">{block('Top Sires', sires)}{block('Top Maternal Grandsires', mgs)}</div></>}
-      {step === 2 && <><div className="mb-3.5 flex flex-wrap gap-1.5">{['HHP$', 'TPI', 'NM$', 'PTAM', 'PL', 'DPR', 'SCS'].map((p, i) => <span key={p} className={`ss-chip ${i < 3 ? 'ss-chip-free' : 'opacity-50'}`}>{p}</span>)}</div><div className="ss-grid-3">{[['HHP$', [612, 668, 712, 758, 801, 852, 884]], ['TPI', [2433, 2511, 2588, 2655, 2712, 2780, 2841]], ['NM$', [612, 652, 701, 742, 789, 841, 884]]].map((c) => <div key={c[0] as string} className="ss-card"><div className="ss-card-header"><h3 className="ss-card-title">Progressão · {c[0]}</h3></div><div className="ss-card-body"><div className="mb-1.5 font-mono text-[11px] text-[var(--ss-green)]">Tendência R²=0.99 · +{Math.round(((c[1] as number[])[6] - (c[1] as number[])[0]) / 6)}/ano</div><EvoChart trait="hhp" years={trend.years} data={c[1] as number[]} width={520} height={200} /></div></div>)}</div></>}
+      {step === 2 && <ProgressaoStep />}
       {step === 3 && <><div className="mb-3.5 flex flex-wrap items-center gap-2"><button className="ss-button ss-button-ghost ss-button-sm">Selecionar PTAs ▾</button><span className="ss-chip ss-chip-free">HHP$</span><span className="ss-chip ss-chip-free">TPI</span></div><div className="ss-grid-2b">{[['HHP$', 612, 180, 150, 1050], ['TPI', 2588, 210, 1980, 3120]].map((d) => <div key={String(d[0])} className="ss-card"><div className="ss-card-header"><h3 className="ss-card-title">Distribuição · {d[0]}</h3><button className="ss-button ss-button-ghost ss-button-sm"><Download />PDF</button></div><div className="ss-card-body"><div className="mb-3.5 grid grid-cols-3 gap-2 lg:grid-cols-6">{['Média', 'Mediana', 'Desv. Pad.', 'CV%', 'Mín-Máx', 'Q1-Q3'].map((s) => <div key={s} className="rounded-lg border border-[var(--ss-border)] bg-[var(--ss-wash)] px-2.5 py-2"><small className="block text-[9px] uppercase tracking-[.5px] text-[var(--ss-muted)]">{s}</small><b className="font-mono text-[13px] text-[var(--ss-fg)]">{s === 'Média' || s === 'Mediana' ? d[1] : s === 'Desv. Pad.' ? d[2] : s === 'CV%' ? `${(Number(d[2]) / Number(d[1]) * 100).toFixed(1)}%` : s === 'Mín-Máx' ? `${d[3]}-${d[4]}` : `${Math.round(Number(d[1]) - Number(d[2]) * .6)}-${Math.round(Number(d[1]) + Number(d[2]) * .6)}`}</b></div>)}</div><DistChart trait={String(d[0]).toLowerCase().replace('$', '')} trendData={String(d[0]) === 'HHP$' ? trend.hhp : trend.gtpi} /></div></div>)}</div></>}
     </div>
   )
