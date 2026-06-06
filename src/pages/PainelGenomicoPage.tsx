@@ -112,7 +112,7 @@ export function PainelGenomicoPage() {
             <div className="ss-card-body"><DistChart trait={trait} trendData={trendRecord[trait] as number[]} /></div>
           </div>
         </div>
-        <div className="ss-card flex flex-col min-h-0 overflow-hidden">
+        <div className="ss-card flex flex-col overflow-hidden" style={{ height: 0, minHeight: '100%' }}>
           <div className="ss-card-header shrink-0"><h3 className="ss-card-title">Perfil genético do rebanho</h3></div>
           <div className="ss-card-body flex-1 flex flex-col overflow-hidden min-h-0">
             <div className="mb-2 flex shrink-0 items-center justify-between text-[9px] uppercase tracking-[.5px] text-[var(--ss-muted)]">
