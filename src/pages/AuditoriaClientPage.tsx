@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { ParentescoGauge } from '@/components/charts/ParentescoGauge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -117,35 +118,31 @@ function Step1({ serviceOrderId }: { serviceOrderId: string }) {
         {(['sire', 'mgs', 'mmgs'] as const).map(role => {
           const d = byRole[role]
           const total = d.informed + d.notInformed
+          const infPct = total > 0 ? (d.informed / total) * 100 : 0
+          const niPct = total > 0 ? (d.notInformed / total) * 100 : 0
           return (
             <Card key={role}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">{roleLabels[role]}</CardTitle>
                 <p className="text-sm text-muted-foreground">{total} animais</p>
               </CardHeader>
-              <CardContent className="space-y-2">
-                {d.notInformed > 0 && (
-                  <div className="flex items-center justify-between rounded-lg border p-3">
-                    <span className="text-sm text-destructive font-medium">Nao Informado</span>
-                    <div className="text-right">
-                      <div className="text-lg font-bold">{total > 0 ? ((d.notInformed / total) * 100).toFixed(2) : '0.00'}%</div>
-                      <div className="text-xs text-muted-foreground">{d.notInformed} animais</div>
+              <CardContent>
+                {total > 0 ? (
+                  <>
+                    <ParentescoGauge pct={infPct} />
+                    <div className="mt-3 space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="flex items-center gap-2 font-medium text-emerald-600"><span className="h-2 w-2 rounded-full bg-emerald-500" />Informado</span>
+                        <span className="font-mono font-semibold">{infPct.toFixed(1)}% <span className="font-normal text-muted-foreground">· {d.informed}</span></span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="flex items-center gap-2 font-medium text-destructive"><span className="h-2 w-2 rounded-full bg-destructive" />Nao Informado</span>
+                        <span className="font-mono font-semibold text-destructive">{niPct.toFixed(1)}% <span className="font-normal text-muted-foreground">· {d.notInformed}</span></span>
+                      </div>
                     </div>
-                  </div>
-                )}
-                {d.informed > 0 && (
-                  <div className="flex items-center justify-between rounded-lg border p-3">
-                    <span className="text-sm text-emerald-500 font-medium">Informado</span>
-                    <div className="text-right">
-                      <div className="text-lg font-bold">{total > 0 ? ((d.informed / total) * 100).toFixed(2) : '0.00'}%</div>
-                      <div className="text-xs text-muted-foreground">{d.informed} animais</div>
-                    </div>
-                  </div>
-                )}
-                {total === 0 && (
-                  <div className="rounded-lg border border-dashed p-3 text-center text-xs text-muted-foreground">
-                    Sem dados
-                  </div>
+                  </>
+                ) : (
+                  <div className="rounded-lg border border-dashed p-3 text-center text-xs text-muted-foreground">Sem dados</div>
                 )}
               </CardContent>
             </Card>

@@ -1,24 +1,13 @@
-import { AlertTriangle, Check, Download, FileText, Info } from 'lucide-react'
-import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { RadarChart } from '@/components/charts/RadarChart'
-import { ComboChart } from '@/components/charts/ComboChart'
+import { Check, Info } from 'lucide-react'
+import { useState } from 'react'
 import { EvoChart } from '@/components/charts/EvoChart'
 import { DistChart } from '@/components/charts/DistChart'
-import { ScatterChart } from '@/components/charts/ScatterChart'
+import { RadarChart } from '@/components/charts/RadarChart'
+import { ParentescoGauge } from '@/components/charts/ParentescoGauge'
 import { SegmentedControl } from '@/components/SegmentedControl'
 import { TraitSelect } from '@/components/TraitSelect'
-import { agSteps, benchmarks, demoHerd, fmt, HAVG, initials, radarGroups, trend, traitLabel } from '@/data/demoData'
+import { agSteps, demoHerd, fmt, HAVG, radarGroups, trend, traitLabel } from '@/data/demoData'
 import { useAuditoria } from '@/hooks/useApi'
-
-function PStat({ label, pct, count, tone }: { label: string; pct: number; count: number; tone: 'amber' | 'green' }) {
-  return (
-    <div className="mb-2 flex items-center justify-between rounded-[9px] border border-[var(--ss-border)] px-[13px] py-[11px]">
-      <div className={`flex items-center gap-2 text-[13px] font-medium ${tone === 'green' ? 'text-[var(--ss-green)]' : 'text-[var(--ss-amber)]'}`}>{tone === 'green' ? <Check className="h-[15px] w-[15px]" /> : <AlertTriangle className="h-[15px] w-[15px]" />}{label}</div>
-      <div><div className="text-right text-[17px] font-bold text-[var(--ss-fg)]">{pct}%</div><div className="text-right font-mono text-[11px] text-[var(--ss-muted)]">{count} animais</div></div>
-    </div>
-  )
-}
 
 const defaultTraits = ['hhp', 'gtpi', 'nm']
 
@@ -61,7 +50,7 @@ function ProgressaoStep() {
               <TraitSelect value={trait} onChange={(v) => changeChart(idx, v)} />
             </div>
             <div className="ss-card-body">
-              <div className="mb-2 font-mono text-[11px] font-semibold text-[var(--ss-primary)]">
+              <div className="mb-2 font-mono text-[11px] text-[var(--ss-green)]">
                 Tendência R²=0.99 · {gain >= 0 ? '+' : ''}{gain}/ano · Último: {fmt(trait, data[data.length - 1])}
               </div>
               <EvoChart trait={trait} years={trend.years} data={data} height={160} />
@@ -120,100 +109,137 @@ function DistribuicaoStep() {
   )
 }
 
-function EvolucaoNacionalStep() {
-  const [comboTrait, setComboTrait] = useState('hhp')
-  const trendRecord = trend as Record<string, number[] | string[]>
-  const comboBench = benchmarks.find(([key]) => key === comboTrait) ?? benchmarks[0]
-  const comboHerd = trendRecord[comboTrait] as number[]
-  const comboNational = comboHerd.map((_, i) => comboBench[2] * 0.92 + ((comboBench[2] - comboBench[2] * 0.92) / (comboHerd.length - 1)) * i)
-  const comboTop25 = comboHerd.map((_, i) => comboBench[3] * 0.92 + ((comboBench[3] - comboBench[3] * 0.92) / (comboHerd.length - 1)) * i)
+// Etapa 5 (índice 4) — Evolução HHP$: Rebanho vs Nacional vs Top 25%
+const EVOL_NAT = [560, 575, 592, 608, 624, 640, 655]
+const EVOL_TOP = [720, 752, 784, 812, 838, 860, 882]
 
+function EvolucaoStep() {
+  const herd = trend.hhp
+  const years = trend.years
+  const W = 920, H = 320, padL = 20, padR = 20, padT = 40, padB = 40
+  const max = 950, plotH = H - padT - padB, plotW = W - padL - padR
+  const n = years.length, stepX = plotW / n, bw = 40
+  const y = (v: number) => padT + (1 - v / max) * plotH
+  const x = (i: number) => padL + stepX * i + stepX / 2
   return (
     <div className="ss-card">
       <div className="ss-card-header">
-        <h3 className="ss-card-title">Evolução {traitLabel[comboTrait]} — Rebanho vs Nacional vs Top 25%</h3>
-        <TraitSelect value={comboTrait} onChange={setComboTrait} />
-      </div>
-      <div className="ss-card-body pb-3">
-        <ComboChart years={trend.years} herdData={comboHerd} nationalData={comboNational} top25Data={comboTop25} trait={comboTrait} formatter={fmt} />
-      </div>
-    </div>
-  )
-}
-
-function ScatterPlotStep() {
-  const [scatterX, setScatterX] = useState('gtpi')
-  const [scatterY, setScatterY] = useState('milk')
-  const [scatterColor, setScatterColor] = useState('hhp')
-
-  return (
-    <div className="ss-card">
-      <div className="ss-card-header">
-        <h3 className="ss-card-title">Scatter Plot Individual</h3>
-        <div className="flex flex-wrap items-center gap-2">
-          <label className="text-[11.5px] font-semibold text-[var(--ss-muted)]">X</label><TraitSelect value={scatterX} onChange={setScatterX} />
-          <label className="text-[11.5px] font-semibold text-[var(--ss-muted)]">Y</label><TraitSelect value={scatterY} onChange={setScatterY} />
-          <label className="text-[11.5px] font-semibold text-[var(--ss-muted)]">Cor</label><TraitSelect value={scatterColor} onChange={setScatterColor} />
+        <h3 className="ss-card-title">Evolução HHP$ — Rebanho vs Nacional vs Top 25%</h3>
+        <div className="flex gap-4">
+          {[['Meu Rebanho', 'var(--ss-primary)'], ['Top 25%', 'var(--ss-green)'], ['Nacional', 'var(--ss-muted)']].map(([l, c]) => (
+            <span key={l} className="flex items-center gap-1.5 text-[11px] text-[var(--ss-muted)]"><span className="h-[3px] w-3 rounded-sm" style={{ background: c }} />{l}</span>
+          ))}
         </div>
       </div>
       <div className="ss-card-body">
-        <ScatterChart animals={demoHerd} xTrait={scatterX} yTrait={scatterY} colorTrait={scatterColor} herdAvg={HAVG} />
+        <svg width="100%" viewBox={`0 0 ${W} ${H}`}>
+          {[0.25, 0.5, 0.75, 1].map((g, i) => <line key={i} x1={padL} x2={W - padR} y1={padT + plotH * (1 - g)} y2={padT + plotH * (1 - g)} stroke="var(--ss-border-2)" />)}
+          {years.map((yr, i) => (
+            <g key={yr}>
+              <rect x={x(i) - bw / 2} y={y(herd[i])} width={bw} height={padT + plotH - y(herd[i])} rx={5} fill="var(--ss-primary)" opacity={i === n - 1 ? 1 : 0.82} />
+              <text x={x(i)} y={y(herd[i]) - 9} textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ss-fg)" fontFamily="Geist Mono">${herd[i]}</text>
+              <text x={x(i)} y={H - 16} textAnchor="middle" fontSize="12" fontWeight={i === n - 1 ? 700 : 500} fill={i === n - 1 ? 'var(--ss-primary)' : 'var(--ss-muted)'}>{yr}</text>
+            </g>
+          ))}
+          <polyline points={EVOL_TOP.map((v, i) => `${x(i)},${y(v)}`).join(' ')} fill="none" stroke="var(--ss-green)" strokeWidth="2.5" />
+          {EVOL_TOP.map((v, i) => <circle key={i} cx={x(i)} cy={y(v)} r="3" fill="var(--ss-green)" />)}
+          <polyline points={EVOL_NAT.map((v, i) => `${x(i)},${y(v)}`).join(' ')} fill="none" stroke="var(--ss-muted)" strokeWidth="2" strokeDasharray="5 5" />
+        </svg>
       </div>
     </div>
   )
 }
 
-const rankTraits = ['hhp', 'gtpi', 'nm', 'milk', 'fat', 'prot', 'pl', 'dpr', 'scs', 'ptat', 'udc', 'flc']
-
-function AnaliseForcasStep() {
-  const navigate = useNavigate()
-  const [trait, setTrait] = useState('hhp')
-  const [selected, setSelected] = useState(0)
-  const [radar, setRadar] = useState('indices')
-  const sorted = useMemo(() => demoHerd.map((animal, idx) => ({ animal, idx })).sort((a, b) => (trait === 'scs' || trait === 'flc') ? Number(a.animal[trait]) - Number(b.animal[trait]) : Number(b.animal[trait]) - Number(a.animal[trait])), [trait])
-  const animal = demoHerd[selected]
-  const group = radarGroups[radar]
-
+// Etapa 6 (índice 5) — Scatter Plot GTPI × HHP$
+function ScatterStep() {
+  const W = 920, H = 360, padL = 60, padR = 24, padT = 22, padB = 46
+  const plotW = W - padL - padR, plotH = H - padT - padB
+  const xMin = 2250, xMax = 2950, yMin = 620, yMax = 970
+  const xThr = Math.round(HAVG.gtpi), yThr = Math.round(HAVG.hhp)
+  const X = (v: number) => padL + ((v - xMin) / (xMax - xMin)) * plotW
+  const Y = (v: number) => padT + (1 - (v - yMin) / (yMax - yMin)) * plotH
+  const xTicks = [2300, 2450, 2600, 2750, 2900]
+  const yTicks = [650, 720, 790, 860, 930]
+  const colorFor = (a: { gtpi: number; hhp: number }) => (a.gtpi >= xThr && a.hhp >= yThr) ? 'var(--ss-green)' : (a.gtpi >= xThr || a.hhp >= yThr) ? 'var(--ss-primary)' : 'var(--ss-muted-2)'
+  const topA = demoHerd.reduce((a, b) => (a.hhp + a.gtpi > b.hhp + b.gtpi ? a : b))
   return (
-    <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1.55fr_1fr]">
-      <div className="ss-card">
-        <div className="ss-card-header">
-          <h3 className="ss-card-title">Ranking do rebanho · {demoHerd.length} animais</h3>
-          <div className="flex items-center gap-2">
-            <select className="rounded-[7px] border border-[var(--ss-border)] bg-white px-2 py-1.5 text-[12px]" value={trait} onChange={(e) => setTrait(e.target.value)}>
-              {rankTraits.map((key) => <option key={key} value={key}>{traitLabel[key]}</option>)}
-            </select>
-            <button className="ss-button ss-button-ghost ss-button-sm"><Download />Exportar</button>
-          </div>
+    <div className="ss-card">
+      <div className="ss-card-header">
+        <h3 className="ss-card-title">Dispersão · GTPI × HHP$</h3>
+        <div className="flex gap-4">
+          {[['Elite (alto/alto)', 'var(--ss-green)'], ['Acima da média', 'var(--ss-primary)'], ['Abaixo da média', 'var(--ss-muted-2)']].map(([l, c]) => (
+            <span key={l} className="flex items-center gap-1.5 text-[11px] text-[var(--ss-muted)]"><span className="h-[9px] w-[9px] rounded-full" style={{ background: c }} />{l}</span>
+          ))}
         </div>
-        <div className="max-h-[calc(100vh-160px)] overflow-auto p-2.5">
-          {sorted.map(({ animal: row, idx }, i) => (
-            <button key={row.id} type="button" onClick={() => setSelected(idx)} className={`ss-rrow w-full text-left ${idx === selected ? 'is-selected' : ''}`}>
-              <div className="text-center font-mono text-xs text-[var(--ss-muted)]">{i + 1}</div>
-              <div><div className="text-[13.5px] font-medium text-[var(--ss-fg)]">{row.name}</div><div className="font-mono text-[11px] text-[var(--ss-muted)]">{row.sire} · {row.id}</div></div>
-              <div className="text-right"><b className="block font-mono text-[13px] font-medium text-[var(--ss-fg)]">{fmt(trait, Number(row[trait]))}</b><small className="text-[8.5px] uppercase tracking-[.6px] text-[var(--ss-muted-2)]">{traitLabel[trait]}</small></div>
-              <div className="text-right"><b className="block font-mono text-[13px] font-medium text-[var(--ss-fg)]">${row.hhp}</b><small className="text-[8.5px] uppercase tracking-[.6px] text-[var(--ss-muted-2)]">HHP$</small></div>
-            </button>
+      </div>
+      <div className="ss-card-body">
+        <svg width="100%" viewBox={`0 0 ${W} ${H}`}>
+          <rect x={X(xThr)} y={padT} width={padL + plotW - X(xThr)} height={Y(yThr) - padT} fill="var(--ss-green)" opacity="0.06" />
+          {yTicks.map((t) => (
+            <g key={'y' + t}>
+              <line x1={padL} x2={W - padR} y1={Y(t)} y2={Y(t)} stroke="var(--ss-border-2)" />
+              <text x={padL - 10} y={Y(t)} textAnchor="end" dominantBaseline="middle" fontSize="11" fill="var(--ss-muted-2)" fontFamily="Geist Mono">${t}</text>
+            </g>
+          ))}
+          {xTicks.map((t) => (
+            <g key={'x' + t}>
+              <line x1={X(t)} x2={X(t)} y1={padT} y2={padT + plotH} stroke="var(--ss-border-2)" />
+              <text x={X(t)} y={padT + plotH + 22} textAnchor="middle" fontSize="11" fill="var(--ss-muted-2)" fontFamily="Geist Mono">+{t}</text>
+            </g>
+          ))}
+          <line x1={X(xThr)} x2={X(xThr)} y1={padT} y2={padT + plotH} stroke="var(--ss-border)" strokeDasharray="5 5" />
+          <line x1={padL} x2={W - padR} y1={Y(yThr)} y2={Y(yThr)} stroke="var(--ss-border)" strokeDasharray="5 5" />
+          <text x={padL + plotW / 2} y={H - 8} textAnchor="middle" fontSize="11.5" fontWeight="700" fill="var(--ss-muted)">GTPI →</text>
+          <text x={16} y={padT + plotH / 2} textAnchor="middle" fontSize="11.5" fontWeight="700" fill="var(--ss-muted)" transform={`rotate(-90 16 ${padT + plotH / 2})`}>HHP$ →</text>
+          {demoHerd.map((a) => {
+            const isTop = a === topA
+            const near = X(a.gtpi) > padL + plotW * 0.72
+            return (
+              <g key={a.id}>
+                <circle cx={X(a.gtpi)} cy={Y(a.hhp)} r={isTop ? 8 : 6} fill={colorFor(a)} fillOpacity={isTop ? 1 : 0.82} stroke="#fff" strokeWidth={isTop ? 2.5 : 1.5} />
+                {isTop && <text x={X(a.gtpi) + (near ? -13 : 13)} y={Y(a.hhp) - 9} textAnchor={near ? 'end' : 'start'} fontSize="11.5" fontWeight="700" fill="var(--ss-fg)">{a.name}</text>}
+              </g>
+            )
+          })}
+        </svg>
+      </div>
+    </div>
+  )
+}
+
+// Etapa 7 (índice 6) — Análise de Forças: ranking + radar
+function ForcasStep() {
+  const top = [...demoHerd].sort((a, b) => b.hhp - a.hhp).slice(0, 9)
+  const leader = top[0]
+  const grp = radarGroups.indices
+  const animal = grp.traits.reduce((o, t) => { o[t] = Number((leader as unknown as Record<string, number>)[t]); return o }, {} as Record<string, number>)
+  const chips: [string, string][] = [['HHP$', fmt('hhp', leader.hhp)], ['GTPI', fmt('gtpi', leader.gtpi)], ['NM$', fmt('nm', leader.nm)], ['CM$', fmt('cm', (leader as unknown as Record<string, number>).cm)]]
+  return (
+    <div className="ss-grid-2">
+      <div className="ss-card">
+        <div className="ss-card-header"><h3 className="ss-card-title">Ranking do Rebanho · HHP$</h3></div>
+        <div className="ss-card-body">
+          {top.map((a, i) => (
+            <div key={a.id} className="grid grid-cols-[20px_1fr_70px] items-center gap-2.5 border-b border-[var(--ss-border-2)] py-2 last:border-0">
+              <span className={`font-mono text-[12px] font-bold ${i < 3 ? 'text-[var(--ss-primary)]' : 'text-[var(--ss-muted-2)]'}`}>{i + 1}</span>
+              <div><div className="text-[12.5px] font-semibold text-[var(--ss-fg)]">{a.name}</div><div className="font-mono text-[10px] text-[var(--ss-muted-2)]">{a.sire} · {a.id}</div></div>
+              <span className="text-right font-mono text-[13px] font-bold text-[var(--ss-fg)]">${a.hhp}</span>
+            </div>
           ))}
         </div>
       </div>
       <div className="ss-card">
-        <div className="ss-card-header"><h3 className="ss-card-title">Perfil do animal</h3><button className="ss-button ss-button-ghost ss-button-sm" onClick={() => navigate('/provas')}><FileText />Ver prova</button></div>
+        <div className="ss-card-header"><h3 className="ss-card-title">Perfil · {leader.name}</h3></div>
         <div className="ss-card-body">
-          <div className="mb-4 flex items-center gap-[13px]">
-            <div className="flex h-12 w-12 items-center justify-center rounded-[13px] bg-[var(--ss-primary-soft)] text-[15px] font-bold text-[var(--ss-primary)]">{initials(animal.name)}</div>
-            <div><b className="block text-base font-semibold text-[var(--ss-fg)]">{animal.name}</b><span className="font-mono text-xs text-[var(--ss-muted)]">{animal.sire} · Filha</span></div>
-          </div>
-          <SegmentedControl options={Object.entries(radarGroups).map(([value, g]) => ({ value, label: g.label }))} value={radar} onChange={setRadar} wrap size="sm" />
-          <div className="mx-auto max-w-[320px]"><RadarChart animal={animal as unknown as Record<string, number>} avg={HAVG} group={group} /></div>
-          <div className="mb-3 mt-1 flex justify-center gap-4 font-mono text-[10px] text-[var(--ss-muted)]"><span>Animal</span><span>Média</span></div>
+          <RadarChart animal={animal} avg={HAVG} group={grp} />
           <div className="mt-3 grid grid-cols-2 gap-2">
-            {group.traits.map((t, i) => {
-              const av = Number(animal[t]); const hv = HAVG[t]; const inv = ['scs', 'flc', 'da', 'ket', 'rfi', 'ssb', 'dsb', 'gl'].includes(t); const better = inv ? av < hv : av > hv
-              return <div key={t} className="rounded-[9px] border border-[var(--ss-border)] bg-[var(--ss-wash)] px-[11px] py-[9px]"><small className="block text-[8.5px] uppercase tracking-[.6px] text-[var(--ss-muted)]">{group.names[i]}</small><b className="font-mono text-sm font-medium text-[var(--ss-fg)]">{fmt(t, av)}</b><span className={`ml-1 font-mono text-[9px] ${better ? 'text-[var(--ss-green)]' : 'text-[#C0633A]'}`}>méd {fmt(t, hv)} {av === hv ? '' : better ? '▲' : '▼'}</span></div>
-            })}
+            {chips.map(([k, v]) => (
+              <div key={k} className="rounded-[9px] bg-[var(--ss-wash)] px-[11px] py-2">
+                <div className="text-[8.5px] font-semibold uppercase tracking-[1px] text-[var(--ss-muted-2)]">{k}</div>
+                <div className="mt-0.5 font-mono text-[14px] font-bold text-[var(--ss-fg)]">{v}</div>
+              </div>
+            ))}
           </div>
-          <div className="mt-3 flex flex-wrap gap-1.5">{animal.haps.map((h) => <span key={h[0]} className={`ss-chip ${h[1] === 'free' ? 'ss-chip-free' : 'ss-chip-carr'}`}>{h[0]} · {h[1] === 'free' ? 'Livre' : 'Portador'}</span>)}</div>
         </div>
       </div>
     </div>
@@ -230,22 +256,45 @@ export function AuditoriaPage() {
     return <div className="ss-card"><div className="ss-card-header"><h3 className="ss-card-title">{title}</h3></div><div className="ss-card-body">{rows.map((r) => <div key={String(r[0])} className="grid grid-cols-[170px_1fr_44px_44px] items-center gap-2 py-[3px] text-xs"><div className="overflow-hidden text-ellipsis text-right font-mono text-[var(--ss-fg)]"><small className="text-[var(--ss-muted)]">{r[1]}</small> {r[0]}</div><div className="h-[18px] rounded-sm bg-[var(--ss-primary-soft)]" style={{ width: `${Number(r[2]) / max * 100}%` }} /><div className="text-right font-mono font-semibold">{r[2]}</div><div className="text-right font-mono text-[10px] text-[var(--ss-muted)]">{(Number(r[2]) / total * 100).toFixed(1)}%</div></div>)}</div></div>
   }
 
+  // [label, % não informado, % informado] — base de 1974 animais
+  const parentesco: [string, number, number][] = [['Pai (Sire)', 8, 92], ['Avô Materno (MGS)', 19, 81], ['Bisavô Materno (MMGS)', 34, 66]]
+  const BASE = 1974
+
   return (
     <div>
       <div className="ss-preserved"><Check className="h-[15px] w-[15px]" />Auditoria genética preservada com fluxo sequencial e visualização por etapas.</div>
-      <div className="mb-4 flex flex-wrap gap-[6px]">
-        {agSteps.map((s, i) => <button key={s.n} onClick={() => setStep(i)} className={`inline-flex items-center gap-2 rounded-[9px] border px-4 py-2 text-[12px] font-semibold transition ${i === step ? 'border-[var(--ss-primary)] bg-[var(--ss-primary)] text-white shadow-[0_3px_10px_rgba(185,28,28,.2)]' : 'border-[var(--ss-border)] bg-white text-[var(--ss-muted)] hover:border-[#999] hover:text-[var(--ss-text)]'}`}><span className={`flex h-5 w-5 items-center justify-center rounded-[6px] font-mono text-[10px] font-bold ${i === step ? 'bg-white/20 text-white' : 'bg-[var(--ss-border-2)] text-[var(--ss-muted)]'}`}>{i + 1}</span>{s.t}</button>)}
+      <div className="mb-4 flex flex-wrap gap-[7px]">
+        {agSteps.map((s, i) => <button key={s.n} onClick={() => setStep(i)} className={`inline-flex items-center gap-[7px] rounded-full border px-[13px] py-[7px] text-[12.5px] font-medium transition ${i === step ? 'border-[var(--ss-primary)] bg-[var(--ss-primary)] text-white' : 'border-[var(--ss-border)] bg-white text-[var(--ss-text)] hover:bg-[var(--ss-wash)]'}`}><span className={`flex h-[18px] w-[18px] items-center justify-center rounded-full font-mono text-[10px] font-semibold ${i === step ? 'bg-white/25 text-white' : 'bg-[var(--ss-wash)] text-[var(--ss-muted)]'}`}>{i + 1}</span>{s.t}</button>)}
       </div>
       {step === 0 && <>
         <div className="mb-4 flex gap-3 rounded-[10px] border border-[var(--ss-border)] bg-[var(--ss-wash)] px-4 py-3.5 text-[12.5px] leading-6"><Info className="mt-0.5 h-[17px] w-[17px] shrink-0 text-[var(--ss-primary)]" /><div><b>Como interpretar.</b> <span className="text-[var(--ss-primary)]">Não informado</span>: parentesco ausente no registro. <span className="text-[var(--ss-green)]">Informado</span>: pai/avô materno preenchidos.</div></div>
-        <div className="ss-grid-3">{[['Pai (Sire)', 8, 92], ['Avô Materno (MGS)', 19, 81], ['Bisavô Materno (MMGS)', 34, 66]].map((row) => <div key={row[0]} className="ss-card"><div className="ss-card-header"><h3 className="ss-card-title">{row[0]}</h3></div><div className="ss-card-body"><PStat label="Não informado" pct={Number(row[1])} count={Math.round(1974 * Number(row[1]) / 100)} tone="amber" /><PStat label="Informado" pct={Number(row[2])} count={Math.round(1974 * Number(row[2]) / 100)} tone="green" /></div></div>)}</div>
+        <div className="ss-grid-3">
+          {parentesco.map(([label, naoInf, inf]) => (
+            <div key={label} className="ss-card">
+              <div className="ss-card-header"><h3 className="ss-card-title">{label}</h3></div>
+              <div className="ss-card-body">
+                <ParentescoGauge pct={inf} />
+                <div className="mt-3 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-[13px] font-medium text-[var(--ss-green)]"><span className="h-2 w-2 rounded-full bg-[var(--ss-green)]" />Informado</span>
+                    <span className="ss-mono text-[13px] font-semibold text-[var(--ss-fg)]">{inf}% <span className="text-[11px] font-normal text-[var(--ss-muted)]">· {Math.round(BASE * inf / 100)}</span></span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-[13px] font-medium text-[var(--ss-amber)]"><span className="h-2 w-2 rounded-full bg-[var(--ss-amber)]" />Não informado</span>
+                    <span className="ss-mono text-[13px] font-semibold text-[var(--ss-amber)]">{naoInf}% <span className="text-[11px] font-normal text-[var(--ss-muted)]">· {Math.round(BASE * naoInf / 100)}</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </>}
       {step === 1 && <><div className="mb-3.5 flex flex-wrap gap-2"><SegmentedControl options={['Todas', 'Novilha', 'Primípara', 'Multípara'].map((x) => ({ value: x, label: x }))} value="Todas" onChange={() => undefined} /><SegmentedControl options={['Superior', 'Intermediário', 'Inferior'].map((x) => ({ value: x, label: x }))} value="Superior" onChange={() => undefined} /><SegmentedControl options={['Top 20', '30', '50'].map((x) => ({ value: x, label: x }))} value="Top 20" onChange={() => undefined} /></div><div className="ss-grid-2b">{block('Top Sires', sires)}{block('Top Maternal Grandsires', mgs)}</div></>}
       {step === 2 && <ProgressaoStep />}
       {step === 3 && <DistribuicaoStep />}
-      {step === 4 && <EvolucaoNacionalStep />}
-      {step === 5 && <ScatterPlotStep />}
-      {step === 6 && <AnaliseForcasStep />}
+      {step === 4 && <EvolucaoStep />}
+      {step === 5 && <ScatterStep />}
+      {step === 6 && <ForcasStep />}
     </div>
   )
 }
