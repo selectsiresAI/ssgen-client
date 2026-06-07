@@ -11,12 +11,12 @@ interface KpiCardProps {
 export function KpiCard({ icon: Icon, label, value, delta, deltaType = 'up' }: KpiCardProps) {
   return (
     <div className="ss-kpi">
-      <div className="mb-[9px] flex items-center gap-[7px] text-[11px] font-medium text-[var(--ss-muted)]">
-        <Icon className="h-3.5 w-3.5 text-[var(--ss-primary)]" strokeWidth={1.8} />
-        {label}
+      <div className="mb-[6px] text-[10px] font-bold uppercase tracking-[1.5px] text-[var(--ss-muted)]">
+        <Icon className="mb-1 h-3.5 w-3.5 text-[var(--ss-primary)]" strokeWidth={1.8} />
+        <span className="ml-1">{label}</span>
       </div>
-      <div className="text-[25px] font-bold leading-none tracking-[-0.5px] text-[var(--ss-fg)]">{value}</div>
-      <div className={`mt-[7px] font-mono text-[11px] ${deltaType === 'up' ? 'text-[var(--ss-green)]' : 'text-[#C0633A]'}`}>
+      <div className="font-mono text-[26px] font-black leading-none tracking-[-1.5px] text-[var(--ss-fg)]">{value}</div>
+      <div className={`mt-[4px] font-mono text-[11px] font-semibold ${deltaType === 'up' ? 'text-[var(--ss-green)]' : 'text-[#C0633A]'}`}>
         {delta}
       </div>
     </div>

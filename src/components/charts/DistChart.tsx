@@ -19,19 +19,19 @@ export function DistChart({ trait, trendData, height }: DistChartProps) {
 
   return (
     <div>
-      <div className="flex items-end gap-2.5 px-1 pb-5 pt-[18px]" style={{ height: height ? `${height}px` : '160px' }}>
+      <div className="flex items-end gap-2.5 px-1 pb-6 pt-[18px]" style={{ height: height ? `${height}px` : '160px' }}>
         {bins.map((bin) => (
           <div
             key={bin.label}
-            className="relative min-h-1 flex-1 rounded-t-[5px] border-t-2 border-[var(--ss-primary)] bg-[var(--ss-primary-soft)]"
+            className="relative min-h-1 flex-1 rounded-t-[5px] bg-[linear-gradient(180deg,rgba(185,28,28,.85),rgba(185,28,28,.4))]"
             style={{ height: `${Math.max(4, (bin.count / maxCount) * 100)}%` }}
           >
-            <span className="absolute -top-[19px] left-0 right-0 text-center font-mono text-[10px] text-[var(--ss-muted)]">{bin.count}</span>
-            <i className="absolute -bottom-5 left-0 right-0 text-center font-mono text-[9px] not-italic text-[var(--ss-muted)]">{bin.label}</i>
+            <span className="absolute -top-[22px] left-0 right-0 text-center font-mono text-[13px] font-extrabold text-[var(--ss-fg)]">{bin.count}</span>
+            <i className="absolute -bottom-6 left-0 right-0 text-center font-mono text-[12px] font-semibold not-italic text-[var(--ss-muted)]">{bin.label}</i>
           </div>
         ))}
       </div>
-      <div className="text-center font-mono text-[10px] text-[var(--ss-muted)]">Distribuição simulada · {traitLabel[trait] ?? trait}</div>
+      <div className="mt-2 text-center font-mono text-[11px] font-medium text-[var(--ss-muted)]">Distribuição simulada · {traitLabel[trait] ?? trait}</div>
     </div>
   )
 }

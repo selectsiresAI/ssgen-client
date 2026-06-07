@@ -10,9 +10,9 @@ const DashboardPage = lazy(() => import('@/pages/DashboardPage').then((m) => ({ 
 const AdminPage = lazy(() => import('@/pages/AdminPage').then((m) => ({ default: m.AdminPage })))
 const PainelGenomicoPage = lazy(() => import('@/pages/PainelGenomicoPage').then((m) => ({ default: m.PainelGenomicoPage })))
 const ProvasPage = lazy(() => import('@/pages/ProvasPage').then((m) => ({ default: m.ProvasPage })))
-const RebanhoPage = lazy(() => import('@/pages/RebanhoPage').then((m) => ({ default: m.RebanhoPage })))
 const AuditoriaPage = lazy(() => import('@/pages/AuditoriaPage').then((m) => ({ default: m.AuditoriaPage })))
 const BotijaoPage = lazy(() => import('@/pages/BotijaoPage').then((m) => ({ default: m.BotijaoPage })))
+const HerdListPage = lazy(() => import('@/pages/HerdListPage').then((m) => ({ default: m.HerdListPage })))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -47,8 +47,9 @@ export default function App() {
             <Route path="/" element={<Suspense fallback={<PageLoader />}><DashboardPage /></Suspense>} />
             <Route path="/painel" element={<Suspense fallback={<PageLoader />}><PainelGenomicoPage /></Suspense>} />
             <Route path="/admin" element={<Suspense fallback={<PageLoader />}><AdminPage /></Suspense>} />
-            <Route path="/herd" element={<Suspense fallback={<PageLoader />}><RebanhoPage /></Suspense>} />
-            <Route path="/rebanho" element={<Navigate to="/herd" replace />} />
+            <Route path="/lista-rebanho" element={<Suspense fallback={<PageLoader />}><HerdListPage /></Suspense>} />
+            <Route path="/herd" element={<Navigate to="/lista-rebanho" replace />} />
+            <Route path="/rebanho" element={<Navigate to="/lista-rebanho" replace />} />
             <Route path="/provas" element={<Suspense fallback={<PageLoader />}><ProvasPage /></Suspense>} />
             <Route path="/semen" element={<Suspense fallback={<PageLoader />}><BotijaoPage /></Suspense>} />
             <Route path="/botijao" element={<Navigate to="/semen" replace />} />

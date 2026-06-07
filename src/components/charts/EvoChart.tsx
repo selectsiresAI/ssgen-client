@@ -30,24 +30,24 @@ export function EvoChart({ data, years, trait, width = 540, height = 220 }: EvoC
         const gy = y(gv)
         return (
           <g key={k}>
-            <line x1={pl} y1={gy} x2={width - pr} y2={gy} stroke="#F3F0EC" />
-            <text x={pl - 8} y={gy + 3} fontFamily="Geist Mono" fontSize="9" fill="#78716C" textAnchor="end">
+            <line x1={pl} y1={gy} x2={width - pr} y2={gy} stroke="var(--ss-border-2)" />
+            <text x={pl - 8} y={gy + 3} fontFamily="var(--ss-mono)" fontSize="10" fill="var(--ss-muted)" textAnchor="end">
               {Math.round(gv)}
             </text>
           </g>
         )
       })}
       {years.map((yr, i) => (
-        <text key={yr} x={x(i)} y={height - 9} fontFamily="Geist Mono" fontSize="9" fill="#78716C" textAnchor="middle">
+        <text key={yr} x={x(i)} y={height - 9} fontFamily="var(--ss-mono)" fontSize="10" fill="var(--ss-muted)" textAnchor="middle">
           {yr}
         </text>
       ))}
-      <polygon points={area} fill="rgba(206,14,45,.06)" />
-      <polyline points={points.join(' ')} fill="none" stroke="#CE0E2D" strokeWidth="2" strokeLinejoin="round" />
+      <polygon points={area} fill="rgba(185,28,28,.06)" />
+      <polyline points={points.join(' ')} fill="none" stroke="var(--ss-primary)" strokeWidth="2" strokeLinejoin="round" />
       {data.map((v, i) => (
-        <circle key={`${v}-${i}`} cx={x(i)} cy={y(v)} r="3" fill="#fff" stroke="#CE0E2D" strokeWidth="1.6" />
+        <circle key={`${v}-${i}`} cx={x(i)} cy={y(v)} r="3.5" fill="#fff" stroke="var(--ss-primary)" strokeWidth="1.8" />
       ))}
-      <text x={width - pr - 6} y={y(data[data.length - 1]) - 9} fontFamily="Geist Mono" fontSize="11" fill="#CE0E2D" textAnchor="end">
+      <text x={width - pr - 6} y={y(data[data.length - 1]) - 9} fontFamily="var(--ss-mono)" fontSize="12" fontWeight="800" fill="var(--ss-primary)" textAnchor="end">
         {traitLabel[trait] ?? trait.toUpperCase()} {fmt(trait, data[data.length - 1])}
       </text>
     </svg>

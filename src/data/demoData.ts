@@ -71,6 +71,18 @@ export const demoHerd: DemoAnimal[] = [
   { ...defaults, id: '7420', name: 'Sape Joia 7420', sire: '7HO15388', gtpi: 2698, nm: 842, hhp: 838, milk: 1760, dpr: 2.1, pl: 6.4, scs: 2.74, haps: [['HH1', 'free'], ['HH3', 'free'], ['HH4', 'free'], ['HCD', 'free'], ['Brachy', 'free'], ['BLAD', 'free']] },
   { ...defaults, id: '6602', name: 'Sape Pérola 6602', sire: '7HO14921', gtpi: 2654, nm: 818, hhp: 826, milk: 1920, dpr: 0.6, pl: 5.1, scs: 2.95, haps: [['HH1', 'free'], ['HH3', 'carr'], ['HH4', 'free'], ['HCD', 'free'], ['Brachy', 'carr'], ['BLAD', 'free']] },
   { ...defaults, id: '7188', name: 'Sape Rainha 7188', sire: '7HO15102', gtpi: 2611, nm: 799, hhp: 804, milk: 1690, dpr: 2.9, pl: 7.4, scs: 2.62, haps: [['HH1', 'free'], ['HH3', 'free'], ['HH4', 'free'], ['HCD', 'free'], ['Brachy', 'free'], ['BLAD', 'free']] },
+  { ...defaults, id: '7501', name: 'Sape Safira 7501', sire: '7HO15388', gtpi: 2580, nm: 785, hhp: 792, milk: 1820, dpr: 1.6, pl: 5.7, scs: 2.84, haps: [['HH1', 'free'], ['HH3', 'free'], ['HH4', 'free'], ['HCD', 'free'], ['Brachy', 'free'], ['BLAD', 'free']] },
+  { ...defaults, id: '6890', name: 'Sape Lua 6890', sire: '7HO14758', gtpi: 2548, nm: 770, hhp: 778, milk: 1950, dpr: 1.0, pl: 5.3, scs: 2.88, haps: [['HH1', 'free'], ['HH3', 'carr'], ['HH4', 'free'], ['HCD', 'free'], ['Brachy', 'free'], ['BLAD', 'free']] },
+  { ...defaults, id: '7055', name: 'Sape Flor 7055', sire: '7HO15264', gtpi: 2520, nm: 758, hhp: 765, milk: 1710, dpr: 2.3, pl: 6.6, scs: 2.70, haps: [['HH1', 'free'], ['HH3', 'free'], ['HH4', 'free'], ['HCD', 'free'], ['Brachy', 'free'], ['BLAD', 'free']] },
+  { ...defaults, id: '7390', name: 'Sape Brisa 7390', sire: '7HO14921', gtpi: 2495, nm: 742, hhp: 751, milk: 2080, dpr: 0.4, pl: 4.9, scs: 2.97, haps: [['HH1', 'free'], ['HH3', 'free'], ['HH4', 'carr'], ['HCD', 'free'], ['Brachy', 'free'], ['BLAD', 'free']] },
+  { ...defaults, id: '6520', name: 'Sape Cristal 6520', sire: '7HO15102', gtpi: 2468, nm: 728, hhp: 738, milk: 1640, dpr: 2.5, pl: 7.0, scs: 2.68, haps: [['HH1', 'free'], ['HH3', 'free'], ['HH4', 'free'], ['HCD', 'carr'], ['Brachy', 'free'], ['BLAD', 'free']] },
+  { ...defaults, id: '7145', name: 'Sape Jade 7145', sire: '7HO15388', gtpi: 2440, nm: 715, hhp: 724, milk: 1880, dpr: 1.8, pl: 6.1, scs: 2.76, haps: [['HH1', 'carr'], ['HH3', 'free'], ['HH4', 'free'], ['HCD', 'free'], ['Brachy', 'free'], ['BLAD', 'free']] },
+  { ...defaults, id: '6678', name: 'Sape Mel 6678', sire: '7HO14758', gtpi: 2415, nm: 701, hhp: 710, milk: 1790, dpr: 1.4, pl: 5.5, scs: 2.83, haps: [['HH1', 'free'], ['HH3', 'free'], ['HH4', 'free'], ['HCD', 'free'], ['Brachy', 'carr'], ['BLAD', 'free']] },
+  { ...defaults, id: '7280', name: 'Sape Rubi 7280', sire: '7HO15264', gtpi: 2388, nm: 688, hhp: 696, milk: 1960, dpr: 0.9, pl: 5.2, scs: 2.90, haps: [['HH1', 'free'], ['HH3', 'carr'], ['HH4', 'free'], ['HCD', 'free'], ['Brachy', 'free'], ['BLAD', 'free']] },
+  { ...defaults, id: '6445', name: 'Sape Neve 6445', sire: '7HO14921', gtpi: 2360, nm: 674, hhp: 682, milk: 1580, dpr: 2.6, pl: 6.9, scs: 2.66, haps: [['HH1', 'free'], ['HH3', 'free'], ['HH4', 'free'], ['HCD', 'free'], ['Brachy', 'free'], ['BLAD', 'free']] },
+  { ...defaults, id: '7468', name: 'Sape Coral 7468', sire: '7HO15102', gtpi: 2335, nm: 660, hhp: 668, milk: 1730, dpr: 1.1, pl: 5.6, scs: 2.86, haps: [['HH1', 'free'], ['HH3', 'free'], ['HH4', 'free'], ['HCD', 'free'], ['Brachy', 'free'], ['BLAD', 'carr']] },
+  { ...defaults, id: '6812', name: 'Sape Oliva 6812', sire: '7HO15388', gtpi: 2310, nm: 648, hhp: 655, milk: 1850, dpr: 2.0, pl: 6.3, scs: 2.73, haps: [['HH1', 'free'], ['HH3', 'free'], ['HH4', 'free'], ['HCD', 'free'], ['Brachy', 'free'], ['BLAD', 'free']] },
+  { ...defaults, id: '7022', name: 'Sape Rosa 7022', sire: '7HO14758', gtpi: 2285, nm: 635, hhp: 642, milk: 1670, dpr: 1.7, pl: 5.8, scs: 2.79, haps: [['HH1', 'free'], ['HH3', 'free'], ['HH4', 'carr'], ['HCD', 'free'], ['Brachy', 'free'], ['BLAD', 'free']] },
 ]
 
 export const HAVG: Record<string, number> = {
@@ -137,7 +149,54 @@ export const botijaoDemo: BotijaoDemoItem[] = [
   { naab: '250HO16021', nome: 'Peak Altahotrod', emp: 'Alta', tipo: 'Convencional', doses: 12, preco: 72, Nov: 0, Prim: 0, Sec: 0, Mult: 0, Doa: 3, Int: 5, Rec: 4 },
 ]
 
-export const agSteps = [{ n: 0, t: 'Parentesco' }, { n: 1, t: 'Top Pais' }, { n: 3, t: 'Progressão' }, { n: 6, t: 'Distribuição' }]
+export const agSteps = [{ n: 0, t: 'Parentesco' }, { n: 1, t: 'Top Pais' }, { n: 3, t: 'Progressão' }, { n: 6, t: 'Distribuição' }, { n: 7, t: 'Evolução vs Nacional' }, { n: 8, t: 'Scatter Plot' }, { n: 9, t: 'Análise de Forças' }]
+
+export const benchmarks: [string, string, number, number, number][] = [
+  ['hhp', 'HHP$', 680, 850, 950],
+  ['gtpi', 'GTPI', 2450, 2650, 2800],
+  ['nm', 'NM$', 720, 880, 960],
+  ['cm', 'CM$', 650, 830, 920],
+  ['fm', 'FM$', 670, 860, 940],
+  ['gm', 'GM$', 560, 730, 810],
+  ['milk', 'Leite', 1500, 1900, 2200],
+  ['fat', 'Gordura', 55, 70, 85],
+  ['fat_pct', 'Gord%', 0.08, 0.14, 0.20],
+  ['prot', 'Proteína', 40, 52, 62],
+  ['prot_pct', 'Prot%', 0.04, 0.07, 0.10],
+  ['cfp', 'CFP', 80, 115, 155],
+  ['fsav', 'F.Sav', 10, 18, 25],
+  ['rfi', 'RFI', -40, -58, -72],
+  ['efc', 'EFC', 45, 68, 88],
+  ['pl', 'PL', 4.0, 5.8, 7.0],
+  ['dpr', 'DPR', 0.5, 1.5, 2.5],
+  ['scs', 'SCS', 2.90, 2.78, 2.70],
+  ['hcr', 'HCR', 0.6, 1.4, 2.0],
+  ['ccr', 'CCR', 0.5, 1.3, 1.9],
+  ['liv', 'LIV', 1.0, 2.2, 3.2],
+  ['hliv', 'H.LIV', 0.6, 1.6, 2.4],
+  ['fi', 'FI', 0.5, 1.2, 1.8],
+  ['gl', 'GL', -0.2, -0.5, -0.8],
+  ['sce', 'SCE', 2.5, 2.0, 1.7],
+  ['ssb', 'SSB', 6.5, 5.0, 4.2],
+  ['dsb', 'DSB', 6.0, 4.6, 3.8],
+  ['mf', 'MF', 6.0, 8.5, 10.5],
+  ['ptat', 'Tipo', 0.20, 0.40, 0.55],
+  ['udc', 'UDC', 0.15, 0.35, 0.48],
+  ['flc', 'FLC', -0.90, -0.72, -0.60],
+  ['sta', 'STA', 0.25, 0.48, 0.65],
+  ['str', 'STR', 0.18, 0.38, 0.52],
+  ['dfm', 'DFM', 0.08, 0.16, 0.22],
+  ['rua', 'RUA', 0.50, 0.85, 1.10],
+  ['fua', 'FUA', 0.40, 0.72, 0.95],
+  ['ruw', 'RUW', 0.45, 0.78, 1.02],
+  ['ftp', 'FTP', 0.30, 0.60, 0.82],
+  ['mast', 'MAST', 2.5, 4.0, 5.5],
+  ['met', 'MET', 0.6, 1.4, 2.2],
+  ['rp', 'RP', 0.2, 0.5, 0.8],
+  ['da', 'DA', -0.5, -0.1, 0.0],
+  ['ket', 'KET', -0.4, -0.1, 0.0],
+  ['gfi', 'GFI', 7.5, 10.2, 12.5],
+]
 
 export function fmt(trait: string, value: number): string {
   const dec = ['dpr', 'pl', 'ptat', 'udc', 'flc', 'hcr', 'ccr', 'liv', 'sce', 'fat_pct', 'prot_pct', 'da', 'ket', 'met', 'rp', 'gl', 'sta', 'str', 'dfm', 'rua', 'rw', 'rls', 'rlr', 'fta', 'fls', 'fua', 'ruh', 'ruw', 'ucl', 'udp', 'ftp', 'rtp', 'ftl']

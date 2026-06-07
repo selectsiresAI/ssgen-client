@@ -8,15 +8,15 @@ interface SegmentedControlProps {
 
 export function SegmentedControl({ options, value, onChange, wrap = false, size = 'md' }: SegmentedControlProps) {
   return (
-    <div className={`flex gap-0.5 rounded-[7px] border border-[var(--ss-border)] bg-[var(--ss-wash)] p-[3px] ${wrap ? 'flex-wrap' : ''}`}>
+    <div className={`flex gap-[2px] rounded-[10px] bg-[var(--ss-border-2)] p-[3px] ${wrap ? 'flex-wrap' : ''}`}>
       {options.map((option) => (
         <button
           key={option.value}
           type="button"
           onClick={() => onChange(option.value)}
-          className={`cursor-pointer rounded-[5px] border-0 bg-transparent font-mono text-[11px] text-[var(--ss-muted)] transition hover:text-[var(--ss-fg)] ${
+          className={`cursor-pointer rounded-[8px] border-0 bg-transparent font-mono text-[11px] text-[var(--ss-muted)] transition hover:text-[var(--ss-fg)] ${
             size === 'sm' ? 'px-2 py-1' : 'px-2.5 py-[5px]'
-          } ${value === option.value ? 'bg-[var(--ss-card)] text-[var(--ss-primary)] shadow-[0_1px_2px_rgba(0,0,0,.08)]' : ''}`}
+          } ${value === option.value ? 'bg-white text-[var(--ss-fg)] shadow-[0_1px_3px_rgba(0,0,0,.06)]' : ''}`}
         >
           {option.label}
         </button>

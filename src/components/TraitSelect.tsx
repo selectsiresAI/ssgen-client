@@ -20,7 +20,7 @@ export function TraitSelect({ value, onChange, className }: TraitSelectProps) {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className={`rounded-[7px] border border-[var(--ss-border)] bg-white px-2.5 py-1.5 font-mono text-[11.5px] text-[var(--ss-fg)] outline-none ${className ?? ''}`}
+      className={`rounded-[8px] border border-[var(--ss-border)] bg-white px-3 py-1.5 font-mono text-[11px] text-[var(--ss-fg)] outline-none ${className ?? ''}`}
     >
       {traitGroups.map((g) => (
         <optgroup key={g.label} label={g.label}>

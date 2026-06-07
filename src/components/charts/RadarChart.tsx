@@ -36,26 +36,26 @@ export function RadarChart({ animal, avg, group, width = 260, height = 220 }: Ra
           key={level}
           points={group.names.map((_, idx) => `${cx + Math.cos(angle(idx)) * radius * level},${cy + Math.sin(angle(idx)) * radius * level}`).join(' ')}
           fill="none"
-          stroke="#EBE7E2"
+          stroke="var(--ss-border)"
         />
       ))}
       {group.names.map((name, idx) => {
         const a = angle(idx)
         return (
           <g key={name}>
-            <line x1={cx} y1={cy} x2={cx + Math.cos(a) * radius} y2={cy + Math.sin(a) * radius} stroke="#F3F0EC" />
-            <text x={cx + Math.cos(a) * (radius + 15)} y={cy + Math.sin(a) * (radius + 15) + 3} fontFamily="Geist Mono" fontSize="9" fill="#78716C" textAnchor="middle">
+            <line x1={cx} y1={cy} x2={cx + Math.cos(a) * radius} y2={cy + Math.sin(a) * radius} stroke="var(--ss-border-2)" />
+            <text x={cx + Math.cos(a) * (radius + 15)} y={cy + Math.sin(a) * (radius + 15) + 3} fontFamily="var(--ss-mono)" fontSize="9" fill="var(--ss-muted)" textAnchor="middle">
               {name}
             </text>
           </g>
         )
       })}
-      <polygon points={poly(avg)} fill="rgba(140,130,120,.07)" stroke="#CBC4BC" strokeWidth="1.5" strokeDasharray="3 3" />
-      <polygon points={poly(animal)} fill="rgba(206,14,45,.10)" stroke="#CE0E2D" strokeWidth="1.75" />
+      <polygon points={poly(avg)} fill="rgba(113,113,122,.07)" stroke="var(--ss-muted-2)" strokeWidth="1.5" strokeDasharray="3 3" />
+      <polygon points={poly(animal)} fill="rgba(185,28,28,.10)" stroke="var(--ss-primary)" strokeWidth="1.75" />
       {group.traits.map((trait, idx) => {
         const a = angle(idx)
         const n = normalize(animal[trait] ?? 0, idx)
-        return <circle key={trait} cx={cx + Math.cos(a) * radius * n} cy={cy + Math.sin(a) * radius * n} r="2.6" fill="#CE0E2D" />
+        return <circle key={trait} cx={cx + Math.cos(a) * radius * n} cy={cy + Math.sin(a) * radius * n} r="2.6" fill="var(--ss-primary)" />
       })}
     </svg>
   )
