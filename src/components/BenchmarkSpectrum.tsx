@@ -42,7 +42,7 @@ export function BenchmarkSpectrum({ benchmarks, herdAvg, category }: BenchmarkSp
               <div className="text-[14px] font-bold text-[var(--ss-fg)]">{label}</div>
               <div className="font-mono text-[10px] text-[var(--ss-muted)]">{traitLabel[key] ?? key.toUpperCase()}</div>
             </div>
-            <div className="relative h-2 rounded-[5px] bg-[linear-gradient(90deg,#7F1D1D,#92400E_30%,#365314_60%,#166534_85%,#14532D)] shadow-[inset_0_1px_2px_rgba(0,0,0,.06)]">
+            <div className="relative h-2 rounded-[5px] bg-[linear-gradient(90deg,#DC2626,#F59E0B_30%,#65A30D_60%,#22C55E_85%,#16A34A)] shadow-[inset_0_1px_2px_rgba(0,0,0,.06)]">
               <div className="absolute inset-y-0 z-20 w-0.5" style={{ left: '50%', background: 'repeating-linear-gradient(to bottom, var(--ss-muted) 0, var(--ss-muted) 3px, transparent 3px, transparent 6px)' }} />
               <div className="absolute inset-y-0 z-30 flex flex-col items-center" style={{ left: `${mine.pct}%` }}>
                 <span className="absolute -top-[22px] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-[6px] bg-[var(--ss-fg)] px-2 py-0.5 font-mono text-[11px] font-extrabold text-white shadow-[0_3px_10px_rgba(0,0,0,.2)]">{fmt(key, val)}</span>

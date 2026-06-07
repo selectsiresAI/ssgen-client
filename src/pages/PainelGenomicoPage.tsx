@@ -2,8 +2,7 @@ import { Download, X } from 'lucide-react'
 import { useState } from 'react'
 import { BenchmarkSpectrum } from '@/components/BenchmarkSpectrum'
 import { GaugeChart } from '@/components/charts/GaugeChart'
-import { DeltaCard } from '@/components/DeltaCard'
-import { benchmarks, demoHerd, fmt, HAVG, traitLabel, trend } from '@/data/demoData'
+import { benchmarks, demoHerd, fmt, HAVG, trend } from '@/data/demoData'
 import { generateReportPdf } from '@/lib/reportPdf'
 
 function getZone(trait: string, val: number, natAvg: number, _top25: number, top10: number): { pct: number; zone: string; color: string } {
@@ -20,8 +19,6 @@ function getZone(trait: string, val: number, natAvg: number, _top25: number, top
 
 export function PainelGenomicoPage() {
   const [spectrumCat, setSpectrumCat] = useState('all')
-  const [periodFrom, setPeriodFrom] = useState(2)
-  const [periodTo, setPeriodTo] = useState(6)
   const [showReport, setShowReport] = useState(false)
   const [reportSections, setReportSections] = useState([
     { key: 'executivo', label: 'Resumo Executivo (KPIs)', enabled: true },
@@ -33,8 +30,6 @@ export function PainelGenomicoPage() {
     { key: 'haplotipo', label: 'Haplotipo Comparativo', enabled: false },
     { key: 'scatter', label: 'Scatter Plot', enabled: false },
   ])
-  const trendRecord = trend as Record<string, number[] | string[]>
-
   const attention = [
     ['SCS', 'Células Somáticas', HAVG.scs, 2.50, '↓ menor é melhor'],
     ['FLC', 'Escore Pernas/Pés', HAVG.flc, 0.00, '↑ maior é melhor'],
@@ -53,13 +48,6 @@ export function PainelGenomicoPage() {
     ['tipo', 'Tipo'],
     ['saude', 'Saúde'],
   ]
-  const periodTraits = [
-    ['hhp', 'Índice econômico'],
-    ['gtpi', 'Mérito genômico'],
-    ['nm', 'Mérito líquido'],
-  ]
-  const fromIndex = Math.min(periodFrom, periodTo)
-  const toIndex = Math.max(periodFrom, periodTo)
   const report = () => generateReportPdf({ sections: reportSections, herdAvg: HAVG, benchmarks, trend, animals: demoHerd, attention })
   const toggleReportSection = (key: string) => setReportSections((items) => items.map((item) => item.key === key ? { ...item, enabled: !item.enabled } : item))
 
@@ -163,31 +151,6 @@ export function PainelGenomicoPage() {
         </div>
       </div>
 
-      {/* Comparativo Temporal */}
-      <div className="ss-card">
-        <div className="ss-card-header">
-          <h3 className="ss-card-title">Comparativo Temporal</h3>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[12px] font-semibold text-[var(--ss-muted)]">De</span>
-            <select value={periodFrom} onChange={(e) => setPeriodFrom(Number(e.target.value))} className="rounded-[8px] border border-[var(--ss-border)] bg-white px-2.5 py-1.5 font-mono text-[12px]">
-              {trend.years.map((year, i) => <option key={year} value={i}>{year}</option>)}
-            </select>
-            <span className="font-bold text-[var(--ss-muted-2)]">VS</span>
-            <select value={periodTo} onChange={(e) => setPeriodTo(Number(e.target.value))} className="rounded-[8px] border border-[var(--ss-border)] bg-white px-2.5 py-1.5 font-mono text-[12px]">
-              {trend.years.map((year, i) => <option key={year} value={i}>{year}</option>)}
-            </select>
-            <span className="rounded-md border border-[var(--ss-border-2)] bg-[var(--ss-wash)] px-2.5 py-1 text-[12px] text-[var(--ss-muted)]">{trend.years[toIndex]} - {trend.years[fromIndex]}</span>
-          </div>
-        </div>
-        <div className="ss-card-body">
-          <div className="ss-grid-3-delta">
-            {periodTraits.map(([key, subtitle]) => {
-              const data = trendRecord[key] as number[]
-              return <DeltaCard key={key} trait={key} label={traitLabel[key]} subtitle={subtitle} fromValue={data[fromIndex]} toValue={data[toIndex]} sparkData={data.slice(fromIndex, toIndex + 1)} formatter={fmt} />
-            })}
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

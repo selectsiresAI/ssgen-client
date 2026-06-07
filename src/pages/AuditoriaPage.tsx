@@ -1,12 +1,13 @@
 import { Check, Info } from 'lucide-react'
 import { useState } from 'react'
+import { ComboChart } from '@/components/charts/ComboChart'
 import { EvoChart } from '@/components/charts/EvoChart'
 import { DistChart } from '@/components/charts/DistChart'
 import { RadarChart } from '@/components/charts/RadarChart'
 import { ParentescoGauge } from '@/components/charts/ParentescoGauge'
 import { SegmentedControl } from '@/components/SegmentedControl'
 import { TraitSelect } from '@/components/TraitSelect'
-import { agSteps, demoHerd, fmt, HAVG, radarGroups, trend, traitLabel } from '@/data/demoData'
+import { agSteps, benchmarks, demoHerd, fmt, HAVG, radarGroups, trend, traitLabel } from '@/data/demoData'
 import { useAuditoria } from '@/hooks/useApi'
 
 const defaultTraits = ['hhp', 'gtpi', 'nm']
@@ -109,136 +110,237 @@ function DistribuicaoStep() {
   )
 }
 
-// Etapa 5 (índice 4) — Evolução HHP$: Rebanho vs Nacional vs Top 25%
-const EVOL_NAT = [560, 575, 592, 608, 624, 640, 655]
-const EVOL_TOP = [720, 752, 784, 812, 838, 860, 882]
-
+// Etapa 5 (índice 4) — Evolução vs Nacional: múltiplos gráficos selecionáveis
 function EvolucaoStep() {
-  const herd = trend.hhp
-  const years = trend.years
-  const W = 920, H = 320, padL = 20, padR = 20, padT = 40, padB = 40
-  const max = 950, plotH = H - padT - padB, plotW = W - padL - padR
-  const n = years.length, stepX = plotW / n, bw = 40
-  const y = (v: number) => padT + (1 - v / max) * plotH
-  const x = (i: number) => padL + stepX * i + stepX / 2
+  const trendRecord = trend as Record<string, number[] | string[]>
+  const [count, setCount] = useState(3)
+  const [charts, setCharts] = useState<string[]>(['hhp', 'gtpi', 'nm'])
+
+  const handleCount = (n: number) => {
+    const clamped = Math.max(1, Math.min(10, n))
+    setCount(clamped)
+    if (clamped > charts.length) {
+      const available = Object.keys(traitLabel).filter((k) => !charts.includes(k) && trendRecord[k])
+      setCharts([...charts, ...available.slice(0, clamped - charts.length)])
+    } else {
+      setCharts(charts.slice(0, clamped))
+    }
+  }
+
+  const changeChart = (idx: number, val: string) => {
+    setCharts(charts.map((c, i) => (i === idx ? val : c)))
+  }
+
   return (
-    <div className="ss-card">
-      <div className="ss-card-header">
-        <h3 className="ss-card-title">Evolução HHP$ — Rebanho vs Nacional vs Top 25%</h3>
-        <div className="flex gap-4">
-          {[['Meu Rebanho', 'var(--ss-primary)'], ['Top 25%', 'var(--ss-green)'], ['Nacional', 'var(--ss-muted)']].map(([l, c]) => (
-            <span key={l} className="flex items-center gap-1.5 text-[11px] text-[var(--ss-muted)]"><span className="h-[3px] w-3 rounded-sm" style={{ background: c }} />{l}</span>
-          ))}
-        </div>
+    <div className="flex flex-col gap-3.5">
+      <div className="flex items-center gap-3">
+        <label className="text-[12px] font-medium text-[var(--ss-fg)]">Gráficos visíveis:</label>
+        <select value={count} onChange={(e) => handleCount(Number(e.target.value))} className="rounded-[7px] border border-[var(--ss-border)] bg-white px-2.5 py-1.5 font-mono text-[11.5px] text-[var(--ss-fg)] outline-none">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <option key={n} value={n}>{n}</option>)}
+        </select>
       </div>
-      <div className="ss-card-body">
-        <svg width="100%" viewBox={`0 0 ${W} ${H}`}>
-          {[0.25, 0.5, 0.75, 1].map((g, i) => <line key={i} x1={padL} x2={W - padR} y1={padT + plotH * (1 - g)} y2={padT + plotH * (1 - g)} stroke="var(--ss-border-2)" />)}
-          {years.map((yr, i) => (
-            <g key={yr}>
-              <rect x={x(i) - bw / 2} y={y(herd[i])} width={bw} height={padT + plotH - y(herd[i])} rx={5} fill="var(--ss-primary)" opacity={i === n - 1 ? 1 : 0.82} />
-              <text x={x(i)} y={y(herd[i]) - 9} textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ss-fg)" fontFamily="Geist Mono">${herd[i]}</text>
-              <text x={x(i)} y={H - 16} textAnchor="middle" fontSize="12" fontWeight={i === n - 1 ? 700 : 500} fill={i === n - 1 ? 'var(--ss-primary)' : 'var(--ss-muted)'}>{yr}</text>
-            </g>
-          ))}
-          <polyline points={EVOL_TOP.map((v, i) => `${x(i)},${y(v)}`).join(' ')} fill="none" stroke="var(--ss-green)" strokeWidth="2.5" />
-          {EVOL_TOP.map((v, i) => <circle key={i} cx={x(i)} cy={y(v)} r="3" fill="var(--ss-green)" />)}
-          <polyline points={EVOL_NAT.map((v, i) => `${x(i)},${y(v)}`).join(' ')} fill="none" stroke="var(--ss-muted)" strokeWidth="2" strokeDasharray="5 5" />
-        </svg>
-      </div>
+      {charts.map((trait, idx) => {
+        const herdData = trendRecord[trait] as number[] | undefined
+        if (!herdData) return null
+        const bench = benchmarks.find(([key]) => key === trait)
+        const natAvg = bench ? bench[2] : herdData[0] * 0.85
+        const top25 = bench ? bench[3] : herdData[0] * 1.05
+        const nationalData = herdData.map((_, i) => natAvg * 0.92 + ((natAvg - natAvg * 0.92) / (herdData.length - 1)) * i)
+        const top25Data = herdData.map((_, i) => top25 * 0.92 + ((top25 - top25 * 0.92) / (herdData.length - 1)) * i)
+        return (
+          <div key={`${trait}-${idx}`} className="ss-card">
+            <div className="ss-card-header">
+              <h3 className="ss-card-title">Evolução {traitLabel[trait] ?? trait.toUpperCase()} — Rebanho vs Nacional vs Top 25%</h3>
+              <TraitSelect value={trait} onChange={(v) => changeChart(idx, v)} />
+            </div>
+            <div className="ss-card-body">
+              <ComboChart years={trend.years} herdData={herdData} nationalData={nationalData} top25Data={top25Data} trait={trait} formatter={fmt} />
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
 
-// Etapa 6 (índice 5) — Scatter Plot GTPI × HHP$
+// Etapa 6 (índice 5) — Scatter Plot — 4 quadrantes fixos
+const Q_COLORS = [
+  { label: 'Elite', color: '#166534' },
+  { label: (y: string) => `Alto ${traitLabel[y] ?? y.toUpperCase()}`, color: '#16A34A' },
+  { label: (x: string) => `Alto ${traitLabel[x] ?? x.toUpperCase()}`, color: '#D97706' },
+  { label: 'Abaixo da média', color: '#C0633A' },
+] as const
+
 function ScatterStep() {
-  const W = 920, H = 360, padL = 60, padR = 24, padT = 22, padB = 46
+  const [xTrait, setXTrait] = useState('gtpi')
+  const [yTrait, setYTrait] = useState('hhp')
+
+  const W = 920, H = 400, padL = 60, padR = 24, padT = 22, padB = 56
   const plotW = W - padL - padR, plotH = H - padT - padB
-  const xMin = 2250, xMax = 2950, yMin = 620, yMax = 970
-  const xThr = Math.round(HAVG.gtpi), yThr = Math.round(HAVG.hhp)
+  const xs = demoHerd.map((a) => Number((a as unknown as Record<string, number>)[xTrait]))
+  const ys = demoHerd.map((a) => Number((a as unknown as Record<string, number>)[yTrait]))
+  const xMin = Math.min(...xs) * 0.96
+  const xMax = Math.max(...xs) * 1.04
+  const yMin = Math.min(...ys) * 0.96
+  const yMax = Math.max(...ys) * 1.04
+  const xThr = (xMin + xMax) / 2
+  const yThr = (yMin + yMax) / 2
   const X = (v: number) => padL + ((v - xMin) / (xMax - xMin)) * plotW
   const Y = (v: number) => padT + (1 - (v - yMin) / (yMax - yMin)) * plotH
-  const xTicks = [2300, 2450, 2600, 2750, 2900]
-  const yTicks = [650, 720, 790, 860, 930]
-  const colorFor = (a: { gtpi: number; hhp: number }) => (a.gtpi >= xThr && a.hhp >= yThr) ? 'var(--ss-green)' : (a.gtpi >= xThr || a.hhp >= yThr) ? 'var(--ss-primary)' : 'var(--ss-muted-2)'
-  const topA = demoHerd.reduce((a, b) => (a.hhp + a.gtpi > b.hhp + b.gtpi ? a : b))
+
+  const val = (a: typeof demoHerd[number], trait: string) => Number((a as unknown as Record<string, number>)[trait])
+  const quadrant = (a: typeof demoHerd[number]) => {
+    const xv = val(a, xTrait), yv = val(a, yTrait)
+    if (xv >= xThr && yv >= yThr) return 0
+    if (xv < xThr && yv >= yThr) return 1
+    if (xv >= xThr && yv < yThr) return 2
+    return 3
+  }
+  const counts = [0, 0, 0, 0]
+  demoHerd.forEach((a) => counts[quadrant(a)]++)
+
+  const xTickCount = 5, yTickCount = 5
+  const topA = demoHerd.reduce((a, b) => (val(a, xTrait) + val(a, yTrait) > val(b, xTrait) + val(b, yTrait) ? a : b))
+  const qLabels = ['ELITE', `ALTO ${(traitLabel[yTrait] ?? yTrait).toUpperCase()}`, `ALTO ${(traitLabel[xTrait] ?? xTrait).toUpperCase()}`, 'ABAIXO']
+
   return (
     <div className="ss-card">
       <div className="ss-card-header">
-        <h3 className="ss-card-title">Dispersão · GTPI × HHP$</h3>
-        <div className="flex gap-4">
-          {[['Elite (alto/alto)', 'var(--ss-green)'], ['Acima da média', 'var(--ss-primary)'], ['Abaixo da média', 'var(--ss-muted-2)']].map(([l, c]) => (
-            <span key={l} className="flex items-center gap-1.5 text-[11px] text-[var(--ss-muted)]"><span className="h-[9px] w-[9px] rounded-full" style={{ background: c }} />{l}</span>
-          ))}
+        <h3 className="ss-card-title">Dispersão · {traitLabel[xTrait] ?? xTrait} × {traitLabel[yTrait] ?? yTrait}</h3>
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="text-[11.5px] font-semibold text-[var(--ss-muted)]">X</label><TraitSelect value={xTrait} onChange={setXTrait} />
+          <label className="text-[11.5px] font-semibold text-[var(--ss-muted)]">Y</label><TraitSelect value={yTrait} onChange={setYTrait} />
         </div>
       </div>
       <div className="ss-card-body">
-        <svg width="100%" viewBox={`0 0 ${W} ${H}`}>
-          <rect x={X(xThr)} y={padT} width={padL + plotW - X(xThr)} height={Y(yThr) - padT} fill="var(--ss-green)" opacity="0.06" />
-          {yTicks.map((t) => (
-            <g key={'y' + t}>
-              <line x1={padL} x2={W - padR} y1={Y(t)} y2={Y(t)} stroke="var(--ss-border-2)" />
-              <text x={padL - 10} y={Y(t)} textAnchor="end" dominantBaseline="middle" fontSize="11" fill="var(--ss-muted-2)" fontFamily="Geist Mono">${t}</text>
-            </g>
-          ))}
-          {xTicks.map((t) => (
-            <g key={'x' + t}>
-              <line x1={X(t)} x2={X(t)} y1={padT} y2={padT + plotH} stroke="var(--ss-border-2)" />
-              <text x={X(t)} y={padT + plotH + 22} textAnchor="middle" fontSize="11" fill="var(--ss-muted-2)" fontFamily="Geist Mono">+{t}</text>
-            </g>
-          ))}
-          <line x1={X(xThr)} x2={X(xThr)} y1={padT} y2={padT + plotH} stroke="var(--ss-border)" strokeDasharray="5 5" />
-          <line x1={padL} x2={W - padR} y1={Y(yThr)} y2={Y(yThr)} stroke="var(--ss-border)" strokeDasharray="5 5" />
-          <text x={padL + plotW / 2} y={H - 8} textAnchor="middle" fontSize="11.5" fontWeight="700" fill="var(--ss-muted)">GTPI →</text>
-          <text x={16} y={padT + plotH / 2} textAnchor="middle" fontSize="11.5" fontWeight="700" fill="var(--ss-muted)" transform={`rotate(-90 16 ${padT + plotH / 2})`}>HHP$ →</text>
-          {demoHerd.map((a) => {
-            const isTop = a === topA
-            const near = X(a.gtpi) > padL + plotW * 0.72
-            return (
-              <g key={a.id}>
-                <circle cx={X(a.gtpi)} cy={Y(a.hhp)} r={isTop ? 8 : 6} fill={colorFor(a)} fillOpacity={isTop ? 1 : 0.82} stroke="#fff" strokeWidth={isTop ? 2.5 : 1.5} />
-                {isTop && <text x={X(a.gtpi) + (near ? -13 : 13)} y={Y(a.hhp) - 9} textAnchor={near ? 'end' : 'start'} fontSize="11.5" fontWeight="700" fill="var(--ss-fg)">{a.name}</text>}
-              </g>
-            )
-          })}
-        </svg>
+        <div className="overflow-hidden rounded-[10px] border border-[var(--ss-border-2)] bg-[linear-gradient(180deg,#FAFAFA,#F0F0F2)]">
+          <svg width="100%" viewBox={`0 0 ${W} ${H}`}>
+            <defs>
+              <linearGradient id="scBg" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0%" stopColor="white" /><stop offset="100%" stopColor="var(--ss-wash)" />
+              </linearGradient>
+            </defs>
+            <rect x={padL - 2} y={padT} width={plotW + 4} height={plotH} rx="8" fill="url(#scBg)" />
+            {/* quadrant background tints */}
+            <rect x={X(xThr)} y={padT} width={X(xMax) - X(xThr)} height={Y(yThr) - padT} fill="#166534" opacity="0.04" />
+            <rect x={padL} y={padT} width={X(xThr) - padL} height={Y(yThr) - padT} fill="#16A34A" opacity="0.03" />
+            <rect x={X(xThr)} y={Y(yThr)} width={X(xMax) - X(xThr)} height={padT + plotH - Y(yThr)} fill="#D97706" opacity="0.03" />
+            <rect x={padL} y={Y(yThr)} width={X(xThr) - padL} height={padT + plotH - Y(yThr)} fill="#C0633A" opacity="0.03" />
+            {/* grid */}
+            {Array.from({ length: yTickCount + 1 }, (_, i) => {
+              const v = yMin + (i / yTickCount) * (yMax - yMin)
+              return <line key={`h${i}`} x1={padL} x2={W - padR} y1={Y(v)} y2={Y(v)} stroke="var(--ss-border-2)" />
+            })}
+            {Array.from({ length: xTickCount + 1 }, (_, i) => {
+              const v = xMin + (i / xTickCount) * (xMax - xMin)
+              return <line key={`v${i}`} x1={X(v)} x2={X(v)} y1={padT} y2={padT + plotH} stroke="var(--ss-border-2)" />
+            })}
+            {/* threshold lines */}
+            <line x1={X(xThr)} x2={X(xThr)} y1={padT} y2={padT + plotH} stroke="var(--ss-primary)" strokeDasharray="6 4" opacity=".3" />
+            <line x1={padL} x2={W - padR} y1={Y(yThr)} y2={Y(yThr)} stroke="var(--ss-primary)" strokeDasharray="6 4" opacity=".3" />
+            {/* quadrant labels */}
+            <text x={X(xThr) + (X(xMax) - X(xThr)) / 2} y={padT + 16} textAnchor="middle" fontSize="10" fontWeight="700" fill="#166534" opacity=".5">{qLabels[0]}</text>
+            <text x={padL + (X(xThr) - padL) / 2} y={padT + 16} textAnchor="middle" fontSize="10" fontWeight="700" fill="#16A34A" opacity=".5">{qLabels[1]}</text>
+            <text x={X(xThr) + (X(xMax) - X(xThr)) / 2} y={padT + plotH - 8} textAnchor="middle" fontSize="10" fontWeight="700" fill="#D97706" opacity=".5">{qLabels[2]}</text>
+            <text x={padL + (X(xThr) - padL) / 2} y={padT + plotH - 8} textAnchor="middle" fontSize="10" fontWeight="700" fill="#C0633A" opacity=".5">{qLabels[3]}</text>
+            {/* axis labels */}
+            {Array.from({ length: xTickCount + 1 }, (_, i) => {
+              const v = xMin + (i / xTickCount) * (xMax - xMin)
+              return <text key={`xl${i}`} x={X(v)} y={padT + plotH + 20} textAnchor="middle" fontSize="11" fontWeight="600" fill="var(--ss-muted)" fontFamily="var(--ss-mono)">{Math.round(v)}</text>
+            })}
+            {Array.from({ length: yTickCount + 1 }, (_, i) => {
+              const v = yMin + (i / yTickCount) * (yMax - yMin)
+              return <text key={`yl${i}`} x={padL - 10} y={Y(v) + 4} textAnchor="end" fontSize="11" fontWeight="600" fill="var(--ss-muted)" fontFamily="var(--ss-mono)">{Math.round(v)}</text>
+            })}
+            <text x={padL + plotW / 2} y={H - 10} textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--ss-fg)">{traitLabel[xTrait] ?? xTrait}</text>
+            <text x={16} y={padT + plotH / 2} textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--ss-fg)" transform={`rotate(-90 16 ${padT + plotH / 2})`}>{traitLabel[yTrait] ?? yTrait}</text>
+            {/* dots */}
+            {demoHerd.map((a) => {
+              const q = quadrant(a)
+              const isTop = a === topA
+              const xv = val(a, xTrait), yv = val(a, yTrait)
+              const near = X(xv) > padL + plotW * 0.72
+              return (
+                <g key={a.id}>
+                  <circle cx={X(xv)} cy={Y(yv)} r={isTop ? 8 : 6} fill={Q_COLORS[q].color} fillOpacity={isTop ? 1 : 0.9} stroke={q === 0 ? 'white' : 'rgba(255,255,255,.8)'} strokeWidth={isTop ? 2.5 : 2} className="cursor-pointer">
+                    <title>{a.name} · {traitLabel[xTrait]} {xv} · {traitLabel[yTrait]} {yv}</title>
+                  </circle>
+                  {isTop && <text x={X(xv) + (near ? -13 : 13)} y={Y(yv) - 9} textAnchor={near ? 'end' : 'start'} fontSize="11.5" fontWeight="700" fill="var(--ss-fg)">{a.name}</text>}
+                </g>
+              )
+            })}
+          </svg>
+          <div className="flex flex-wrap gap-4 border-t border-[var(--ss-border-2)] bg-white px-4 py-3">
+            {Q_COLORS.map((item, i) => {
+              const lbl = typeof item.label === 'function' ? item.label(i === 1 ? yTrait : xTrait) : item.label
+              return (
+                <div key={i} className="flex items-center gap-1.5 text-[11.5px] font-semibold text-[var(--ss-muted)]">
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: item.color }} />{lbl} ({counts[i]})
+                </div>
+              )
+            })}
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
 // Etapa 7 (índice 6) — Análise de Forças: ranking + radar
+const rankTraits = ['hhp', 'gtpi', 'nm', 'milk', 'fat', 'prot', 'pl', 'dpr', 'scs', 'ptat', 'udc', 'flc']
+
 function ForcasStep() {
-  const top = [...demoHerd].sort((a, b) => b.hhp - a.hhp).slice(0, 9)
-  const leader = top[0]
-  const grp = radarGroups.indices
-  const animal = grp.traits.reduce((o, t) => { o[t] = Number((leader as unknown as Record<string, number>)[t]); return o }, {} as Record<string, number>)
-  const chips: [string, string][] = [['HHP$', fmt('hhp', leader.hhp)], ['GTPI', fmt('gtpi', leader.gtpi)], ['NM$', fmt('nm', leader.nm)], ['CM$', fmt('cm', (leader as unknown as Record<string, number>).cm)]]
+  const [trait, setTrait] = useState('hhp')
+  const [selected, setSelected] = useState(0)
+  const [radar, setRadar] = useState('indices')
+
+  const inverse = ['scs', 'flc']
+  const sorted = [...demoHerd].map((animal, idx) => ({ animal, idx })).sort((a, b) => inverse.includes(trait) ? Number((a.animal as unknown as Record<string, number>)[trait]) - Number((b.animal as unknown as Record<string, number>)[trait]) : Number((b.animal as unknown as Record<string, number>)[trait]) - Number((a.animal as unknown as Record<string, number>)[trait]))
+  const animal = demoHerd[selected]
+  const grp = radarGroups[radar]
+  const animalData = grp.traits.reduce((o, t) => { o[t] = Number((animal as unknown as Record<string, number>)[t]); return o }, {} as Record<string, number>)
+
   return (
-    <div className="ss-grid-2">
+    <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1.55fr_1fr]">
       <div className="ss-card">
-        <div className="ss-card-header"><h3 className="ss-card-title">Ranking do Rebanho · HHP$</h3></div>
-        <div className="ss-card-body">
-          {top.map((a, i) => (
-            <div key={a.id} className="grid grid-cols-[20px_1fr_70px] items-center gap-2.5 border-b border-[var(--ss-border-2)] py-2 last:border-0">
-              <span className={`font-mono text-[12px] font-bold ${i < 3 ? 'text-[var(--ss-primary)]' : 'text-[var(--ss-muted-2)]'}`}>{i + 1}</span>
-              <div><div className="text-[12.5px] font-semibold text-[var(--ss-fg)]">{a.name}</div><div className="font-mono text-[10px] text-[var(--ss-muted-2)]">{a.sire} · {a.id}</div></div>
-              <span className="text-right font-mono text-[13px] font-bold text-[var(--ss-fg)]">${a.hhp}</span>
-            </div>
+        <div className="ss-card-header">
+          <h3 className="ss-card-title">Ranking do Rebanho · {traitLabel[trait] ?? trait}</h3>
+          <div className="flex items-center gap-2">
+            <select className="rounded-[7px] border border-[var(--ss-border)] bg-white px-2 py-1.5 text-[12px]" value={trait} onChange={(e) => setTrait(e.target.value)}>
+              {rankTraits.map((key) => <option key={key} value={key}>{traitLabel[key]}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="ss-card-body max-h-[calc(100vh-200px)] overflow-auto">
+          {sorted.map(({ animal: row, idx }, i) => (
+            <button key={row.id} type="button" onClick={() => setSelected(idx)} className={`ss-rrow w-full text-left ${idx === selected ? 'is-selected' : ''}`}>
+              <div className="text-center font-mono text-xs text-[var(--ss-muted)]">{i + 1}</div>
+              <div><div className="text-[13px] font-medium text-[var(--ss-fg)]">{row.name}</div><div className="font-mono text-[11px] text-[var(--ss-muted)]">{row.sire} · {row.id}</div></div>
+              <div className="text-right"><b className="block font-mono text-[13px] font-medium text-[var(--ss-fg)]">{fmt(trait, Number((row as unknown as Record<string, number>)[trait]))}</b><small className="text-[8.5px] uppercase tracking-[.6px] text-[var(--ss-muted-2)]">{traitLabel[trait]}</small></div>
+              <div className="text-right"><b className="block font-mono text-[13px] font-medium text-[var(--ss-fg)]">${row.hhp}</b><small className="text-[8.5px] uppercase tracking-[.6px] text-[var(--ss-muted-2)]">HHP$</small></div>
+            </button>
           ))}
         </div>
       </div>
       <div className="ss-card">
-        <div className="ss-card-header"><h3 className="ss-card-title">Perfil · {leader.name}</h3></div>
+        <div className="ss-card-header"><h3 className="ss-card-title">Perfil · {animal.name}</h3></div>
         <div className="ss-card-body">
-          <RadarChart animal={animal} avg={HAVG} group={grp} />
+          <SegmentedControl options={Object.entries(radarGroups).map(([value, g]) => ({ value, label: g.label }))} value={radar} onChange={setRadar} wrap size="sm" />
+          <div className="mx-auto max-w-[320px]"><RadarChart animal={animalData} avg={HAVG} group={grp} /></div>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            {chips.map(([k, v]) => (
-              <div key={k} className="rounded-[9px] bg-[var(--ss-wash)] px-[11px] py-2">
-                <div className="text-[8.5px] font-semibold uppercase tracking-[1px] text-[var(--ss-muted-2)]">{k}</div>
-                <div className="mt-0.5 font-mono text-[14px] font-bold text-[var(--ss-fg)]">{v}</div>
-              </div>
-            ))}
+            {grp.traits.map((t, i) => {
+              const av = Number((animal as unknown as Record<string, number>)[t])
+              const hv = HAVG[t]
+              const inv = ['scs', 'flc', 'da', 'ket', 'rfi', 'ssb', 'dsb', 'gl'].includes(t)
+              const better = inv ? av < hv : av > hv
+              return (
+                <div key={t} className="rounded-[9px] border border-[var(--ss-border)] bg-[var(--ss-wash)] px-[11px] py-[9px]">
+                  <small className="block text-[8.5px] uppercase tracking-[.6px] text-[var(--ss-muted)]">{grp.names[i]}</small>
+                  <b className="font-mono text-sm font-medium text-[var(--ss-fg)]">{fmt(t, av)}</b>
+                  <span className={`ml-1 font-mono text-[9px] ${better ? 'text-[var(--ss-green)]' : 'text-[#C0633A]'}`}>méd {fmt(t, hv)} {av === hv ? '' : better ? '▲' : '▼'}</span>
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>

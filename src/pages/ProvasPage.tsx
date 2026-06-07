@@ -1,8 +1,10 @@
 import { Download, FileText, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { SegmentedControl } from '@/components/SegmentedControl'
-import { demoHerd, proof } from '@/data/demoData'
+import { demoHerd, fmt, proof, traitLabel } from '@/data/demoData'
 import { generateProofPdf, generateCatalogPdf } from '@/lib/pdf'
+
+const rankTraits = ['hhp', 'gtpi', 'nm', 'milk', 'fat', 'prot', 'pl', 'dpr', 'scs', 'ptat', 'udc', 'flc']
 
 function LinearRows({ limit }: { limit?: number }) {
   return (
@@ -29,41 +31,57 @@ export function ProvasPage() {
   const [active, setActive] = useState(0)
   const [view, setView] = useState('detail')
   const [query, setQuery] = useState('')
+  const [rankTrait, setRankTrait] = useState('hhp')
   const animal = demoHerd[active]
-  const filtered = useMemo(() => demoHerd.map((a, i) => ({ a, i })).filter(({ a }) => !query || `${a.name} ${a.id} ${a.sire}`.toUpperCase().includes(query.toUpperCase())), [query])
 
-  const toggleAll = () => setSelected((prev) => prev.size === demoHerd.length ? new Set() : new Set(demoHerd.map((_, i) => i)))
+  const inverse = ['scs', 'flc']
+  const sorted = useMemo(() => {
+    return demoHerd.map((a, i) => ({ a, i })).sort((x, y) =>
+      inverse.includes(rankTrait)
+        ? Number((x.a as unknown as Record<string, number>)[rankTrait]) - Number((y.a as unknown as Record<string, number>)[rankTrait])
+        : Number((y.a as unknown as Record<string, number>)[rankTrait]) - Number((x.a as unknown as Record<string, number>)[rankTrait])
+    )
+  }, [rankTrait])
+
+  const filtered = useMemo(() => {
+    if (query) return sorted.filter(({ a }) => `${a.name} ${a.id} ${a.sire}`.toUpperCase().includes(query.toUpperCase()))
+    return sorted
+  }, [query, sorted])
+
   const toggle = (idx: number) => setSelected((prev) => { const next = new Set(prev); if (next.has(idx)) next.delete(idx); else next.add(idx); return next })
 
   return (
     <div>
       <div className="mb-3.5 flex flex-wrap items-center gap-2">
         <div className="flex w-[280px] items-center gap-2 rounded-[7px] border border-[var(--ss-border)] bg-white px-3 py-2"><Search className="h-4 w-4 text-[var(--ss-muted)]" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar fêmea..." className="w-full border-0 bg-transparent text-[13px] outline-none" /></div>
-        <SegmentedControl options={[{ value: 'all', label: 'Todas' }, { value: 'with', label: 'Com prova' }, { value: 'without', label: 'Sem prova' }]} value="all" onChange={() => undefined} />
         <span className="font-mono text-[11.5px] text-[var(--ss-muted)]">{selected.size} selecionada{selected.size !== 1 ? 's' : ''}</span>
-        <button className="ss-button ss-button-ghost ss-button-sm" onClick={toggleAll}>Selecionar todas</button>
         <button className="ss-button ss-button-sm disabled:pointer-events-none disabled:opacity-40" disabled={selected.size === 0} onClick={() => generateCatalogPdf(Array.from(selected).map((i) => demoHerd[i]))}><FileText />Gerar Catálogo PDF</button>
         <SegmentedControl options={[{ value: 'detail', label: 'Prova Detalhada' }, { value: 'pdf', label: 'Preview PDF' }]} value={view} onChange={setView} />
       </div>
       <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[340px_1fr]">
-        <div className="ss-card">
-          <div className="ss-card-header"><h3 className="ss-card-title">Fêmeas · {demoHerd.length}</h3></div>
-          <div className="max-h-[calc(100vh-180px)] overflow-auto p-2">
+        <div className="ss-card flex flex-col">
+          <div className="ss-card-header">
+            <h3 className="ss-card-title">Fêmeas · {demoHerd.length}</h3>
+            <select className="rounded-[7px] border border-[var(--ss-border)] bg-white px-2 py-1.5 text-[11px] font-medium" value={rankTrait} onChange={(e) => setRankTrait(e.target.value)}>
+              {rankTraits.map((key) => <option key={key} value={key}>{traitLabel[key]}</option>)}
+            </select>
+          </div>
+          <div className="flex-1 overflow-auto p-2">
             {filtered.map(({ a, i }) => (
               <button key={a.id} onClick={() => setActive(i)} className={`ss-rrow w-full grid-cols-[28px_1fr_auto_auto] px-3.5 py-2.5 text-left ${i === active ? 'is-selected' : ''}`}>
                 <input type="checkbox" checked={selected.has(i)} onClick={(e) => e.stopPropagation()} onChange={() => toggle(i)} className="h-[15px] w-[15px] accent-[var(--ss-primary)]" />
                 <div><div className="text-[13px] font-medium text-[var(--ss-fg)]">{a.name}</div><div className="font-mono text-[11px] text-[var(--ss-muted)]">{a.sire} · Brinco {a.id}</div></div>
+                <div className="text-right"><b className="block font-mono text-xs text-[var(--ss-fg)]">{fmt(rankTrait, Number((a as unknown as Record<string, number>)[rankTrait]))}</b><small className="text-[8.5px] text-[var(--ss-muted-2)]">{traitLabel[rankTrait]}</small></div>
                 <div className="text-right"><b className="block font-mono text-xs text-[var(--ss-fg)]">${a.hhp}</b><small className="text-[8.5px] text-[var(--ss-muted-2)]">HHP$</small></div>
-                <div className="text-right"><b className="block font-mono text-xs text-[var(--ss-fg)]">+{a.gtpi}</b><small className="text-[8.5px] text-[var(--ss-muted-2)]">GTPI</small></div>
               </button>
             ))}
           </div>
         </div>
 
         {view === 'detail' ? (
-          <div className="ss-card">
+          <div className="ss-card flex flex-col" style={{ maxHeight: 'calc(100vh - 120px)' }}>
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--ss-border-2)] px-5 py-[13px]"><span className="rounded-full border border-[var(--ss-border)] bg-[var(--ss-wash)] px-3 py-1.5 font-mono text-[11px]">Validade <b className="text-[var(--ss-primary)]">04/2026</b></span><span className="font-mono text-[11px] text-[var(--ss-muted)]">Base <b className="text-[var(--ss-fg)]">CDCB-S</b></span><button className="ss-button ss-button-ghost ss-button-sm" onClick={() => generateProofPdf(animal)}><Download />PDF</button></div>
-            <div className="grid grid-cols-1 lg:grid-cols-[.96fr_1.04fr]">
+            <div className="flex-1 overflow-auto grid grid-cols-1 lg:grid-cols-[.96fr_1.04fr]">
               <div className="border-r border-[var(--ss-border-2)] p-6">
                 <div className="text-lg font-bold leading-tight tracking-[-.3px] text-[var(--ss-fg)]">{animal.name}</div>
                 <div className="mt-2 font-mono text-[11px] leading-7 text-[var(--ss-text)]"><span className="text-[var(--ss-muted)]">HO840329657664</span> · 99% RHA-I · Born 2/12/25<br /><b className="text-[var(--ss-fg)]">HHP$ ${animal.hhp}</b> · GTPI +{animal.gtpi} · NM$ ${animal.nm}</div>
