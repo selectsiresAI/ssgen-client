@@ -4,9 +4,19 @@ import { useFemalesFull } from '@/hooks/useApi'
 import { api, type FemaleFull } from '@/lib/api'
 import { fmt } from '@/data/demoData'
 
+const CATEGORIES = [
+  { key: 'Bezerra', label: 'Bezerras', color: '#f59e0b' },
+  { key: 'Novilha', label: 'Novilhas', color: '#10b981' },
+  { key: 'Primípara', label: 'Primíparas', color: '#3b82f6' },
+  { key: 'Secundípara', label: 'Secundíparas', color: '#8b5cf6' },
+  { key: 'Multípara', label: 'Multíparas', color: '#ef4444' },
+] as const
+
 const herdCols: { key: keyof FemaleFull; label: string; mono?: boolean }[] = [
   { key: 'ear_tag', label: 'Brinco', mono: true },
   { key: 'name', label: 'Nome' },
+  { key: 'cdcb_id', label: 'CDCB', mono: true },
+  { key: 'category', label: 'Categoria' },
   { key: 'birth_date', label: 'Nascimento', mono: true },
   { key: 'sire_naab', label: 'Pai', mono: true },
   { key: 'mgs_naab', label: 'MGS', mono: true },
@@ -83,10 +93,36 @@ export function HerdListPage() {
   const [herdSearch, setHerdSearch] = useState('')
   const [sortCol, setSortCol] = useState<string | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>(null)
-  const { data: femalesData } = useFemalesFull({ page: herdPage, search: herdSearch })
-  const rawFemales = femalesData?.data ?? []
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const { data: femalesData } = useFemalesFull({ page: herdPage, perPage: 5000, search: herdSearch })
+  const allFemales = femalesData?.data ?? []
   const totalFemales = femalesData?.total ?? 0
-  const totalPages = Math.max(1, Math.ceil(totalFemales / (femalesData?.per_page ?? 50)))
+
+  // Contagem por categoria
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    CATEGORIES.forEach((c) => { counts[c.key] = 0 })
+    allFemales.forEach((f) => {
+      const cat = f.category ?? ''
+      if (cat in counts) counts[cat]++
+    })
+    return counts
+  }, [allFemales])
+
+  // Filtrar por categoria selecionada e busca
+  const filteredFemales = useMemo(() => {
+    let result = allFemales
+    if (selectedCategory) result = result.filter((f) => f.category === selectedCategory)
+    return result
+  }, [allFemales, selectedCategory])
+
+  const PER_PAGE = 200
+  const totalFiltered = filteredFemales.length
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / PER_PAGE))
+  const rawFemales = useMemo(() => {
+    const from = (herdPage - 1) * PER_PAGE
+    return filteredFemales.slice(from, from + PER_PAGE)
+  }, [filteredFemales, herdPage])
 
   const females = useMemo(() => {
     if (!sortCol || !sortDir) return rawFemales
@@ -120,9 +156,34 @@ export function HerdListPage() {
 
   return (
     <div>
+      {/* Cards de Categorias */}
+      <div className="grid grid-cols-5 gap-2 mb-3.5">
+        {CATEGORIES.map((cat) => {
+          const n = categoryCounts[cat.key] ?? 0
+          const pct = totalFemales > 0 ? ((n / totalFemales) * 100).toFixed(1) : '0.0'
+          const active = selectedCategory === cat.key
+          return (
+            <button
+              key={cat.key}
+              type="button"
+              onClick={() => { setSelectedCategory(active ? null : cat.key); setHerdPage(1) }}
+              className={`ss-card cursor-pointer transition-all ${active ? 'ring-2 ring-[var(--ss-primary)]' : 'hover:shadow-md'}`}
+            >
+              <div className="px-3 py-2.5 text-center">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--ss-muted)]">{cat.label}</p>
+                <p className="text-[18px] font-bold leading-tight text-[var(--ss-fg)]">{n}</p>
+                <p className="text-[10px] text-[var(--ss-muted)]">{pct}%</p>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
       <div className="ss-card">
         <div className="ss-card-header">
-          <h3 className="ss-card-title">Rebanho completo · {totalFemales || '—'} fêmeas</h3>
+          <h3 className="ss-card-title">
+            {selectedCategory ? `${CATEGORIES.find((c) => c.key === selectedCategory)?.label} · ${totalFiltered} fêmeas` : `Rebanho completo · ${totalFemales || '—'} fêmeas`}
+          </h3>
           <div className="flex items-center gap-2">
             <div className="flex w-[230px] items-center gap-2 rounded-[8px] border border-[var(--ss-border)] bg-white px-3 py-1.5">
               <Search className="h-3.5 w-3.5 text-[var(--ss-muted)]" />
@@ -160,7 +221,7 @@ export function HerdListPage() {
         </div>
         {totalPages > 1 && (
           <div className="flex items-center justify-between border-t border-[var(--ss-border-2)] px-4 py-2.5">
-            <span className="font-mono text-[11px] text-[var(--ss-muted)]">Página {herdPage} de {totalPages}</span>
+            <span className="font-mono text-[11px] text-[var(--ss-muted)]">Página {herdPage} de {totalPages} · {totalFiltered} fêmeas</span>
             <div className="flex gap-1.5">
               <button className="ss-button ss-button-ghost ss-button-sm" disabled={herdPage <= 1} onClick={() => setHerdPage((p) => p - 1)}>← Anterior</button>
               <button className="ss-button ss-button-ghost ss-button-sm" disabled={herdPage >= totalPages} onClick={() => setHerdPage((p) => p + 1)}>Próxima →</button>

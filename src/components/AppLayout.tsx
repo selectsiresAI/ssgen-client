@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Activity, BarChart3, Container, FileText, LayoutDashboard, List, Menu, Search } from 'lucide-react'
+import { Activity, BarChart3, Container, FileText, LayoutDashboard, List, Menu, Search, TrendingUp } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { NotificationsDropdown } from '@/components/NotificationsDropdown'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 const navGroups = [
   {
@@ -26,6 +27,7 @@ const navGroups = [
     title: 'Operação',
     items: [
       { to: '/semen', label: 'Botijão Virtual', icon: Container },
+      { to: '/nexus', label: 'Nexus 3', icon: TrendingUp, badge: 'NOVO' },
     ],
   },
 ]
@@ -35,6 +37,7 @@ const titles: Record<string, [string, string]> = {
   '/painel': ['Painel Genômico', 'Visão analítica do lote genotipado'],
   '/provas': ['Prova Individual', 'Formato oficial Select Sires'],
   '/semen': ['Botijão Virtual', 'Estoque, doses e nitrogênio'],
+  '/nexus': ['Nexus 3', 'Predição genética de progênie'],
   '/auditoria': ['Auditoria Genética', 'Fluxo sequencial 1→7 · Fazenda Sape'],
   '/lista-rebanho': ['Lista do Rebanho', 'Todas as fêmeas genotipadas'],
   '/admin': ['Administração', 'Usuários, fazendas e permissões'],
@@ -157,6 +160,7 @@ export function AppLayout() {
               <Search className="h-[14px] w-[14px]" strokeWidth={1.8} />
               <input className="w-full border-0 bg-transparent text-[12px] text-[var(--ss-fg)] outline-none placeholder:text-[var(--ss-muted-2)]" placeholder="Buscar animal, brinco..." />
             </div>
+            <ThemeToggle />
             <NotificationsDropdown />
             <Button variant="ghost" className="h-8 px-2 text-xs text-[var(--ss-muted)]" onClick={() => void signOut()}>
               Sair
