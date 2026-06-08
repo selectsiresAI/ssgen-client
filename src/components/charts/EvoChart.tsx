@@ -23,15 +23,14 @@ export function EvoChart({ data, years, trait, width = 540, height = 220 }: EvoC
   const points = data.map((v, i) => `${x(i)},${y(v)}`)
   const area = `${pl},${height - pb} ${points.join(' ')} ${x(data.length - 1)},${height - pb}`
 
-  // Gradient ID unique per trait
   const gradId = `evo-grad-${trait}`
-  const lineColor = '#2563eb'    // blue-600
-  const dotFill = '#3b82f6'      // blue-500
-  const areaFrom = '#3b82f6'     // blue-500
-  const areaTo = '#dbeafe'       // blue-100
-  const labelColor = '#1d4ed8'   // blue-700
+  const lineColor = '#1e3a5f'
+  const dotFill = '#1e3a5f'
+  const areaFrom = '#1e3a5f'
+  const areaTo = '#e2e8f0'
+  const labelColor = '#0f2942'
+  const trendColor = '#94a3b8'
 
-  // Trend line (first to last)
   const trendY1 = y(data[0])
   const trendY2 = y(data[data.length - 1])
 
@@ -39,19 +38,19 @@ export function EvoChart({ data, years, trait, width = 540, height = 220 }: EvoC
     <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full">
       <defs>
         <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={areaFrom} stopOpacity="0.25" />
-          <stop offset="100%" stopColor={areaTo} stopOpacity="0.05" />
+          <stop offset="0%" stopColor={areaFrom} stopOpacity="0.12" />
+          <stop offset="100%" stopColor={areaTo} stopOpacity="0.02" />
         </linearGradient>
       </defs>
 
       {/* Grid lines */}
-      {[0, 1, 2, 3].map((k) => {
-        const gv = lo + ((hi - lo) * k) / 3
+      {[0, 1, 2, 3, 4].map((k) => {
+        const gv = lo + ((hi - lo) * k) / 4
         const gy = y(gv)
         return (
           <g key={k}>
-            <line x1={pl} y1={gy} x2={width - pr} y2={gy} stroke="var(--ss-border-2)" strokeDasharray="4 3" />
-            <text x={pl - 8} y={gy + 3} fontFamily="var(--ss-mono)" fontSize="10" fill="var(--ss-muted)" textAnchor="end">
+            <line x1={pl} y1={gy} x2={width - pr} y2={gy} stroke="#e2e8f0" strokeWidth="0.8" />
+            <text x={pl - 8} y={gy + 3} fontFamily="var(--ss-mono)" fontSize="9" fill="#94a3b8" textAnchor="end">
               {Math.round(gv)}
             </text>
           </g>
@@ -60,30 +59,29 @@ export function EvoChart({ data, years, trait, width = 540, height = 220 }: EvoC
 
       {/* Year labels */}
       {years.map((yr, i) => (
-        <text key={yr} x={x(i)} y={height - 9} fontFamily="var(--ss-mono)" fontSize="10" fill="var(--ss-muted)" textAnchor="middle">
+        <text key={yr} x={x(i)} y={height - 9} fontFamily="var(--ss-mono)" fontSize="9" fill="#94a3b8" textAnchor="middle">
           {yr}
         </text>
       ))}
 
       {/* Trend line (dashed) */}
-      <line x1={x(0)} y1={trendY1} x2={x(data.length - 1)} y2={trendY2} stroke="#f97316" strokeWidth="1.5" strokeDasharray="6 4" opacity="0.6" />
+      <line x1={x(0)} y1={trendY1} x2={x(data.length - 1)} y2={trendY2} stroke={trendColor} strokeWidth="1" strokeDasharray="5 3" opacity="0.5" />
 
       {/* Area fill */}
       <polygon points={area} fill={`url(#${gradId})`} />
 
       {/* Main line */}
-      <polyline points={points.join(' ')} fill="none" stroke={lineColor} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+      <polyline points={points.join(' ')} fill="none" stroke={lineColor} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
 
       {/* Dots */}
       {data.map((v, i) => (
         <g key={`${v}-${i}`}>
-          <circle cx={x(i)} cy={y(v)} r="5" fill={dotFill} opacity="0.15" />
-          <circle cx={x(i)} cy={y(v)} r="3.5" fill="#fff" stroke={dotFill} strokeWidth="2" />
+          <circle cx={x(i)} cy={y(v)} r="3" fill="#fff" stroke={dotFill} strokeWidth="1.5" />
         </g>
       ))}
 
       {/* Last value label */}
-      <text x={width - pr - 6} y={y(data[data.length - 1]) - 10} fontFamily="var(--ss-mono)" fontSize="12" fontWeight="800" fill={labelColor} textAnchor="end">
+      <text x={width - pr - 6} y={y(data[data.length - 1]) - 10} fontFamily="var(--ss-mono)" fontSize="11" fontWeight="700" fill={labelColor} textAnchor="end">
         {traitLabel[trait] ?? trait.toUpperCase()} {fmt(trait, data[data.length - 1])}
       </text>
     </svg>

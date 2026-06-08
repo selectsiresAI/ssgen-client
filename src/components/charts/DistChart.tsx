@@ -7,13 +7,13 @@ interface DistChartProps {
   height?: number
 }
 
-// Vibrant palette for distribution bars
+// Professional slate/navy palette
 const BAR_COLORS = [
-  { from: '#f59e0b', to: '#fbbf24' },  // amber
-  { from: '#10b981', to: '#34d399' },  // emerald
-  { from: '#3b82f6', to: '#60a5fa' },  // blue
-  { from: '#8b5cf6', to: '#a78bfa' },  // violet
-  { from: '#ef4444', to: '#f87171' },  // red
+  '#334155',  // slate-700
+  '#1e3a5f',  // navy
+  '#475569',  // slate-600
+  '#1e40af',  // blue-800
+  '#374151',  // gray-700
 ]
 
 export function DistChart({ trait, trendData, bins: propBins, height }: DistChartProps) {
@@ -35,30 +35,30 @@ export function DistChart({ trait, trendData, bins: propBins, height }: DistChar
 
   return (
     <div>
-      <div className="flex items-end gap-3 px-2 pb-8 pt-[22px]" style={{ height: height ? `${height}px` : '180px' }}>
+      <div className="flex items-end gap-2 px-2 pb-8 pt-[22px]" style={{ height: height ? `${height}px` : '180px' }}>
         {bins.map((bin, i) => {
           const pct = Math.round((bin.count / total) * 100)
-          const colors = BAR_COLORS[i % BAR_COLORS.length]
+          const color = BAR_COLORS[i % BAR_COLORS.length]
           return (
             <div
-              key={bin.label}
-              className="relative min-h-1 flex-1 rounded-t-lg shadow-sm transition-all hover:scale-[1.03] hover:shadow-md"
+              key={`${bin.label}-${i}`}
+              className="relative min-h-1 flex-1 rounded-t transition-all hover:opacity-80"
               style={{
                 height: `${Math.max(6, (bin.count / maxCount) * 100)}%`,
-                background: `linear-gradient(180deg, ${colors.from}, ${colors.to})`,
+                background: color,
               }}
             >
-              <span className="absolute -top-[24px] left-0 right-0 text-center">
-                <span className="font-mono text-[14px] font-extrabold" style={{ color: colors.from }}>{bin.count}</span>
-                <span className="ml-0.5 font-mono text-[10px] text-[var(--ss-muted)]">{pct}%</span>
+              <span className="absolute -top-[22px] left-0 right-0 text-center">
+                <span className="font-mono text-[13px] font-bold text-[var(--ss-fg)]">{bin.count}</span>
+                <span className="ml-0.5 font-mono text-[9px] text-[var(--ss-muted)]">{pct}%</span>
               </span>
-              <i className="absolute -bottom-7 left-0 right-0 text-center font-mono text-[12px] font-semibold not-italic text-[var(--ss-muted)]">{String(bin.label)}</i>
+              <i className="absolute -bottom-6 left-0 right-0 text-center font-mono text-[11px] font-medium not-italic text-[var(--ss-muted)]">{String(bin.label)}</i>
             </div>
           )
         })}
       </div>
-      <div className="mt-3 text-center font-mono text-[11px] font-medium text-[var(--ss-muted)]">
-        Distribuição simulada · {traitLabel[trait] ?? trait} · {total} animais
+      <div className="mt-2 text-center font-mono text-[10px] font-medium text-[var(--ss-muted)]">
+        {traitLabel[trait] ?? trait} · {total} animais
       </div>
     </div>
   )
