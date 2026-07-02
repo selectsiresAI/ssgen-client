@@ -2,12 +2,7 @@ import { Clock, Download, FileText, Plus } from 'lucide-react'
 import { KpiCard } from '@/components/KpiCard'
 import { useDashboard, useOrders } from '@/hooks/useApi'
 
-const demoOrders = [
-  ['#2026-188', '312', 'Concluída', 'ok'],
-  ['#2026-187', '540', 'Concluída', 'ok'],
-  ['#2026-186', '96', 'Em análise', 'wait'],
-  ['#2026-185', '208', 'Liberada', 'done'],
-]
+const demoOrders: string[][] = []
 
 export function DashboardPage() {
   const { data } = useDashboard()
@@ -17,10 +12,10 @@ export function DashboardPage() {
   return (
     <div>
       <div className="ss-grid-kpis">
-        <KpiCard icon={FileText} label="OS abertas" value={data?.orders_in_progress ?? 14} delta="▲ 3 esta semana" />
-        <KpiCard icon={Plus} label="Amostras processadas" value={(data?.total_genotyped ?? 1974).toLocaleString('pt-BR')} delta="▲ 212 no mês" />
-        <KpiCard icon={Download} label="Laudos disponíveis" value={data?.recent_results ?? 38} delta="▲ 9 novos" />
-        <KpiCard icon={Clock} label="Aguardando CDCB" value={6} delta="▼ aguardando base" deltaType="down" />
+        <KpiCard icon={FileText} label="OS abertas" value={data?.orders_in_progress ?? 0} delta="" />
+        <KpiCard icon={Plus} label="Embriões cadastrados" value={(data?.total_genotyped ?? 26).toLocaleString('pt-BR')} delta="Predição Pedigree" />
+        <KpiCard icon={Download} label="Laudos disponíveis" value={data?.recent_results ?? 0} delta="" />
+        <KpiCard icon={Clock} label="Aguardando CDCB" value={0} delta="" />
       </div>
       <div className="ss-card">
         <div className="ss-card-header">
