@@ -1,15 +1,15 @@
 import { Download, FileText, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { demoHerd, fmt, proof, traitLabel } from '@/data/demoData'
+import { buildProof, demoHerd, fmt, traitLabel } from '@/data/demoData'
 import { generateProofPdf, generateCatalogPdf } from '@/lib/pdf'
 
 const rankTraits = ['hhp', 'gtpi', 'nm', 'milk', 'fat', 'prot', 'pl', 'dpr', 'scs', 'ptat', 'udc', 'flc']
 
-function LinearRows({ limit }: { limit?: number }) {
+function LinearRows({ data, limit }: { data: [string, number, string][]; limit?: number }) {
   return (
     <div>
       <div className="mb-1 grid grid-cols-[1fr_150px_48px] gap-2"><div /><div className="flex justify-between font-mono text-[9px] text-[var(--ss-muted)]"><span>-2</span><span>-1</span><span>0</span><span>+1</span><span>+2</span></div></div>
-      {proof.lin.slice(0, limit).map((line) => {
+      {data.slice(0, limit).map((line) => {
         const v = line[1]
         const half = Math.min(Math.abs(v) / 2, 1) * 50
         const left = v >= 0 ? 50 : 50 - half
@@ -31,6 +31,7 @@ export function ProvasPage() {
   const [query, setQuery] = useState('')
   const [rankTrait, setRankTrait] = useState('hhp')
   const animal = demoHerd[active]
+  const animalProof = useMemo(() => buildProof(animal), [animal])
 
   const inverse = ['scs', 'flc']
   const sorted = useMemo(() => {
@@ -76,18 +77,18 @@ export function ProvasPage() {
         </div>
 
         <div className="ss-card">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--ss-border-2)] px-5 py-[13px]"><span className="rounded-full border border-[var(--ss-border)] bg-[var(--ss-wash)] px-3 py-1.5 font-mono text-[11px]">Validade <b className="text-[var(--ss-primary)]">04/2026</b></span><span className="font-mono text-[11px] text-[var(--ss-muted)]">Base <b className="text-[var(--ss-fg)]">CDCB-S</b></span><button className="ss-button ss-button-ghost ss-button-sm" onClick={() => generateProofPdf(animal)}><Download />PDF</button></div>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--ss-border-2)] px-5 py-[13px]"><span className="rounded-full border border-[var(--ss-border)] bg-[var(--ss-wash)] px-3 py-1.5 font-mono text-[11px]">Validade <b className="text-[var(--ss-primary)]">07/2026</b></span><span className="font-mono text-[11px] text-[var(--ss-muted)]">Base <b className="text-[var(--ss-fg)]">Predição Pedigree</b></span><button className="ss-button ss-button-ghost ss-button-sm" onClick={() => generateProofPdf(animal)}><Download />PDF</button></div>
           <div className="grid grid-cols-1 lg:grid-cols-[.96fr_1.04fr]">
             <div className="border-r border-[var(--ss-border-2)] p-6">
               <div className="text-lg font-bold leading-tight tracking-[-.3px] text-[var(--ss-fg)]">{animal.name}</div>
-              <div className="mt-2 font-mono text-[11px] leading-7 text-[var(--ss-text)]"><span className="text-[var(--ss-muted)]">HO840329657664</span> · 99% RHA-I · Born 2/12/25<br /><b className="text-[var(--ss-fg)]">HHP$ ${animal.hhp}</b> · GTPI +{animal.gtpi} · NM$ ${animal.nm}</div>
+              <div className="mt-2 font-mono text-[11px] leading-7 text-[var(--ss-text)]"><span className="text-[var(--ss-muted)]">Embrião #{animal.id}</span> · HO · Predição Pedigree<br /><b className="text-[var(--ss-fg)]">HHP$ ${animal.hhp}</b> · GTPI +{animal.gtpi} · NM$ ${animal.nm}</div>
               <div className="my-5 border-b-2 border-[var(--ss-fg)] pb-1 text-[11px] font-semibold uppercase tracking-[.6px] text-[var(--ss-fg)]">Pedigree</div>
-              <div className="font-mono text-[11px] leading-6 text-[var(--ss-text)]">{proof.ped.map((p, i) => p[0] === 'lact' ? <span key={i} className="block pl-4 text-[10px] text-[var(--ss-muted)]">{p[2]}</span> : <div key={i}><span className="font-medium text-[var(--ss-primary)]">{p[1]}</span> {p[2]}</div>)}</div>
+              <div className="font-mono text-[11px] leading-6 text-[var(--ss-text)]">{animalProof.ped.map((p, i) => p[0] === 'lact' ? <span key={i} className="block pl-4 text-[10px] text-[var(--ss-muted)]">{p[2]}</span> : <div key={i}><span className="font-medium text-[var(--ss-primary)]">{p[1]}</span> {p[2]}</div>)}</div>
               <div className="my-5 border-b-2 border-[var(--ss-fg)] pb-1 text-[11px] font-semibold uppercase tracking-[.6px] text-[var(--ss-fg)]">Linear</div>
-              <LinearRows />
+              <LinearRows data={animalProof.lin} />
             </div>
             <div className="p-6">
-              {proof.sections.map((section) => (
+              {animalProof.sections.map((section) => (
                 <div key={section.t}>
                   <div className="mb-2 mt-5 flex justify-between border-b-2 border-[var(--ss-fg)] pb-1 text-[11px] font-semibold uppercase tracking-[.6px] text-[var(--ss-fg)] first:mt-0">{section.t}<span className="font-mono text-[8.5px] font-normal normal-case tracking-normal text-[var(--ss-muted)]">{section.meta}</span></div>
                   {section.rows.map((row) => <div key={`${section.t}-${row[0]}`} className="grid grid-cols-[minmax(0,1fr)_56px_minmax(0,1fr)] items-baseline gap-2 border-b border-[var(--ss-border-2)] py-[3.5px] font-mono text-[11px]"><div className="text-[var(--ss-text)]">{row[0]}</div><div className="text-right font-medium text-[var(--ss-fg)]">{row[1]}</div><div className="text-right text-[9.5px] text-[var(--ss-muted)]">{row[2]}</div></div>)}
