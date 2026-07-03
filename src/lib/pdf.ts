@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf'
 import type { DemoAnimal } from '@/data/demoData'
-import { proof } from '@/data/demoData'
+import { buildProof } from '@/data/demoData'
 
 const PRIMARY = [206, 14, 45] as const
 const FG = [28, 28, 28] as const
@@ -24,7 +24,7 @@ function drawHeader(doc: jsPDF, animal: DemoAnimal, subtitle?: string) {
   doc.setFont('helvetica', 'normal')
   doc.text(subtitle ?? 'Prova Genômica Individual', 14, 16)
   doc.text(`Gerado: ${new Date().toLocaleDateString('pt-BR')}`, 196, 10, { align: 'right' })
-  doc.text('Base CDCB-S · 04/2026', 196, 16, { align: 'right' })
+  doc.text('Predição Pedigree · 07/2026', 196, 16, { align: 'right' })
 
   doc.setTextColor(...FG)
   doc.setFontSize(12)
@@ -33,7 +33,7 @@ function drawHeader(doc: jsPDF, animal: DemoAnimal, subtitle?: string) {
   doc.setFontSize(8)
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(...MUTED)
-  doc.text(`HO840329657664 · 99% RHA-I · Brinco ${animal.id} · Pai: ${animal.sire}`, 14, 33)
+  doc.text(`Embrião #${animal.id} · HO · Pai: ${animal.sireName ?? animal.sire}`, 14, 33)
 }
 
 function drawIndices(doc: jsPDF, animal: DemoAnimal, y: number): number {
@@ -63,7 +63,7 @@ function drawIndices(doc: jsPDF, animal: DemoAnimal, y: number): number {
   return y + h + 5
 }
 
-function drawPedigree(doc: jsPDF, y: number): number {
+function drawPedigree(doc: jsPDF, y: number, ped: string[][]): number {
   doc.setFontSize(8)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(...FG)
@@ -74,7 +74,7 @@ function drawPedigree(doc: jsPDF, y: number): number {
   y += 4
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(7)
-  for (const p of proof.ped) {
+  for (const p of ped) {
     if (p[0] === 'lact') {
       doc.setTextColor(...MUTED)
       doc.text(`    ${p[2]}`, 16, y)
@@ -89,7 +89,7 @@ function drawPedigree(doc: jsPDF, y: number): number {
   return y + 1
 }
 
-function drawLinear(doc: jsPDF, startY: number): number {
+function drawLinear(doc: jsPDF, startY: number, lin: [string, number, string][]): number {
   doc.setFontSize(8)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(...FG)
@@ -100,7 +100,7 @@ function drawLinear(doc: jsPDF, startY: number): number {
   let y = startY + 4
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(6.5)
-  for (const [name, val] of proof.lin) {
+  for (const [name, val] of lin) {
     doc.setTextColor(...FG)
     doc.text(String(name), 106, y)
     const barX = 150
@@ -122,9 +122,9 @@ function drawLinear(doc: jsPDF, startY: number): number {
   return y + 1
 }
 
-function drawSections(doc: jsPDF, startY: number) {
+function drawSections(doc: jsPDF, startY: number, sections: { t: string; meta: string; rows: string[][] }[]) {
   let y = startY
-  for (const section of proof.sections) {
+  for (const section of sections) {
     doc.setFontSize(8)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(...FG)
@@ -157,14 +157,15 @@ function drawSections(doc: jsPDF, startY: number) {
 }
 
 function drawOnePage(doc: jsPDF, animal: DemoAnimal, subtitle?: string) {
+  const animalProof = buildProof(animal)
   drawHeader(doc, animal, subtitle)
   let y = drawIndices(doc, animal, 36)
   const pedLinY = y
-  drawPedigree(doc, pedLinY)
-  const linEndY = drawLinear(doc, pedLinY)
-  const pedEndY = pedLinY + proof.ped.length * LH_PED + 5
+  drawPedigree(doc, pedLinY, animalProof.ped)
+  const linEndY = drawLinear(doc, pedLinY, animalProof.lin)
+  const pedEndY = pedLinY + animalProof.ped.length * LH_PED + 5
   const contentY = Math.max(pedEndY, linEndY) + 1
-  const secEndY = drawSections(doc, contentY)
+  const secEndY = drawSections(doc, contentY, animalProof.sections)
 
   // Haplotypes
   const hapY = Math.max(secEndY + 2, 278)
