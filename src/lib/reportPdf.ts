@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf'
-import type { DemoAnimal, trend as trendShape } from '@/data/demoData'
-import { fmt, traitLabel } from '@/data/demoData'
+import type { FemaleFull } from '@/lib/api'
+import { fmt, traitLabel, trend as trendShape } from '@/lib/traits'
 
 interface ReportSection {
   key: string
@@ -74,8 +74,8 @@ export function generateReportPdf(options: {
   herdAvg: Record<string, number>
   benchmarks: Benchmarks
   trend: TrendData
-  animals: DemoAnimal[]
-  attention: readonly (readonly [string, string, number, number, string])[]
+  animals: FemaleFull[]
+  attention: readonly (readonly [string, string, number | null, number, string])[]
 }): void {
   const { sections, herdAvg, benchmarks, trend, animals, attention } = options
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
@@ -137,7 +137,7 @@ export function generateReportPdf(options: {
   })
 
   page(doc, 'Top 5 Animais', 5)
-  animals.slice().sort((a, b) => b.hhp - a.hhp).slice(0, 5).forEach((animal, i) => {
+  animals.slice().sort((a, b) => (b.hhp_dollar ?? -Infinity) - (a.hhp_dollar ?? -Infinity)).slice(0, 5).forEach((animal, i) => {
     const y = 50 + i * 24
     doc.setFillColor(i === 0 ? 201 : 245, i === 0 ? 154 : 245, i === 0 ? 75 : 245)
     doc.circle(22, y - 2, 5, 'F')
@@ -145,14 +145,14 @@ export function generateReportPdf(options: {
     doc.setFont('helvetica', 'bold')
     doc.text(String(i + 1), 22, y, { align: 'center' })
     doc.setTextColor(...FG)
-    doc.text(animal.name, 34, y - 3)
+    doc.text(animal.name ?? animal.ear_tag ?? animal.id, 34, y - 3)
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(...MUTED)
-    doc.text(`${animal.sire} · HHP$ ${animal.hhp} · GTPI ${animal.gtpi}`, 34, y + 4)
+    doc.text(`${animal.sire_naab ?? '-'} · HHP$ ${animal.hhp_dollar ?? '-'} · GTPI ${animal.tpi ?? '-'}`, 34, y + 4)
   })
 
   page(doc, 'Características de Atenção', 6)
-  attention.forEach(([code, name, current, target, hint], i) => {
+  attention.filter((item) => item[2] != null).forEach(([code, name, current, target, hint], i) => {
     const y = 48 + i * 19
     doc.setFillColor(...AMBER)
     doc.circle(18, y - 2, 2.5, 'F')
@@ -161,7 +161,7 @@ export function generateReportPdf(options: {
     doc.text(`${code} · ${name}`, 25, y - 3)
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(...MUTED)
-    doc.text(`Atual ${current.toFixed(2)} · Ideal ${target.toFixed(2)} · ${hint}`, 25, y + 4)
+    doc.text(`Atual ${(current ?? 0).toFixed(2)} · Ideal ${target.toFixed(2)} · ${hint}`, 25, y + 4)
   })
 
   const activeLabels = sections.filter((s) => s.enabled).map((s) => s.label).join(' · ')

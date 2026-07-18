@@ -1,4 +1,4 @@
-import { fmt, traitLabel } from '@/data/demoData'
+import { fmt, traitLabel } from '@/lib/traits'
 
 interface EvoChartProps {
   data: number[]
@@ -87,3 +87,4 @@ export function EvoChart({ data, years, trait, width = 540, height = 220 }: EvoC
     </svg>
   )
 }
+

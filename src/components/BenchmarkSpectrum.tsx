@@ -1,4 +1,4 @@
-import { fmt, traitLabel } from '@/data/demoData'
+import { fmt, traitLabel } from '@/lib/traits'
 
 interface BenchmarkSpectrumProps {
   benchmarks: [string, string, number, number, number][]
@@ -59,3 +59,4 @@ export function BenchmarkSpectrum({ benchmarks, herdAvg, category }: BenchmarkSp
     </div>
   )
 }
+

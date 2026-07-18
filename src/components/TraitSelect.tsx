@@ -1,4 +1,4 @@
-import { traitLabel } from '@/data/demoData'
+import { traitLabel } from '@/lib/traits'
 
 const traitGroups = [
   { label: 'Índices', keys: ['hhp', 'gtpi', 'nm', 'cm', 'fm', 'gm'] },
@@ -32,3 +32,4 @@ export function TraitSelect({ value, onChange, className }: TraitSelectProps) {
     </select>
   )
 }
+

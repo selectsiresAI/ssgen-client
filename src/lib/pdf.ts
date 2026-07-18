@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf'
-import type { DemoAnimal } from '@/data/demoData'
-import { buildProof } from '@/data/demoData'
+import type { FemaleFull } from '@/lib/api'
+import { buildProofFromFemale } from '@/lib/proof'
 
 const PRIMARY = [206, 14, 45] as const
 const FG = [28, 28, 28] as const
@@ -13,7 +13,11 @@ const LH_ROW = 3.2    // section row height
 const SEC_GAP = 1.5    // gap between sections
 const SEC_HEAD = 4     // section header height
 
-function drawHeader(doc: jsPDF, animal: DemoAnimal, subtitle?: string) {
+function label(animal: FemaleFull) {
+  return animal.name ?? animal.ear_tag ?? animal.id
+}
+
+function drawHeader(doc: jsPDF, animal: FemaleFull, subtitle?: string) {
   doc.setFillColor(...PRIMARY)
   doc.rect(0, 0, 210, 20, 'F')
   doc.setTextColor(255, 255, 255)
@@ -24,26 +28,26 @@ function drawHeader(doc: jsPDF, animal: DemoAnimal, subtitle?: string) {
   doc.setFont('helvetica', 'normal')
   doc.text(subtitle ?? 'Prova Genômica Individual', 14, 16)
   doc.text(`Gerado: ${new Date().toLocaleDateString('pt-BR')}`, 196, 10, { align: 'right' })
-  doc.text('Predição Pedigree · 07/2026', 196, 16, { align: 'right' })
+  doc.text('Predição Pedigree', 196, 16, { align: 'right' })
 
   doc.setTextColor(...FG)
   doc.setFontSize(12)
   doc.setFont('helvetica', 'bold')
-  doc.text(animal.name, 14, 28)
+  doc.text(label(animal), 14, 28)
   doc.setFontSize(8)
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(...MUTED)
-  doc.text(`Embrião #${animal.id} · HO · Pai: ${animal.sireName ?? animal.sire}`, 14, 33)
+  doc.text(`Brinco ${animal.ear_tag ?? '-'} · ${animal.breed ?? '-'} · Pai: ${animal.sire_naab ?? '-'}`, 14, 33)
 }
 
-function drawIndices(doc: jsPDF, animal: DemoAnimal, y: number): number {
+function drawIndices(doc: jsPDF, animal: FemaleFull, y: number): number {
   const indices = [
-    ['HHP$', `$${animal.hhp}`],
-    ['GTPI', `+${animal.gtpi}`],
-    ['NM$', `$${animal.nm}`],
-    ['CM$', `$${animal.cm}`],
-    ['FM$', `$${animal.fm}`],
-    ['GM$', `$${animal.gm}`],
+    ['HHP$', animal.hhp_dollar != null ? `$${animal.hhp_dollar}` : '-'],
+    ['GTPI', animal.tpi != null ? `+${animal.tpi}` : '-'],
+    ['NM$', animal.nm_dollar != null ? `$${animal.nm_dollar}` : '-'],
+    ['CM$', animal.cm_dollar != null ? `$${animal.cm_dollar}` : '-'],
+    ['FM$', animal.fm_dollar != null ? `$${animal.fm_dollar}` : '-'],
+    ['GM$', animal.gm_dollar != null ? `$${animal.gm_dollar}` : '-'],
   ]
   const w = 29
   const h = 11
@@ -156,8 +160,8 @@ function drawSections(doc: jsPDF, startY: number, sections: { t: string; meta: s
   return y
 }
 
-function drawOnePage(doc: jsPDF, animal: DemoAnimal, subtitle?: string) {
-  const animalProof = buildProof(animal)
+function drawOnePage(doc: jsPDF, animal: FemaleFull, subtitle?: string) {
+  const animalProof = buildProofFromFemale(animal)
   drawHeader(doc, animal, subtitle)
   let y = drawIndices(doc, animal, 36)
   const pedLinY = y
@@ -167,24 +171,23 @@ function drawOnePage(doc: jsPDF, animal: DemoAnimal, subtitle?: string) {
   const contentY = Math.max(pedEndY, linEndY) + 1
   const secEndY = drawSections(doc, contentY, animalProof.sections)
 
-  // Haplotypes
-  const hapY = Math.max(secEndY + 2, 278)
+  const footerY = Math.max(secEndY + 2, 278)
   doc.setFontSize(6.5)
   doc.setTextColor(...MUTED)
   doc.text(
-    animal.haps.map((h) => `${h[0]}: ${h[1] === 'free' ? 'Livre' : 'Portador'}`).join(' · '),
+    `Beta caseína: ${animal.beta_casein ?? '-'} · Kappa caseína: ${animal.kappa_casein ?? '-'}`,
     14,
-    Math.min(hapY, 288),
+    Math.min(footerY, 288),
   )
 }
 
-export function generateProofPdf(animal: DemoAnimal) {
+export function generateProofPdf(animal: FemaleFull) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   drawOnePage(doc, animal)
-  doc.save(`prova-${animal.name.replace(/\s+/g, '-')}.pdf`)
+  doc.save(`prova-${label(animal).replace(/\s+/g, '-')}.pdf`)
 }
 
-export function generateCatalogPdf(animals: DemoAnimal[]) {
+export function generateCatalogPdf(animals: FemaleFull[]) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   animals.forEach((animal, idx) => {
     if (idx > 0) doc.addPage()

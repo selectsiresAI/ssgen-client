@@ -1,4 +1,4 @@
-import type { RadarGroup } from '@/data/demoData'
+import type { RadarGroup } from '@/lib/traits'
 
 interface RadarChartProps {
   animal: Record<string, number>
@@ -60,3 +60,4 @@ export function RadarChart({ animal, avg, group, width = 260, height = 220 }: Ra
     </svg>
   )
 }
+

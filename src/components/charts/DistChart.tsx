@@ -1,4 +1,4 @@
-import { traitLabel } from '@/data/demoData'
+import { traitLabel } from '@/lib/traits'
 
 interface DistChartProps {
   trait: string
@@ -63,3 +63,4 @@ export function DistChart({ trait, trendData, bins: propBins, height }: DistChar
     </div>
   )
 }
+

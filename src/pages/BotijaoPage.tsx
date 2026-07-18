@@ -9,7 +9,6 @@ import { KpiCard } from '@/components/KpiCard'
 import { BotijaoTankPanel } from '@/components/BotijaoTankPanel'
 import { useSemenInventory, useBotijaoData, useSaveBotijao, useSearchBulls } from '@/hooks/useApi'
 import type { BullSemen, PlatformBull } from '@/lib/api'
-import { botijaoDemo } from '@/data/demoData'
 
 // ── Cryogenic Tank Icon ──
 
@@ -51,26 +50,6 @@ interface NitrogenRecord {
   dataAbastecimento: string
   volume: number
   observacoes: string
-}
-
-const DEFAULT_BOTIJOES: Botijao[] = [
-  { id: 'btj-01', nome: 'BTJ-01', canecas: 6, capacidadeLitros: 35 },
-  { id: 'btj-02', nome: 'BTJ-02', canecas: 6, capacidadeLitros: 35 },
-  { id: 'btj-03', nome: 'BTJ-03', canecas: 6, capacidadeLitros: 20 },
-]
-
-function demoItems(): BotijaoItem[] {
-  return botijaoDemo.map((i, idx) => ({
-    id: `${i.naab}-demo`,
-    touro: { code: i.naab, name: i.nome, registration: null, breed: 'HO', daughters_count: 0 },
-    tipo: i.tipo,
-    doses: i.doses,
-    preco: i.preco,
-    caneca: (idx % 6) + 1,
-    botijaoId: DEFAULT_BOTIJOES[idx % 3].id,
-    dataAdicao: new Date().toISOString(),
-    observacoes: i.emp,
-  }))
 }
 
 export function BotijaoPage() {
@@ -115,28 +94,14 @@ export function BotijaoPage() {
   useEffect(() => {
     if (hydrated) return
     if (remoteData && !loadingRemote) {
-      if (remoteData.botijoes.length > 0) {
-        setBotijoes(remoteData.botijoes.map((b) => ({ id: b.id, nome: b.nome, canecas: b.canecas, capacidadeLitros: Number(b.capacidade_litros) })))
-        setItens(remoteData.itens.map((i) => ({ id: i.id, touro: { code: i.touro_code, name: i.touro_name, registration: null, breed: i.touro_breed, daughters_count: 0 }, tipo: i.tipo as 'Convencional' | 'Sexado', doses: i.doses, preco: Number(i.preco), caneca: i.caneca, botijaoId: i.botijao_id, dataAdicao: i.created_at, observacoes: i.observacoes })))
-        setNitrogenRecords(remoteData.nitrogen.map((n) => ({ id: n.id, dataAbastecimento: n.data_abastecimento, volume: Number(n.volume), observacoes: n.observacoes })))
-      } else {
-        // No remote data yet — use demo/localStorage
-        try {
-          const saved = localStorage.getItem('botijao-ssgen-v2')
-          if (saved) { const p = JSON.parse(saved); setItens(p.itens ?? []); setBotijoes(p.botijoes ?? DEFAULT_BOTIJOES) }
-          else { setItens(demoItems()); setBotijoes(DEFAULT_BOTIJOES) }
-        } catch { setItens(demoItems()); setBotijoes(DEFAULT_BOTIJOES) }
-        try { const saved = localStorage.getItem('nitrogen-ssgen'); if (saved) setNitrogenRecords(JSON.parse(saved)) } catch { /* */ }
-      }
+      setBotijoes(remoteData.botijoes.map((b) => ({ id: b.id, nome: b.nome, canecas: b.canecas, capacidadeLitros: Number(b.capacidade_litros) })))
+      setItens(remoteData.itens.map((i) => ({ id: i.id, touro: { code: i.touro_code, name: i.touro_name, registration: null, breed: i.touro_breed, daughters_count: 0 }, tipo: i.tipo as 'Convencional' | 'Sexado', doses: i.doses, preco: Number(i.preco), caneca: i.caneca, botijaoId: i.botijao_id, dataAdicao: i.created_at, observacoes: i.observacoes })))
+      setNitrogenRecords(remoteData.nitrogen.map((n) => ({ id: n.id, dataAbastecimento: n.data_abastecimento, volume: Number(n.volume), observacoes: n.observacoes })))
       setHydrated(true)
     } else if (!loadingRemote) {
-      // API unavailable — fallback to localStorage
-      try {
-        const saved = localStorage.getItem('botijao-ssgen-v2')
-        if (saved) { const p = JSON.parse(saved); setItens(p.itens ?? []); setBotijoes(p.botijoes ?? DEFAULT_BOTIJOES) }
-        else { setItens(demoItems()); setBotijoes(DEFAULT_BOTIJOES) }
-      } catch { setItens(demoItems()); setBotijoes(DEFAULT_BOTIJOES) }
-      try { const saved = localStorage.getItem('nitrogen-ssgen'); if (saved) setNitrogenRecords(JSON.parse(saved)) } catch { /* */ }
+      setItens([])
+      setBotijoes([])
+      setNitrogenRecords([])
       setHydrated(true)
     }
   }, [remoteData, loadingRemote, hydrated])
@@ -162,7 +127,7 @@ export function BotijaoPage() {
       }))
     }
     // Fallback to local semen inventory
-    const source = allBulls.length > 0 ? allBulls : demoItems().map((i) => i.touro)
+    const source = allBulls
     if (!addBullSearch) return source.slice(0, 30)
     const q = addBullSearch.trim().toLowerCase()
     return source.filter((b) => {
@@ -287,7 +252,7 @@ export function BotijaoPage() {
         </div>
         <div className="ss-card-body">
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-            {botijoes.map((btj) => {
+            {botijoes.length > 0 ? botijoes.map((btj) => {
               const st = botijaoStats.get(btj.id)
               const isActive = activeBotijao === btj.id
               return (
@@ -301,7 +266,7 @@ export function BotijaoPage() {
                   </div>
                 </button>
               )
-            })}
+            }) : <div className="col-span-full rounded-[10px] border border-[var(--ss-border)] bg-[var(--ss-wash)] p-5 text-center text-[12px] text-[var(--ss-muted)]">Nenhum botijão cadastrado</div>}
           </div>
           {activeBotijao && <div className="mt-2 text-[11px] text-[var(--ss-muted)]">Filtrando por <b className="text-[var(--ss-fg)]">{botijoes.find((b) => b.id === activeBotijao)?.nome}</b> · <button type="button" className="text-[var(--ss-primary)] underline" onClick={() => setActiveBotijao(null)}>ver todos</button></div>}
         </div>
@@ -364,7 +329,7 @@ export function BotijaoPage() {
           <div className="overflow-x-auto">
             <table className="ss-table">
               <thead><tr><th>NAAB</th><th onClick={() => handleSort('nome')} className="cursor-pointer">Nome</th><th>Botijão</th><th>Caneca</th><th onClick={() => handleSort('tipo')} className="cursor-pointer">Tipo</th><th onClick={() => handleSort('doses')} className="cursor-pointer">Doses</th><th onClick={() => handleSort('preco')} className="cursor-pointer">Preço</th><th>Ações</th></tr></thead>
-              <tbody>{filteredItens.map((i) => <tr key={i.id}><td className="ss-mono">{i.touro.code}</td><td>{i.touro.name ?? '-'}</td><td className="font-mono text-[11px] text-[var(--ss-muted)]">{botijoes.find((b) => b.id === i.botijaoId)?.nome ?? '-'}</td><td className="ss-mono">{i.caneca}</td><td><span className={i.tipo === 'Sexado' ? 'ss-badge-sex' : 'ss-badge-conv'}>{i.tipo}</span></td><td className="ss-mono">{i.doses}</td><td className="ss-mono">R$ {i.preco}</td><td><div className="flex gap-1"><button className="grid h-7 w-7 place-items-center rounded-md border border-[var(--ss-border)]" onClick={() => startEdit(i)} title="Editar"><Edit className="h-3.5 w-3.5" /></button><button className="grid h-7 w-7 place-items-center rounded-md border border-[var(--ss-border)]" onClick={() => duplicateItem(i)} title="Duplicar"><Copy className="h-3.5 w-3.5" /></button><button className="grid h-7 w-7 place-items-center rounded-md border border-[var(--ss-border)] text-[var(--ss-primary)]" onClick={() => { if (confirm('Remover este touro?')) removeItem(i.id) }} title="Remover"><Trash2 className="h-3.5 w-3.5" /></button></div></td></tr>)}</tbody>
+              <tbody>{filteredItens.length > 0 ? filteredItens.map((i) => <tr key={i.id}><td className="ss-mono">{i.touro.code}</td><td>{i.touro.name ?? '-'}</td><td className="font-mono text-[11px] text-[var(--ss-muted)]">{botijoes.find((b) => b.id === i.botijaoId)?.nome ?? '-'}</td><td className="ss-mono">{i.caneca}</td><td><span className={i.tipo === 'Sexado' ? 'ss-badge-sex' : 'ss-badge-conv'}>{i.tipo}</span></td><td className="ss-mono">{i.doses}</td><td className="ss-mono">R$ {i.preco}</td><td><div className="flex gap-1"><button className="grid h-7 w-7 place-items-center rounded-md border border-[var(--ss-border)]" onClick={() => startEdit(i)} title="Editar"><Edit className="h-3.5 w-3.5" /></button><button className="grid h-7 w-7 place-items-center rounded-md border border-[var(--ss-border)]" onClick={() => duplicateItem(i)} title="Duplicar"><Copy className="h-3.5 w-3.5" /></button><button className="grid h-7 w-7 place-items-center rounded-md border border-[var(--ss-border)] text-[var(--ss-primary)]" onClick={() => { if (confirm('Remover este touro?')) removeItem(i.id) }} title="Remover"><Trash2 className="h-3.5 w-3.5" /></button></div></td></tr>) : <tr><td colSpan={8} className="text-center text-[var(--ss-muted)]">Nenhum botijão cadastrado</td></tr>}</tbody>
             </table>
           </div>
         </div>

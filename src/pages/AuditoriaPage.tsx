@@ -7,7 +7,7 @@ import { RadarChart } from '@/components/charts/RadarChart'
 import { ParentescoGauge } from '@/components/charts/ParentescoGauge'
 import { SegmentedControl } from '@/components/SegmentedControl'
 import { TraitSelect } from '@/components/TraitSelect'
-import { agSteps, benchmarks, fmt, radarGroups, traitLabel } from '@/data/demoData'
+import { agSteps, benchmarks, fmt, radarGroups, traitLabel } from '@/lib/traits'
 import { useFemalesFull } from '@/hooks/useApi'
 import type { FemaleFull } from '@/lib/api'
 import {
@@ -156,14 +156,15 @@ function EvolucaoStep({ females }: { females: FemaleFull[] }) {
         const herdData = trendResult.data[trait]
         if (!herdData || herdData.length < 2) return null
         const bench = benchmarks.find(([key]) => key === trait)
-        const natAvg = bench ? bench[2] : herdData[0] * 0.85
-        const top25 = bench ? bench[3] : herdData[0] * 1.05
+        if (!bench) return null
+        const natAvg = bench[2]
+        const top25 = bench[3]
         const nationalData = herdData.map((_, i) => natAvg * 0.92 + ((natAvg - natAvg * 0.92) / (herdData.length - 1)) * i)
         const top25Data = herdData.map((_, i) => top25 * 0.92 + ((top25 - top25 * 0.92) / (herdData.length - 1)) * i)
         return (
           <div key={`${trait}-${idx}`} className="ss-card">
             <div className="ss-card-header">
-              <h3 className="ss-card-title">Evolução {traitLabel[trait] ?? trait.toUpperCase()} — Rebanho vs Nacional vs Top 25%</h3>
+              <h3 className="ss-card-title">Evolução {traitLabel[trait] ?? trait.toUpperCase()} — Rebanho vs Referência Nacional vs Top 25%</h3>
               <TraitSelect value={trait} onChange={(v) => changeChart(idx, v)} />
             </div>
             <div className="ss-card-body">

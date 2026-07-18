@@ -47,12 +47,12 @@ export function ComboChart({ years, herdData, nationalData, top25Data, trait, fo
         <polyline points={points(top25Data, min, max, step)} fill="none" stroke="#475569" strokeWidth="2" strokeLinecap="round" />
         <circle cx={80 + (years.length - 1) * step} cy={scale(nationalData.at(-1) ?? 0, min, max)} r="3.5" fill="#94a3b8" />
         <circle cx={80 + (years.length - 1) * step} cy={scale(top25Data.at(-1) ?? 0, min, max)} r="3.5" fill="#475569" />
-        <text x="676" y={scale(nationalData.at(-1) ?? 0, min, max) - 8} fontSize="9" fontWeight="600" fill="#94a3b8">Nacional {formatter(trait, nationalData.at(-1) ?? 0)}</text>
+        <text x="676" y={scale(nationalData.at(-1) ?? 0, min, max) - 8} fontSize="9" fontWeight="600" fill="#94a3b8">Referência Nacional {formatter(trait, nationalData.at(-1) ?? 0)}</text>
         <text x="676" y={scale(top25Data.at(-1) ?? 0, min, max) - 8} fontSize="9" fontWeight="600" fill="#475569">Top 25% {formatter(trait, top25Data.at(-1) ?? 0)}</text>
       </svg>
       <div className="mt-2.5 flex justify-center gap-5">
         <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[var(--ss-muted)]"><i className="h-3 w-3 rounded" style={{ background: '#1e3a5f' }} />Meu Rebanho</span>
-        <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[var(--ss-muted)]"><i className="w-5 border-t-2 border-dashed" style={{ borderColor: '#94a3b8' }} />Média Nacional</span>
+        <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[var(--ss-muted)]"><i className="w-5 border-t-2 border-dashed" style={{ borderColor: '#94a3b8' }} />Referência Nacional</span>
         <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[var(--ss-muted)]"><i className="h-0.5 w-5 rounded" style={{ background: '#475569' }} />Top 25%</span>
       </div>
     </div>

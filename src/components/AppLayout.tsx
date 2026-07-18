@@ -38,7 +38,7 @@ const titles: Record<string, [string, string]> = {
   '/provas': ['Prova Individual', 'Formato oficial Select Sires'],
   '/semen': ['Botijão Virtual', 'Estoque, doses e nitrogênio'],
   '/nexus': ['Nexus 3', 'Predição genética de progênie'],
-  '/auditoria': ['Auditoria Genética', 'Fluxo sequencial 1→7 · Embriões HO DS-II'],
+  '/auditoria': ['Auditoria Genética', 'Fluxo sequencial 1→7 · Rebanho'],
   '/lista-rebanho': ['Lista do Rebanho', 'Todas as fêmeas genotipadas'],
   '/admin': ['Administração', 'Usuários, fazendas e permissões'],
 }
@@ -114,7 +114,7 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
           {initials}
         </div>
         <div className="min-w-0">
-          <b className="block truncate text-[13px] font-semibold leading-tight text-[#E4E4E7]">{profile?.full_name ?? 'Diego C.'}</b>
+          <b className="block truncate text-[13px] font-semibold leading-tight text-[#E4E4E7]">{profile?.full_name ?? profile?.email ?? ''}</b>
           <small className="text-[10px] text-[var(--ss-sidebar-muted)]">Select Sires BR</small>
         </div>
       </div>
@@ -154,7 +154,7 @@ export function AppLayout() {
           <div className="flex items-center gap-2">
             <div className="hidden items-center gap-[7px] rounded-[8px] border border-[var(--ss-border)] bg-white px-3.5 py-[7px] text-[12px] font-semibold text-[var(--ss-text)] sm:flex">
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--ss-primary-bright)] shadow-[0_0_8px_rgba(220,38,38,.4)] animate-[ss-pulse_2s_infinite]" />
-              Embriões DS-II
+              Lista de Rebanho
             </div>
             <div className="hidden w-[220px] items-center gap-2 rounded-[8px] border border-[var(--ss-border)] bg-white px-3.5 py-[7px] text-[var(--ss-muted)] lg:flex">
               <Search className="h-[14px] w-[14px]" strokeWidth={1.8} />

@@ -2,7 +2,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Download, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useFemalesFull } from '@/hooks/useApi'
 import { api, type FemaleFull } from '@/lib/api'
-import { fmt } from '@/data/demoData'
+import { fmt } from '@/lib/traits'
 
 const CATEGORIES = [
   { key: 'Bezerra', label: 'Bezerras', color: '#f59e0b' },
@@ -232,3 +232,4 @@ export function HerdListPage() {
     </div>
   )
 }
+
