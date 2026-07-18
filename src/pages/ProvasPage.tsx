@@ -2,6 +2,7 @@ import { Download, FileText, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useFemalesFull } from '@/hooks/useApi'
 import type { FemaleFull } from '@/lib/api'
+import { useBreed } from '@/lib/breed'
 import { buildProofFromFemale } from '@/lib/proof'
 import { femaleTrait, fmt, traitLabel } from '@/lib/traits'
 import { generateProofPdf, generateCatalogPdf } from '@/lib/pdf'
@@ -33,6 +34,7 @@ export function ProvasPage() {
   const [active, setActive] = useState(0)
   const [query, setQuery] = useState('')
   const [rankTrait, setRankTrait] = useState('hhp')
+  const { indexLabel, udderLabel, traitLabels } = useBreed()
   const { data } = useFemalesFull({ page: 1, perPage: 5000 })
   const herd = data?.data ?? []
   const animal = herd[active] ?? herd[0]
@@ -78,7 +80,7 @@ export function ProvasPage() {
           <div className="ss-card-header">
             <h3 className="ss-card-title">Fêmeas · {herd.length}</h3>
             <select className="rounded-[7px] border border-[var(--ss-border)] bg-white px-2 py-1.5 text-[11px] font-medium" value={rankTrait} onChange={(e) => setRankTrait(e.target.value)}>
-              {rankTraits.map((key) => <option key={key} value={key}>{traitLabel[key]}</option>)}
+              {rankTraits.map((key) => <option key={key} value={key}>{traitLabels[key] ?? traitLabel[key]}</option>)}
             </select>
           </div>
           <div className="flex-1 overflow-auto p-2">
@@ -86,7 +88,7 @@ export function ProvasPage() {
               <button key={a.id} onClick={() => setActive(i)} className={`ss-rrow w-full grid-cols-[28px_1fr_auto_auto] px-3.5 py-2.5 text-left ${i === active ? 'is-selected' : ''}`}>
                 <input type="checkbox" checked={selected.has(i)} onClick={(e) => e.stopPropagation()} onChange={() => toggle(i)} className="h-[15px] w-[15px] accent-[var(--ss-primary)]" />
                 <div><div className="text-[13px] font-medium text-[var(--ss-fg)]">{a.name ?? a.ear_tag ?? 'Sem identificação'}</div><div className="font-mono text-[11px] text-[var(--ss-muted)]">{a.sire_naab ?? '—'} · Brinco {a.ear_tag ?? '—'}</div></div>
-                <div className="text-right"><b className="block font-mono text-xs text-[var(--ss-fg)]">{femaleTrait(a, rankTrait) != null ? fmt(rankTrait, femaleTrait(a, rankTrait) ?? 0) : '—'}</b><small className="text-[8.5px] text-[var(--ss-muted-2)]">{traitLabel[rankTrait]}</small></div>
+                <div className="text-right"><b className="block font-mono text-xs text-[var(--ss-fg)]">{femaleTrait(a, rankTrait) != null ? fmt(rankTrait, femaleTrait(a, rankTrait) ?? 0) : '—'}</b><small className="text-[8.5px] text-[var(--ss-muted-2)]">{traitLabels[rankTrait] ?? traitLabel[rankTrait]}</small></div>
                 <div className="text-right"><b className="block font-mono text-xs text-[var(--ss-fg)]">{a.hhp_dollar != null ? `$${a.hhp_dollar}` : '—'}</b><small className="text-[8.5px] text-[var(--ss-muted-2)]">HHP$</small></div>
               </button>
             ))}
@@ -98,7 +100,7 @@ export function ProvasPage() {
           <div className="grid grid-cols-1 lg:grid-cols-[.96fr_1.04fr]">
             <div className="border-r border-[var(--ss-border-2)] p-6">
               <div className="text-lg font-bold leading-tight tracking-[-.3px] text-[var(--ss-fg)]">{animal?.name ?? animal?.ear_tag ?? 'Sem identificação'}</div>
-              <div className="mt-2 font-mono text-[11px] leading-7 text-[var(--ss-text)]"><span className="text-[var(--ss-muted)]">Brinco {animal?.ear_tag ?? '—'}</span> · {animal?.breed ?? '—'} · Predição Pedigree<br /><b className="text-[var(--ss-fg)]">HHP$ {animal?.hhp_dollar ?? '—'}</b> · GTPI +{animal?.tpi ?? '—'} · NM$ {animal?.nm_dollar ?? '—'}</div>
+              <div className="mt-2 font-mono text-[11px] leading-7 text-[var(--ss-text)]"><span className="text-[var(--ss-muted)]">Brinco {animal?.ear_tag ?? '—'}</span> · {animal?.breed ?? '—'} · Predição Pedigree<br /><b className="text-[var(--ss-fg)]">HHP$ {animal?.hhp_dollar ?? '—'}</b> · {indexLabel} +{animal?.tpi ?? '—'} · NM$ {animal?.nm_dollar ?? '—'}</div>
               <div className="my-5 border-b-2 border-[var(--ss-fg)] pb-1 text-[11px] font-semibold uppercase tracking-[.6px] text-[var(--ss-fg)]">Pedigree</div>
               <div className="font-mono text-[11px] leading-6 text-[var(--ss-text)]">{animalProof?.ped.map((p, i) => p[0] === 'lact' ? <span key={i} className="block pl-4 text-[10px] text-[var(--ss-muted)]">{p[2]}</span> : <div key={i}><span className="font-medium text-[var(--ss-primary)]">{p[1]}</span> {p[2]}</div>)}</div>
               <div className="my-5 border-b-2 border-[var(--ss-fg)] pb-1 text-[11px] font-semibold uppercase tracking-[.6px] text-[var(--ss-fg)]">Linear</div>
@@ -108,7 +110,10 @@ export function ProvasPage() {
               {animalProof?.sections.map((section) => (
                 <div key={section.t}>
                   <div className="mb-2 mt-5 flex justify-between border-b-2 border-[var(--ss-fg)] pb-1 text-[11px] font-semibold uppercase tracking-[.6px] text-[var(--ss-fg)] first:mt-0">{section.t}<span className="font-mono text-[8.5px] font-normal normal-case tracking-normal text-[var(--ss-muted)]">{section.meta}</span></div>
-                  {section.rows.map((row) => <div key={`${section.t}-${row[0]}`} className="grid grid-cols-[minmax(0,1fr)_56px_minmax(0,1fr)] items-baseline gap-2 border-b border-[var(--ss-border-2)] py-[3.5px] font-mono text-[11px]"><div className="text-[var(--ss-text)]">{row[0]}</div><div className="text-right font-medium text-[var(--ss-fg)]">{row[1]}</div><div className="text-right text-[9.5px] text-[var(--ss-muted)]">{row[2]}</div></div>)}
+                  {section.rows.map((row) => {
+                    const label = row[0] === 'TPI' ? indexLabel : row[0] === 'UDC' ? udderLabel : row[0]
+                    return <div key={`${section.t}-${row[0]}`} className="grid grid-cols-[minmax(0,1fr)_56px_minmax(0,1fr)] items-baseline gap-2 border-b border-[var(--ss-border-2)] py-[3.5px] font-mono text-[11px]"><div className="text-[var(--ss-text)]">{label}</div><div className="text-right font-medium text-[var(--ss-fg)]">{row[1]}</div><div className="text-right text-[9.5px] text-[var(--ss-muted)]">{row[2]}</div></div>
+                  })}
                 </div>
               ))}
             </div>

@@ -64,6 +64,14 @@ export function useServiceOrderOptions() {
   })
 }
 
+export function useBreedParams() {
+  return useQuery({
+    queryKey: ['breed-params'],
+    queryFn: api.getBreedParams,
+    staleTime: 1000 * 60 * 60,
+  })
+}
+
 export function useOrders(params?: { page?: number; status?: string }) {
   return useQuery({
     queryKey: ['orders', params],

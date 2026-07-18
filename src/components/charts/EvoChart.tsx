@@ -1,4 +1,5 @@
 import { fmt, traitLabel } from '@/lib/traits'
+import { useBreed } from '@/lib/breed'
 
 interface EvoChartProps {
   data: number[]
@@ -9,6 +10,7 @@ interface EvoChartProps {
 }
 
 export function EvoChart({ data, years, trait, width = 540, height = 220 }: EvoChartProps) {
+  const { traitLabels } = useBreed()
   const pl = 46
   const pr = 18
   const pt = 18
@@ -82,7 +84,7 @@ export function EvoChart({ data, years, trait, width = 540, height = 220 }: EvoC
 
       {/* Last value label */}
       <text x={width - pr - 6} y={y(data[data.length - 1]) - 10} fontFamily="var(--ss-mono)" fontSize="11" fontWeight="700" fill={labelColor} textAnchor="end">
-        {traitLabel[trait] ?? trait.toUpperCase()} {fmt(trait, data[data.length - 1])}
+        {traitLabels[trait] ?? traitLabel[trait] ?? trait.toUpperCase()} {fmt(trait, data[data.length - 1])}
       </text>
     </svg>
   )

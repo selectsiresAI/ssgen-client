@@ -191,6 +191,28 @@ export interface LinearMeanRow {
   n: number
 }
 
+export interface BreedCatalogItem {
+  key: string
+  label: string
+  group: string
+}
+
+export interface BreedReference {
+  index_label: string
+  udder_label: string
+  genotyped_prefixes: string[]
+  catalog: BreedCatalogItem[]
+  benchmarks: [string, string, number, number, number][] | null
+  trend: Record<string, number[]> | null
+}
+
+export interface BreedParams {
+  breed: string
+  reference: BreedReference
+  label: string
+  is_placeholder: boolean
+}
+
 // --- Types ---
 
 export interface DashboardData {
@@ -306,6 +328,9 @@ export const api = {
     callFunction<Paginated<ServiceOrderOption>>('get-my-orders', { per_page: '100' }),
 
   getDashboard: () => callFunction<DashboardData>('get-my-dashboard'),
+
+  getBreedParams: () =>
+    callFunction<{ breed: string; params: BreedParams }>('get-breed-params'),
 
   getOrders: (params?: { page?: string; per_page?: string; status?: string }) =>
     callFunction<Paginated<ServiceOrder>>('get-my-orders', params),

@@ -7,7 +7,8 @@ import { RadarChart } from '@/components/charts/RadarChart'
 import { ParentescoGauge } from '@/components/charts/ParentescoGauge'
 import { SegmentedControl } from '@/components/SegmentedControl'
 import { TraitSelect } from '@/components/TraitSelect'
-import { agSteps, benchmarks, fmt, radarGroups, traitLabel } from '@/lib/traits'
+import { agSteps, fmt, radarGroups, traitLabel } from '@/lib/traits'
+import { useBreed } from '@/lib/breed'
 import { useFemalesFull } from '@/hooks/useApi'
 import type { FemaleFull } from '@/lib/api'
 import {
@@ -22,10 +23,11 @@ import {
 const defaultTraits = ['hhp', 'gtpi', 'nm']
 
 function ProgressaoStep({ females }: { females: FemaleFull[] }) {
+  const { traitLabels } = useBreed()
   const [count, setCount] = useState(3)
   const [charts, setCharts] = useState<string[]>(defaultTraits)
 
-  const allTraits = Object.keys(traitLabel)
+  const allTraits = Object.keys(traitLabels)
   const trendResult = useMemo(() => computeTrendByYear(females, allTraits), [females])
 
   const handleCount = (n: number) => {
@@ -59,7 +61,7 @@ function ProgressaoStep({ females }: { females: FemaleFull[] }) {
         return (
           <div key={`${trait}-${idx}`} className="ss-card">
             <div className="ss-card-header">
-              <h3 className="ss-card-title">Progressão · {traitLabel[trait] ?? trait.toUpperCase()}</h3>
+              <h3 className="ss-card-title">Progressão · {traitLabels[trait] ?? traitLabel[trait] ?? trait.toUpperCase()}</h3>
               <TraitSelect value={trait} onChange={(v) => changeChart(idx, v)} />
             </div>
             <div className="ss-card-body">
@@ -76,10 +78,11 @@ function ProgressaoStep({ females }: { females: FemaleFull[] }) {
 }
 
 function DistribuicaoStep({ females }: { females: FemaleFull[] }) {
+  const { traitLabels } = useBreed()
   const [count, setCount] = useState(3)
   const [charts, setCharts] = useState<string[]>(['hhp', 'gtpi', 'nm'])
 
-  const allTraits = Object.keys(traitLabel)
+  const allTraits = Object.keys(traitLabels)
 
   const handleCount = (n: number) => {
     const clamped = Math.max(1, Math.min(10, n))
@@ -110,7 +113,7 @@ function DistribuicaoStep({ females }: { females: FemaleFull[] }) {
         return (
           <div key={`${trait}-${idx}`} className="ss-card">
             <div className="ss-card-header">
-              <h3 className="ss-card-title">Distribuição · {traitLabel[trait] ?? trait.toUpperCase()}</h3>
+              <h3 className="ss-card-title">Distribuição · {traitLabels[trait] ?? traitLabel[trait] ?? trait.toUpperCase()}</h3>
               <TraitSelect value={trait} onChange={(v) => changeChart(idx, v)} />
             </div>
             <div className="ss-card-body">
@@ -124,7 +127,8 @@ function DistribuicaoStep({ females }: { females: FemaleFull[] }) {
 }
 
 function EvolucaoStep({ females }: { females: FemaleFull[] }) {
-  const allTraits = Object.keys(traitLabel)
+  const { benchmarks, breedLabel, traitLabels } = useBreed()
+  const allTraits = Object.keys(traitLabels)
   const trendResult = useMemo(() => computeTrendByYear(females, allTraits), [females])
   const [count, setCount] = useState(3)
   const [charts, setCharts] = useState<string[]>(['hhp', 'gtpi', 'nm'])
@@ -146,6 +150,12 @@ function EvolucaoStep({ females }: { females: FemaleFull[] }) {
 
   return (
     <div className="flex flex-col gap-3.5">
+      {benchmarks == null && (
+        <div className="rounded-[10px] border border-[var(--ss-border)] bg-[var(--ss-wash)] p-5 text-center">
+          <div className="text-[14px] font-bold text-[var(--ss-fg)]">Referência nacional {breedLabel} ainda não disponível</div>
+          <div className="mt-1 text-[12px] text-[var(--ss-muted)]">A série nacional foi omitida; a evolução do rebanho permanece disponível nas outras etapas.</div>
+        </div>
+      )}
       <div className="flex items-center gap-3">
         <label className="text-[12px] font-medium text-[var(--ss-fg)]">Gráficos visíveis:</label>
         <select value={count} onChange={(e) => handleCount(Number(e.target.value))} className="rounded-[7px] border border-[var(--ss-border)] bg-white px-2.5 py-1.5 font-mono text-[11.5px] text-[var(--ss-fg)] outline-none">
@@ -155,7 +165,7 @@ function EvolucaoStep({ females }: { females: FemaleFull[] }) {
       {charts.map((trait, idx) => {
         const herdData = trendResult.data[trait]
         if (!herdData || herdData.length < 2) return null
-        const bench = benchmarks.find(([key]) => key === trait)
+        const bench = benchmarks?.find(([key]) => key === trait)
         if (!bench) return null
         const natAvg = bench[2]
         const top25 = bench[3]
@@ -164,7 +174,7 @@ function EvolucaoStep({ females }: { females: FemaleFull[] }) {
         return (
           <div key={`${trait}-${idx}`} className="ss-card">
             <div className="ss-card-header">
-              <h3 className="ss-card-title">Evolução {traitLabel[trait] ?? trait.toUpperCase()} — Rebanho vs Referência Nacional vs Top 25%</h3>
+              <h3 className="ss-card-title">Evolução {traitLabels[trait] ?? traitLabel[trait] ?? trait.toUpperCase()} — Rebanho vs Referência Nacional vs Top 25%</h3>
               <TraitSelect value={trait} onChange={(v) => changeChart(idx, v)} />
             </div>
             <div className="ss-card-body">
@@ -180,12 +190,13 @@ function EvolucaoStep({ females }: { females: FemaleFull[] }) {
 // Etapa 6 (índice 5) — Scatter Plot — 4 quadrantes fixos
 const Q_COLORS = [
   { label: 'Elite', color: '#166534' },
-  { label: (y: string) => `Alto ${traitLabel[y] ?? y.toUpperCase()}`, color: '#16A34A' },
-  { label: (x: string) => `Alto ${traitLabel[x] ?? x.toUpperCase()}`, color: '#D97706' },
+  { label: (y: string, labels: Record<string, string>) => `Alto ${labels[y] ?? traitLabel[y] ?? y.toUpperCase()}`, color: '#16A34A' },
+  { label: (x: string, labels: Record<string, string>) => `Alto ${labels[x] ?? traitLabel[x] ?? x.toUpperCase()}`, color: '#D97706' },
   { label: 'Abaixo da média', color: '#C0633A' },
 ] as const
 
 function ScatterStep({ females }: { females: FemaleFull[] }) {
+  const { traitLabels } = useBreed()
   const [xTrait, setXTrait] = useState('gtpi')
   const [yTrait, setYTrait] = useState('hhp')
 
@@ -222,12 +233,14 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
 
   const xTickCount = 5, yTickCount = 5
   const topA = sampled.reduce((a, b) => ((getTraitValue(a, xTrait) ?? 0) + (getTraitValue(a, yTrait) ?? 0) > (getTraitValue(b, xTrait) ?? 0) + (getTraitValue(b, yTrait) ?? 0) ? a : b))
-  const qLabels = ['ELITE', `ALTO ${(traitLabel[yTrait] ?? yTrait).toUpperCase()}`, `ALTO ${(traitLabel[xTrait] ?? xTrait).toUpperCase()}`, 'ABAIXO']
+  const xLabel = traitLabels[xTrait] ?? traitLabel[xTrait] ?? xTrait
+  const yLabel = traitLabels[yTrait] ?? traitLabel[yTrait] ?? yTrait
+  const qLabels = ['ELITE', `ALTO ${yLabel.toUpperCase()}`, `ALTO ${xLabel.toUpperCase()}`, 'ABAIXO']
 
   return (
     <div className="ss-card">
       <div className="ss-card-header">
-        <h3 className="ss-card-title">Dispersão · {traitLabel[xTrait] ?? xTrait} × {traitLabel[yTrait] ?? yTrait}</h3>
+        <h3 className="ss-card-title">Dispersão · {xLabel} × {yLabel}</h3>
         <div className="flex flex-wrap items-center gap-2">
           <label className="text-[11.5px] font-semibold text-[var(--ss-muted)]">X</label><TraitSelect value={xTrait} onChange={setXTrait} />
           <label className="text-[11.5px] font-semibold text-[var(--ss-muted)]">Y</label><TraitSelect value={yTrait} onChange={setYTrait} />
@@ -273,8 +286,8 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
               const v = yMin + (i / yTickCount) * (yMax - yMin)
               return <text key={`yl${i}`} x={padL - 10} y={Y(v) + 4} textAnchor="end" fontSize="11" fontWeight="600" fill="var(--ss-muted)" fontFamily="var(--ss-mono)">{Math.round(v)}</text>
             })}
-            <text x={padL + plotW / 2} y={H - 10} textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--ss-fg)">{traitLabel[xTrait] ?? xTrait}</text>
-            <text x={16} y={padT + plotH / 2} textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--ss-fg)" transform={`rotate(-90 16 ${padT + plotH / 2})`}>{traitLabel[yTrait] ?? yTrait}</text>
+            <text x={padL + plotW / 2} y={H - 10} textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--ss-fg)">{xLabel}</text>
+            <text x={16} y={padT + plotH / 2} textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--ss-fg)" transform={`rotate(-90 16 ${padT + plotH / 2})`}>{yLabel}</text>
             {/* dots */}
             {sampled.map((a) => {
               const q = quadrant(a)
@@ -286,7 +299,7 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
               return (
                 <g key={a.id}>
                   <circle cx={X(xv)} cy={Y(yv)} r={isTop ? 8 : 4} fill={Q_COLORS[q].color} fillOpacity={isTop ? 1 : 0.7} stroke={q === 0 ? 'white' : 'rgba(255,255,255,.8)'} strokeWidth={isTop ? 2.5 : 1.5} className="cursor-pointer">
-                    <title>{label} · {traitLabel[xTrait]} {Math.round(xv)} · {traitLabel[yTrait]} {Math.round(yv)}</title>
+                    <title>{label} · {xLabel} {Math.round(xv)} · {yLabel} {Math.round(yv)}</title>
                   </circle>
                   {isTop && <text x={X(xv) + (near ? -13 : 13)} y={Y(yv) - 9} textAnchor={near ? 'end' : 'start'} fontSize="11.5" fontWeight="700" fill="var(--ss-fg)">{label}</text>}
                 </g>
@@ -295,7 +308,7 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
           </svg>
           <div className="flex flex-wrap gap-4 border-t border-[var(--ss-border-2)] bg-white px-4 py-3">
             {Q_COLORS.map((item, i) => {
-              const lbl = typeof item.label === 'function' ? item.label(i === 1 ? yTrait : xTrait) : item.label
+              const lbl = typeof item.label === 'function' ? item.label(i === 1 ? yTrait : xTrait, traitLabels) : item.label
               return (
                 <div key={i} className="flex items-center gap-1.5 text-[11.5px] font-semibold text-[var(--ss-muted)]">
                   <span className="h-2.5 w-2.5 rounded-full" style={{ background: item.color }} />{lbl} ({counts[i]})
@@ -313,6 +326,7 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
 const rankTraits = ['hhp', 'gtpi', 'nm', 'milk', 'fat', 'prot', 'pl', 'dpr', 'scs', 'ptat', 'udc', 'flc']
 
 function ForcasStep({ females }: { females: FemaleFull[] }) {
+  const { traitLabels } = useBreed()
   const [trait, setTrait] = useState('hhp')
   const [selectedIdx, setSelectedIdx] = useState(0)
   const [radar, setRadar] = useState('indices')
@@ -331,16 +345,17 @@ function ForcasStep({ females }: { females: FemaleFull[] }) {
   const animal = females[selectedIdx] ?? females[0]
   if (!animal) return null
   const grp = radarGroups[radar]
+  const displayGroup = { ...grp, names: grp.traits.map((t, i) => traitLabels[t] ?? grp.names[i]) }
   const animalData = grp.traits.reduce((o, t) => { o[t] = getTraitValue(animal, t) ?? 0; return o }, {} as Record<string, number>)
 
   return (
     <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1.55fr_1fr]">
       <div className="ss-card">
         <div className="ss-card-header">
-          <h3 className="ss-card-title">Ranking do Rebanho · {traitLabel[trait] ?? trait}</h3>
+          <h3 className="ss-card-title">Ranking do Rebanho · {traitLabels[trait] ?? traitLabel[trait] ?? trait}</h3>
           <div className="flex items-center gap-2">
             <select className="rounded-[7px] border border-[var(--ss-border)] bg-white px-2 py-1.5 text-[12px]" value={trait} onChange={(e) => setTrait(e.target.value)}>
-              {rankTraits.map((key) => <option key={key} value={key}>{traitLabel[key]}</option>)}
+              {rankTraits.map((key) => <option key={key} value={key}>{traitLabels[key] ?? traitLabel[key]}</option>)}
             </select>
           </div>
         </div>
@@ -352,7 +367,7 @@ function ForcasStep({ females }: { females: FemaleFull[] }) {
               <button key={row.id} type="button" onClick={() => setSelectedIdx(idx)} className={`ss-rrow w-full text-left ${idx === selectedIdx ? 'is-selected' : ''}`}>
                 <div className="text-center font-mono text-xs text-[var(--ss-muted)]">{i + 1}</div>
                 <div><div className="text-[13px] font-medium text-[var(--ss-fg)]">{label}</div><div className="font-mono text-[11px] text-[var(--ss-muted)]">{row.sire_naab ?? '—'} · {row.ear_tag ?? '—'}</div></div>
-                <div className="text-right"><b className="block font-mono text-[13px] font-medium text-[var(--ss-fg)]">{fmt(trait, getTraitValue(row, trait) ?? 0)}</b><small className="text-[8.5px] uppercase tracking-[.6px] text-[var(--ss-muted-2)]">{traitLabel[trait]}</small></div>
+                <div className="text-right"><b className="block font-mono text-[13px] font-medium text-[var(--ss-fg)]">{fmt(trait, getTraitValue(row, trait) ?? 0)}</b><small className="text-[8.5px] uppercase tracking-[.6px] text-[var(--ss-muted-2)]">{traitLabels[trait] ?? traitLabel[trait]}</small></div>
                 <div className="text-right"><b className="block font-mono text-[13px] font-medium text-[var(--ss-fg)]">{hhpVal != null ? `$${Math.round(hhpVal)}` : '—'}</b><small className="text-[8.5px] uppercase tracking-[.6px] text-[var(--ss-muted-2)]">HHP$</small></div>
               </button>
             )
@@ -363,7 +378,7 @@ function ForcasStep({ females }: { females: FemaleFull[] }) {
         <div className="ss-card-header"><h3 className="ss-card-title">Perfil · {animal.ear_tag || animal.cdcb_id || animal.id.slice(0, 8)}</h3></div>
         <div className="ss-card-body">
           <SegmentedControl options={Object.entries(radarGroups).map(([value, g]) => ({ value, label: g.label }))} value={radar} onChange={setRadar} wrap size="sm" />
-          <div className="mx-auto max-w-[320px]"><RadarChart animal={animalData} avg={herdAvg} group={grp} /></div>
+          <div className="mx-auto max-w-[320px]"><RadarChart animal={animalData} avg={herdAvg} group={displayGroup} /></div>
           <div className="mt-3 grid grid-cols-2 gap-2">
             {grp.traits.map((t, i) => {
               const av = getTraitValue(animal, t) ?? 0
@@ -372,7 +387,7 @@ function ForcasStep({ females }: { females: FemaleFull[] }) {
               const better = inv ? av < hv : av > hv
               return (
                 <div key={t} className="rounded-[9px] border border-[var(--ss-border)] bg-[var(--ss-wash)] px-[11px] py-[9px]">
-                  <small className="block text-[8.5px] uppercase tracking-[.6px] text-[var(--ss-muted)]">{grp.names[i]}</small>
+                  <small className="block text-[8.5px] uppercase tracking-[.6px] text-[var(--ss-muted)]">{displayGroup.names[i]}</small>
                   <b className="font-mono text-sm font-medium text-[var(--ss-fg)]">{fmt(t, av)}</b>
                   <span className={`ml-1 font-mono text-[9px] ${better ? 'text-[var(--ss-green)]' : 'text-[#C0633A]'}`}>méd {fmt(t, hv)} {av === hv ? '' : better ? '▲' : '▼'}</span>
                 </div>

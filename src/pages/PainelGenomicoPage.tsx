@@ -3,8 +3,9 @@ import { useMemo, useState } from 'react'
 import { BenchmarkSpectrum } from '@/components/BenchmarkSpectrum'
 import { GaugeChart } from '@/components/charts/GaugeChart'
 import { useFemalesFull } from '@/hooks/useApi'
+import { useBreed } from '@/lib/breed'
 import { computeHerdAverage } from '@/lib/herdStats'
-import { benchmarks, fmt, trend } from '@/lib/traits'
+import { fmt } from '@/lib/traits'
 import { generateReportPdf } from '@/lib/reportPdf'
 
 function getZone(trait: string, val: number, natAvg: number, _top25: number, top10: number): { pct: number; zone: string; color: string } {
@@ -23,6 +24,7 @@ export function PainelGenomicoPage() {
   const [spectrumCat, setSpectrumCat] = useState('all')
   const [showReport, setShowReport] = useState(false)
   const { data: fem, isLoading } = useFemalesFull({ page: 1, perPage: 5000 })
+  const { benchmarks, trend, breedLabel } = useBreed()
   const females = fem?.data ?? []
   const herdAvg = useMemo(() => computeHerdAverage(females), [females])
   const [reportSections, setReportSections] = useState([
@@ -54,7 +56,12 @@ export function PainelGenomicoPage() {
     ['tipo', 'Tipo'],
     ['saude', 'Saúde'],
   ]
-  const report = () => generateReportPdf({ sections: reportSections, herdAvg, benchmarks, trend, animals: females, attention: visibleAttention })
+  const hasReference = benchmarks != null && trend != null
+  const canGenerateReport = hasReference && 'years' in trend
+  const report = () => {
+    if (!canGenerateReport) return
+    generateReportPdf({ sections: reportSections, herdAvg, benchmarks, trend: trend as Parameters<typeof generateReportPdf>[0]['trend'], animals: females, attention: visibleAttention })
+  }
   const toggleReportSection = (key: string) => setReportSections((items) => items.map((item) => item.key === key ? { ...item, enabled: !item.enabled } : item))
   const isEmpty = !isLoading && Object.keys(herdAvg).length === 0
 
@@ -93,7 +100,7 @@ export function PainelGenomicoPage() {
               </div>
               <div className="flex justify-end gap-2">
                 <button type="button" className="ss-button ss-button-ghost" onClick={() => setShowReport(false)}>Cancelar</button>
-                <button type="button" className="ss-button" onClick={report}><Download />Gerar PDF (6 páginas)</button>
+                <button type="button" className="ss-button disabled:pointer-events-none disabled:opacity-40" disabled={!canGenerateReport} onClick={report}><Download />Gerar PDF (6 páginas)</button>
               </div>
             </div>
           </div>
@@ -113,6 +120,11 @@ export function PainelGenomicoPage() {
             <div className="rounded-[10px] border border-[var(--ss-border)] bg-[var(--ss-wash)] p-6 text-center">
               <div className="text-[14px] font-bold text-[var(--ss-fg)]">Sem resultados genômicos ainda</div>
               <div className="mt-1 text-[12px] text-[var(--ss-muted)]">os índices aparecem quando o laboratório liberar as provas.</div>
+            </div>
+          ) : !hasReference ? (
+            <div className="rounded-[10px] border border-[var(--ss-border)] bg-[var(--ss-wash)] p-6 text-center">
+              <div className="text-[14px] font-bold text-[var(--ss-fg)]">Referência nacional {breedLabel} ainda não disponível</div>
+              <div className="mt-1 text-[12px] text-[var(--ss-muted)]">A média real do rebanho continua disponível nas demais análises.</div>
             </div>
           ) : (
             <>

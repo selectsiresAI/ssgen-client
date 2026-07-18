@@ -2,6 +2,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Download, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useFemalesFull } from '@/hooks/useApi'
 import { api, type FemaleFull } from '@/lib/api'
+import { useBreed } from '@/lib/breed'
 import { fmt } from '@/lib/traits'
 
 const CATEGORIES = [
@@ -82,8 +83,27 @@ const herdCols: { key: keyof FemaleFull; label: string; mono?: boolean }[] = [
 function fmtCell(key: string, val: unknown): string {
   if (val == null) return '—'
   if (key === 'birth_date') return new Date(String(val)).toLocaleDateString('pt-BR')
-  if (typeof val === 'number') return fmt(key.replace('_dollar', '').replace('pta', '').replace('tpi', 'gtpi'), val)
+  if (typeof val === 'number') return fmt(traitKeyForColumn(key), val)
   return String(val)
+}
+
+function traitKeyForColumn(key: string): string {
+  const map: Record<string, string> = {
+    hhp_dollar: 'hhp',
+    tpi: 'gtpi',
+    nm_dollar: 'nm',
+    cm_dollar: 'cm',
+    fm_dollar: 'fm',
+    gm_dollar: 'gm',
+    ptam: 'milk',
+    ptaf: 'fat',
+    ptaf_pct: 'fat_pct',
+    ptap: 'prot',
+    ptap_pct: 'prot_pct',
+    f_sav: 'fsav',
+    h_liv: 'hliv',
+  }
+  return map[key] ?? key
 }
 
 type SortDir = 'asc' | 'desc' | null
@@ -94,6 +114,7 @@ export function HerdListPage() {
   const [sortCol, setSortCol] = useState<string | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const { traitLabels } = useBreed()
   const { data: femalesData } = useFemalesFull({ page: herdPage, perPage: 5000, search: herdSearch })
   const allFemales = femalesData?.data ?? []
   const totalFemales = femalesData?.total ?? 0
@@ -146,7 +167,7 @@ export function HerdListPage() {
   const exportFemales = async () => {
     const result = await api.getFemalesFull({ per_page: '9999' })
     const { utils, writeFile } = await import('xlsx')
-    const headers = herdCols.map((c) => c.label)
+    const headers = herdCols.map((c) => traitLabels[traitKeyForColumn(String(c.key))] ?? c.label)
     const rows = (result.data ?? []).map((f) => herdCols.map((c) => f[c.key] ?? ''))
     const ws = utils.aoa_to_sheet([headers, ...rows])
     const wb = utils.book_new()
@@ -199,7 +220,7 @@ export function HerdListPage() {
                 {herdCols.map((c) => (
                   <th key={c.key} onClick={() => toggleSort(String(c.key))} className="cursor-pointer select-none">
                     <span className="inline-flex items-center gap-1">
-                      {c.label}
+                      {traitLabels[traitKeyForColumn(String(c.key))] ?? c.label}
                       {sortCol === String(c.key) ? (sortDir === 'desc' ? <ArrowDown className="h-3 w-3" /> : <ArrowUp className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-30" />}
                     </span>
                   </th>

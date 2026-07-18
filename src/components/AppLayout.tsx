@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { NotificationsDropdown } from '@/components/NotificationsDropdown'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { BreedProvider } from '@/lib/breed'
 
 const navGroups = [
   {
@@ -129,6 +130,7 @@ export function AppLayout() {
   const [title, subtitle] = titles[location.pathname] ?? titles['/']
 
   return (
+    <BreedProvider>
     <div className="grid min-h-screen grid-cols-1 bg-[var(--ss-bg)] text-[var(--ss-text)] md:grid-cols-[248px_1fr]">
       <aside className="sticky top-0 hidden h-screen flex-col border-r border-[var(--ss-sidebar-border)] md:flex">
         <SidebarContent />
@@ -173,5 +175,6 @@ export function AppLayout() {
         </main>
       </div>
     </div>
+    </BreedProvider>
   )
 }

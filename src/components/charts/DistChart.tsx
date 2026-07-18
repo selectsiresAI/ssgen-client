@@ -1,4 +1,5 @@
 import { traitLabel } from '@/lib/traits'
+import { useBreed } from '@/lib/breed'
 
 interface DistChartProps {
   trait: string
@@ -17,6 +18,7 @@ const BAR_COLORS = [
 ]
 
 export function DistChart({ trait, trendData, bins: propBins, height }: DistChartProps) {
+  const { traitLabels } = useBreed()
   const bins = propBins ?? (() => {
     const data = trendData ?? []
     if (data.length === 0) return []
@@ -58,7 +60,7 @@ export function DistChart({ trait, trendData, bins: propBins, height }: DistChar
         })}
       </div>
       <div className="mt-2 text-center font-mono text-[10px] font-medium text-[var(--ss-muted)]">
-        {traitLabel[trait] ?? trait} · {total} animais
+        {traitLabels[trait] ?? traitLabel[trait] ?? trait} · {total} animais
       </div>
     </div>
   )

@@ -1,4 +1,5 @@
 import { fmt, traitLabel } from '@/lib/traits'
+import { useBreed } from '@/lib/breed'
 
 interface BenchmarkSpectrumProps {
   benchmarks: [string, string, number, number, number][]
@@ -27,6 +28,7 @@ function zoneFor(trait: string, val: number, natAvg: number, _top25: number, top
 }
 
 export function BenchmarkSpectrum({ benchmarks, herdAvg, category }: BenchmarkSpectrumProps) {
+  const { traitLabels } = useBreed()
   const filtered = category === 'all' ? benchmarks : benchmarks.filter(([key]) => categories[category]?.includes(key))
 
   return (
@@ -40,7 +42,7 @@ export function BenchmarkSpectrum({ benchmarks, herdAvg, category }: BenchmarkSp
           <div key={key} className="grid grid-cols-[110px_1fr_120px] items-center gap-[18px] border-b border-[var(--ss-border-2)] py-[14px] last:border-0 max-[720px]:grid-cols-1">
             <div>
               <div className="text-[14px] font-bold text-[var(--ss-fg)]">{label}</div>
-              <div className="font-mono text-[10px] text-[var(--ss-muted)]">{traitLabel[key] ?? key.toUpperCase()}</div>
+              <div className="font-mono text-[10px] text-[var(--ss-muted)]">{traitLabels[key] ?? traitLabel[key] ?? key.toUpperCase()}</div>
             </div>
             <div className="relative h-2 rounded-[5px] bg-[linear-gradient(90deg,#DC2626,#F59E0B_30%,#65A30D_60%,#22C55E_85%,#16A34A)] shadow-[inset_0_1px_2px_rgba(0,0,0,.06)]">
               <div className="absolute inset-y-0 z-20 w-0.5" style={{ left: '50%', background: 'repeating-linear-gradient(to bottom, var(--ss-muted) 0, var(--ss-muted) 3px, transparent 3px, transparent 6px)' }} />

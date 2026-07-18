@@ -1,4 +1,5 @@
 import { traitLabel } from '@/lib/traits'
+import { useBreed } from '@/lib/breed'
 
 const traitGroups = [
   { label: 'Índices', keys: ['hhp', 'gtpi', 'nm', 'cm', 'fm', 'gm'] },
@@ -16,6 +17,8 @@ interface TraitSelectProps {
 }
 
 export function TraitSelect({ value, onChange, className }: TraitSelectProps) {
+  const { traitLabels } = useBreed()
+
   return (
     <select
       value={value}
@@ -25,7 +28,7 @@ export function TraitSelect({ value, onChange, className }: TraitSelectProps) {
       {traitGroups.map((g) => (
         <optgroup key={g.label} label={g.label}>
           {g.keys.map((k) => (
-            <option key={k} value={k}>{traitLabel[k] ?? k.toUpperCase()}</option>
+            <option key={k} value={k}>{traitLabels[k] ?? traitLabel[k] ?? k.toUpperCase()}</option>
           ))}
         </optgroup>
       ))}
