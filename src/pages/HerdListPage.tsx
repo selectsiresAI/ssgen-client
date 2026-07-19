@@ -137,13 +137,8 @@ export function HerdListPage() {
     return result
   }, [allFemales, selectedCategory])
 
-  const PER_PAGE = 200
   const totalFiltered = filteredFemales.length
-  const totalPages = Math.max(1, Math.ceil(totalFiltered / PER_PAGE))
-  const rawFemales = useMemo(() => {
-    const from = (herdPage - 1) * PER_PAGE
-    return filteredFemales.slice(from, from + PER_PAGE)
-  }, [filteredFemales, herdPage])
+  const rawFemales = filteredFemales   // sem paginação — cliente rola por todos
 
   const columns = useMemo(() => herdCols.map((col) => {
     if (col.role === 'index') return { ...col, key: indexKey, label: indexLabel }
@@ -246,15 +241,6 @@ export function HerdListPage() {
             </tbody>
           </table>
         </div>
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-[var(--ss-border-2)] px-4 py-2.5">
-            <span className="font-mono text-[11px] text-[var(--ss-muted)]">Página {herdPage} de {totalPages} · {totalFiltered} fêmeas</span>
-            <div className="flex gap-1.5">
-              <button className="ss-button ss-button-ghost ss-button-sm" disabled={herdPage <= 1} onClick={() => setHerdPage((p) => p - 1)}>← Anterior</button>
-              <button className="ss-button ss-button-ghost ss-button-sm" disabled={herdPage >= totalPages} onClick={() => setHerdPage((p) => p + 1)}>Próxima →</button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )

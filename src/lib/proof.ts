@@ -24,7 +24,8 @@ const n = (value: number | null | undefined) => value ?? 0
 const f2 = (value: number) => (value >= 0 ? '+' : '') + value.toFixed(2)
 const f1 = (value: number) => (value >= 0 ? '+' : '') + value.toFixed(1)
 const plus = (value: number) => `${value >= 0 ? '+' : ''}${value}`
-const money = (value: number) => `${value >= 0 ? '+$' : '-$'}${Math.abs(value)}`
+const money = (value: number) => `${value >= 0 ? '+$' : '-$'}${Math.round(Math.abs(value))}`
+const idx = (value: number) => `${value > 0 ? '+' : ''}${Math.round(value)}`
 const femaleNumber = (f: FemaleFull, key: string) => {
   const value = f[key]
   return typeof value === 'number' ? value : 0
@@ -58,7 +59,7 @@ export function buildProofFromFemale(f: FemaleFull, opts: BreedProofOptions = ho
     ],
     sections: [
       { t: 'Produção', meta: '(PTA) · Predição Pedigree', rows: [['Leite', plus(n(f.ptam)), ''], ['Proteína', plus(n(f.ptap)), '% Prot ' + f2(n(f.ptap_pct))], ['Gordura', plus(n(f.ptaf)), '% Gord ' + f2(n(f.ptaf_pct))], ['CFP', plus(n(f.cfp)), ''], ['NM$', money(n(f.nm_dollar)), ''], ['GM$', money(n(f.gm_dollar)), ''], ['F.Sav', plus(n(f.f_sav)), ''], ['RFI', String(n(f.rfi)), '']] },
-      { t: 'Tipo', meta: '(PTA) · Predição Pedigree', rows: [[opts.indexLabel, plus(femaleNumber(f, opts.indexKey)), ''], ['PTAT', f2(n(f.ptat)), ''], [opts.udderLabel, f2(femaleNumber(f, opts.udderKey)), ''], ['FLC', n(f.flc).toFixed(2), '']] },
+      { t: 'Tipo', meta: '(PTA) · Predição Pedigree', rows: [[opts.indexLabel, idx(femaleNumber(f, opts.indexKey)), ''], ['PTAT', f2(n(f.ptat)), ''], [opts.udderLabel, opts.udderKey === 'jui' ? idx(femaleNumber(f, opts.udderKey)) : f2(femaleNumber(f, opts.udderKey)), ''], ['FLC', n(f.flc).toFixed(2), '']] },
       { t: 'Aptidão', meta: '', rows: [['HHP$®', money(n(f.hhp_dollar)), ''], ['SCS', n(f.scs).toFixed(2), ''], ['PL', f1(n(f.pl)), ''], ['LIV', f1(n(f.liv)), ''], ['DPR', f1(n(f.dpr)), ''], ['HCR', f1(n(f.hcr)), ''], ['CCR', f1(n(f.ccr)), ''], ['FI', f1(n(f.fi)), '']] },
       { t: 'Saúde', meta: '', rows: [['Mastite', f1(n(f.mast)), ''], ['Metrite', f1(n(f.met)), ''], ['Ret. Placenta', f1(n(f.rp)), ''], ['Desp. Abomaso', f1(n(f.da)), ''], ['Cetose', f1(n(f.ket)), ''], ['Febre de Leite', f1(n(f.mf)), '']] },
       { t: 'Facilidade de Parto', meta: '', rows: [['SCE', n(f.sce).toFixed(1), ''], ['SSB', n(f.ssb).toFixed(1), ''], ['DSB', n(f.dsb).toFixed(1), ''], ['Gestação', f1(n(f.gl)), ''], ['EFC', plus(n(f.efc)), '']] },

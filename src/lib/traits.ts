@@ -154,8 +154,9 @@ export function femaleTrait(f: Record<string, unknown>, demoKey: string): number
   return typeof value === 'number' && Number.isFinite(value) ? value : null
 }
 export function fmt(trait: string, value: number): string {
-  const dec = ['dpr', 'pl', 'ptat', 'udc', 'jui', 'flc', 'hcr', 'ccr', 'liv', 'sce', 'fat_pct', 'prot_pct', 'da', 'ket', 'met', 'rp', 'gl', 'sta', 'str', 'dfm', 'rua', 'rw', 'rls', 'rlr', 'fta', 'fls', 'fua', 'ruh', 'ruw', 'ucl', 'udp', 'ftp', 'rtp', 'ftl']
-  if (['nm', 'hhp', 'cm', 'fm', 'gm'].includes(trait)) return `$${value}`
+  const dec = ['dpr', 'pl', 'ptat', 'udc', 'flc', 'hcr', 'ccr', 'liv', 'sce', 'fat_pct', 'prot_pct', 'da', 'ket', 'met', 'rp', 'gl', 'sta', 'str', 'dfm', 'rua', 'rw', 'rls', 'rlr', 'fta', 'fls', 'fua', 'ruh', 'ruw', 'ucl', 'udp', 'ftp', 'rtp', 'ftl']
+  if (['nm', 'hhp', 'cm', 'fm', 'gm'].includes(trait)) return `$${Math.round(value)}`
+  if (['gtpi', 'tpi', 'jpi', 'jui'].includes(trait)) return `${value > 0 ? '+' : ''}${Math.round(value)}`
   if (trait === 'scs') return value.toFixed(2)
   if (dec.includes(trait)) return `${value > 0 ? '+' : ''}${value.toFixed(2)}`
   if (['mf', 'gfi', 'mast', 'ssb', 'dsb', 'hliv', 'fi'].includes(trait)) return value.toFixed(1)
