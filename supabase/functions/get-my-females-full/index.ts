@@ -119,7 +119,7 @@ Deno.serve(async (req: Request) => {
       "h_liv", "fi", "gl", "efc", "bwc",
       "sta", "dfm", "rua", "rls", "rtp", "ftl", "rw", "rlr",
       "fta", "fls", "fua", "ruh", "ruw", "ucl", "udp", "ftp",
-      "rfi", "beta_casein", "kappa_casein", "gfi",
+      "rfi", "beta_casein", "kappa_casein", "gfi", "jpi", "jui", "str:str_num",
       "ptam:pta_milk", "ptaf:pta_fat", "ptaf_pct:pta_fat_pct",
       "ptap:pta_protein", "ptap_pct:pta_protein_pct",
       "pl:pta_pl", "dpr:pta_dpr", "liv:pta_livability", "scs:pta_scs",
