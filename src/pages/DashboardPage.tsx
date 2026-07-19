@@ -11,7 +11,7 @@ export function DashboardPage() {
     <div>
       <div className="ss-grid-kpis">
         <KpiCard icon={FileText} label="OS abertas" value={data?.orders_in_progress ?? 0} delta="" />
-        <KpiCard icon={Plus} label="Embriões cadastrados" value={(data?.total_genotyped ?? 0).toLocaleString('pt-BR')} delta="" />
+        <KpiCard icon={Plus} label="Fêmeas cadastradas" value={(data?.total_genotyped ?? 0).toLocaleString('pt-BR')} delta="" />
         <KpiCard icon={Download} label="Laudos disponíveis" value={data?.recent_results ?? 0} delta="" />
         <KpiCard icon={Clock} label="Aguardando CDCB" value={0} delta="" />
       </div>

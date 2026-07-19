@@ -135,6 +135,7 @@ Deno.serve(async (req: Request) => {
         .from("females")
         .select(selectCols, { count: "exact" })
         .in("client_id", clientIds)
+        .is("deleted_at", null)
         .order("nm_dollar", { ascending: false, nullsFirst: false })
         .range(rangeFrom, rangeTo);
 
