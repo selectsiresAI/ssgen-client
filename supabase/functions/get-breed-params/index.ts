@@ -41,6 +41,13 @@ Deno.serve(async (req: Request) => {
 
     let breed = forced ?? null;
 
+    // 0) user-level breed preference (set at signup)
+    if (!breed) {
+      const { data: prof } = await clientDb
+        .from("profiles").select("breed").eq("id", user.id).maybeSingle();
+      if (prof?.breed) breed = prof.breed as string;
+    }
+
     if (!breed) {
       const { data: links } = await clientDb
         .from("client_links").select("platform_client_id").eq("user_id", user.id);

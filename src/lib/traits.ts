@@ -137,10 +137,10 @@ export const benchmarks: [string, string, number, number, number][] = [
 ]
 
 export const DEMO_TO_FEMALE: Record<string, string> = {
-  gtpi: 'tpi', nm: 'nm_dollar', hhp: 'hhp_dollar', cm: 'cm_dollar', fm: 'fm_dollar', gm: 'gm_dollar',
+  gtpi: 'tpi', jpi: 'jpi', nm: 'nm_dollar', hhp: 'hhp_dollar', cm: 'cm_dollar', fm: 'fm_dollar', gm: 'gm_dollar',
   milk: 'ptam', fat: 'ptaf', fat_pct: 'ptaf_pct', prot: 'ptap', prot_pct: 'ptap_pct',
   dpr: 'dpr', pl: 'pl', scs: 'scs', hcr: 'hcr', ccr: 'ccr', liv: 'liv', sce: 'sce',
-  ptat: 'ptat', udc: 'udc', flc: 'flc', fsav: 'f_sav', rfi: 'rfi', cfp: 'cfp', efc: 'efc',
+  ptat: 'ptat', udc: 'udc', jui: 'jui', flc: 'flc', fsav: 'f_sav', rfi: 'rfi', cfp: 'cfp', efc: 'efc',
   da: 'da', ket: 'ket', mast: 'mast', met: 'met', rp: 'rp', ssb: 'ssb', dsb: 'dsb', hliv: 'h_liv',
   fi: 'fi', gl: 'gl', mf: 'mf', gfi: 'gfi', sta: 'sta', str: 'str', dfm: 'dfm',
   rua: 'rua', rw: 'rw', rls: 'rls', rlr: 'rlr', fta: 'fta', fls: 'fls', fua: 'fua', ruh: 'ruh', ruw: 'ruw',
@@ -154,7 +154,7 @@ export function femaleTrait(f: Record<string, unknown>, demoKey: string): number
   return typeof value === 'number' && Number.isFinite(value) ? value : null
 }
 export function fmt(trait: string, value: number): string {
-  const dec = ['dpr', 'pl', 'ptat', 'udc', 'flc', 'hcr', 'ccr', 'liv', 'sce', 'fat_pct', 'prot_pct', 'da', 'ket', 'met', 'rp', 'gl', 'sta', 'str', 'dfm', 'rua', 'rw', 'rls', 'rlr', 'fta', 'fls', 'fua', 'ruh', 'ruw', 'ucl', 'udp', 'ftp', 'rtp', 'ftl']
+  const dec = ['dpr', 'pl', 'ptat', 'udc', 'jui', 'flc', 'hcr', 'ccr', 'liv', 'sce', 'fat_pct', 'prot_pct', 'da', 'ket', 'met', 'rp', 'gl', 'sta', 'str', 'dfm', 'rua', 'rw', 'rls', 'rlr', 'fta', 'fls', 'fua', 'ruh', 'ruw', 'ucl', 'udp', 'ftp', 'rtp', 'ftl']
   if (['nm', 'hhp', 'cm', 'fm', 'gm'].includes(trait)) return `$${value}`
   if (trait === 'scs') return value.toFixed(2)
   if (dec.includes(trait)) return `${value > 0 ? '+' : ''}${value.toFixed(2)}`

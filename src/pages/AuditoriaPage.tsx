@@ -1,5 +1,5 @@
 import { Check, Info, Loader2 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ComboChart } from '@/components/charts/ComboChart'
 import { EvoChart } from '@/components/charts/EvoChart'
 import { DistChart } from '@/components/charts/DistChart'
@@ -22,10 +22,19 @@ import {
 
 const defaultTraits = ['hhp', 'gtpi', 'nm']
 
+function breedTraits(traits: string[], indexKey: string, udderKey: string) {
+  return traits.map((trait) => {
+    if (trait === 'gtpi' || trait === 'tpi' || trait === 'jpi') return indexKey
+    if (trait === 'udc' || trait === 'jui') return udderKey
+    return trait
+  })
+}
+
 function ProgressaoStep({ females }: { females: FemaleFull[] }) {
-  const { traitLabels } = useBreed()
+  const { indexKey, udderKey, traitLabels } = useBreed()
   const [count, setCount] = useState(3)
-  const [charts, setCharts] = useState<string[]>(defaultTraits)
+  const [charts, setCharts] = useState<string[]>(() => breedTraits(defaultTraits, indexKey, udderKey))
+  useEffect(() => setCharts((items) => breedTraits(items, indexKey, udderKey)), [indexKey, udderKey])
 
   const allTraits = Object.keys(traitLabels)
   const trendResult = useMemo(() => computeTrendByYear(females, allTraits), [females])
@@ -78,9 +87,10 @@ function ProgressaoStep({ females }: { females: FemaleFull[] }) {
 }
 
 function DistribuicaoStep({ females }: { females: FemaleFull[] }) {
-  const { traitLabels } = useBreed()
+  const { indexKey, udderKey, traitLabels } = useBreed()
   const [count, setCount] = useState(3)
-  const [charts, setCharts] = useState<string[]>(['hhp', 'gtpi', 'nm'])
+  const [charts, setCharts] = useState<string[]>(() => breedTraits(defaultTraits, indexKey, udderKey))
+  useEffect(() => setCharts((items) => breedTraits(items, indexKey, udderKey)), [indexKey, udderKey])
 
   const allTraits = Object.keys(traitLabels)
 
@@ -127,11 +137,12 @@ function DistribuicaoStep({ females }: { females: FemaleFull[] }) {
 }
 
 function EvolucaoStep({ females }: { females: FemaleFull[] }) {
-  const { benchmarks, breedLabel, traitLabels } = useBreed()
+  const { benchmarks, breedLabel, indexKey, udderKey, traitLabels } = useBreed()
   const allTraits = Object.keys(traitLabels)
   const trendResult = useMemo(() => computeTrendByYear(females, allTraits), [females])
   const [count, setCount] = useState(3)
-  const [charts, setCharts] = useState<string[]>(['hhp', 'gtpi', 'nm'])
+  const [charts, setCharts] = useState<string[]>(() => breedTraits(defaultTraits, indexKey, udderKey))
+  useEffect(() => setCharts((items) => breedTraits(items, indexKey, udderKey)), [indexKey, udderKey])
 
   const handleCount = (n: number) => {
     const clamped = Math.max(1, Math.min(10, n))
@@ -196,9 +207,10 @@ const Q_COLORS = [
 ] as const
 
 function ScatterStep({ females }: { females: FemaleFull[] }) {
-  const { traitLabels } = useBreed()
-  const [xTrait, setXTrait] = useState('gtpi')
+  const { indexKey, traitLabels } = useBreed()
+  const [xTrait, setXTrait] = useState(indexKey)
   const [yTrait, setYTrait] = useState('hhp')
+  useEffect(() => setXTrait((trait) => breedTraits([trait], indexKey, 'udc')[0]), [indexKey])
 
   // Sample up to 500 animals for scatter performance
   const sampled = useMemo(() => {
@@ -326,7 +338,7 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
 const rankTraits = ['hhp', 'gtpi', 'nm', 'milk', 'fat', 'prot', 'pl', 'dpr', 'scs', 'ptat', 'udc', 'flc']
 
 function ForcasStep({ females }: { females: FemaleFull[] }) {
-  const { traitLabels } = useBreed()
+  const { indexKey, udderKey, traitLabels } = useBreed()
   const [trait, setTrait] = useState('hhp')
   const [selectedIdx, setSelectedIdx] = useState(0)
   const [radar, setRadar] = useState('indices')
@@ -345,8 +357,9 @@ function ForcasStep({ females }: { females: FemaleFull[] }) {
   const animal = females[selectedIdx] ?? females[0]
   if (!animal) return null
   const grp = radarGroups[radar]
-  const displayGroup = { ...grp, names: grp.traits.map((t, i) => traitLabels[t] ?? grp.names[i]) }
-  const animalData = grp.traits.reduce((o, t) => { o[t] = getTraitValue(animal, t) ?? 0; return o }, {} as Record<string, number>)
+  const groupTraits = breedTraits(grp.traits, indexKey, udderKey)
+  const displayGroup = { ...grp, traits: groupTraits, names: groupTraits.map((t, i) => traitLabels[t] ?? grp.names[i]) }
+  const animalData = groupTraits.reduce((o, t) => { o[t] = getTraitValue(animal, t) ?? 0; return o }, {} as Record<string, number>)
 
   return (
     <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1.55fr_1fr]">
@@ -355,7 +368,7 @@ function ForcasStep({ females }: { females: FemaleFull[] }) {
           <h3 className="ss-card-title">Ranking do Rebanho · {traitLabels[trait] ?? traitLabel[trait] ?? trait}</h3>
           <div className="flex items-center gap-2">
             <select className="rounded-[7px] border border-[var(--ss-border)] bg-white px-2 py-1.5 text-[12px]" value={trait} onChange={(e) => setTrait(e.target.value)}>
-              {rankTraits.map((key) => <option key={key} value={key}>{traitLabels[key] ?? traitLabel[key]}</option>)}
+              {breedTraits(rankTraits, indexKey, udderKey).map((key) => <option key={key} value={key}>{traitLabels[key] ?? traitLabel[key]}</option>)}
             </select>
           </div>
         </div>
@@ -380,7 +393,7 @@ function ForcasStep({ females }: { females: FemaleFull[] }) {
           <SegmentedControl options={Object.entries(radarGroups).map(([value, g]) => ({ value, label: g.label }))} value={radar} onChange={setRadar} wrap size="sm" />
           <div className="mx-auto max-w-[320px]"><RadarChart animal={animalData} avg={herdAvg} group={displayGroup} /></div>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            {grp.traits.map((t, i) => {
+            {groupTraits.map((t, i) => {
               const av = getTraitValue(animal, t) ?? 0
               const hv = herdAvg[t] ?? 0
               const inv = ['scs', 'flc', 'da', 'ket', 'rfi', 'ssb', 'dsb', 'gl'].includes(t)

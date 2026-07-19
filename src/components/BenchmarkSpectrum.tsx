@@ -28,8 +28,13 @@ function zoneFor(trait: string, val: number, natAvg: number, _top25: number, top
 }
 
 export function BenchmarkSpectrum({ benchmarks, herdAvg, category }: BenchmarkSpectrumProps) {
-  const { traitLabels } = useBreed()
-  const filtered = category === 'all' ? benchmarks : benchmarks.filter(([key]) => categories[category]?.includes(key))
+  const { indexKey, udderKey, traitLabels } = useBreed()
+  const categoryKeys = categories[category]?.map((key) => {
+    if (key === 'gtpi') return indexKey
+    if (key === 'udc') return udderKey
+    return key
+  })
+  const filtered = category === 'all' ? benchmarks : benchmarks.filter(([key]) => categoryKeys?.includes(key))
 
   return (
     <div className="flex max-h-[420px] flex-col overflow-y-auto ss-herd-scroll">

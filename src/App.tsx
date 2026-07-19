@@ -13,7 +13,6 @@ const ProvasPage = lazy(() => import('@/pages/ProvasPage').then((m) => ({ defaul
 const AuditoriaPage = lazy(() => import('@/pages/AuditoriaPage').then((m) => ({ default: m.AuditoriaPage })))
 const BotijaoPage = lazy(() => import('@/pages/BotijaoPage').then((m) => ({ default: m.BotijaoPage })))
 const HerdListPage = lazy(() => import('@/pages/HerdListPage').then((m) => ({ default: m.HerdListPage })))
-const NexusPage = lazy(() => import('@/pages/NexusPage').then((m) => ({ default: m.NexusPage })))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,7 +54,7 @@ export default function App() {
             <Route path="/semen" element={<Suspense fallback={<PageLoader />}><BotijaoPage /></Suspense>} />
             <Route path="/botijao" element={<Navigate to="/semen" replace />} />
             <Route path="/auditoria" element={<Suspense fallback={<PageLoader />}><AuditoriaPage /></Suspense>} />
-            <Route path="/nexus" element={<Suspense fallback={<PageLoader />}><NexusPage /></Suspense>} />
+            <Route path="/nexus" element={<Navigate to="/" replace />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -19,5 +19,5 @@ export function computeHerdAverage(females: FemaleFull[]): Record<string, number
 }
 
 export function genotypedCount(females: FemaleFull[]): number {
-  return females.filter((f) => f.hhp_dollar != null || f.tpi != null).length
+  return females.filter((f) => f.hhp_dollar != null || f.tpi != null || f.jpi != null).length
 }

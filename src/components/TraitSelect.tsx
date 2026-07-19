@@ -17,7 +17,15 @@ interface TraitSelectProps {
 }
 
 export function TraitSelect({ value, onChange, className }: TraitSelectProps) {
-  const { traitLabels } = useBreed()
+  const { indexKey, udderKey, traitLabels } = useBreed()
+  const groups = traitGroups.map((group) => ({
+    ...group,
+    keys: group.keys.map((key) => {
+      if (key === 'gtpi') return indexKey
+      if (key === 'udc') return udderKey
+      return key
+    }),
+  }))
 
   return (
     <select
@@ -25,7 +33,7 @@ export function TraitSelect({ value, onChange, className }: TraitSelectProps) {
       onChange={(e) => onChange(e.target.value)}
       className={`rounded-[8px] border border-[var(--ss-border)] bg-white px-3 py-1.5 font-mono text-[11px] text-[var(--ss-fg)] outline-none ${className ?? ''}`}
     >
-      {traitGroups.map((g) => (
+      {groups.map((g) => (
         <optgroup key={g.label} label={g.label}>
           {g.keys.map((k) => (
             <option key={k} value={k}>{traitLabels[k] ?? traitLabel[k] ?? k.toUpperCase()}</option>

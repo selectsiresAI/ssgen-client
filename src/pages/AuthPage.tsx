@@ -15,6 +15,7 @@ export function AuthPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
+  const [breed, setBreed] = useState<'HO' | 'JE'>('HO')
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -72,7 +73,7 @@ export function AuthPage() {
     setError(null)
     setLoading(true)
     try {
-      await signUp(email, password, fullName)
+      await signUp(email, password, fullName, breed)
       setMessage('Conta criada! Verifique seu email para confirmar.')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erro ao criar conta'
@@ -218,6 +219,28 @@ export function AuthPage() {
                     required
                     minLength={6}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label>Raça</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {([
+                      ['HO', 'Holandês'],
+                      ['JE', 'Jersey'],
+                    ] as const).map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setBreed(value)}
+                        className={`rounded-md border px-3 py-2 text-sm font-medium transition ${
+                          breed === value
+                            ? 'border-primary bg-primary text-primary-foreground'
+                            : 'border-input bg-background text-foreground hover:bg-accent'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Criando...' : 'Criar conta'}

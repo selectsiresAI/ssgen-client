@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf'
 import type { FemaleFull } from '@/lib/api'
-import { buildProofFromFemale } from '@/lib/proof'
+import { buildProofFromFemale, holsteinProofOptions, type BreedProofOptions } from '@/lib/proof'
 
 const PRIMARY = [206, 14, 45] as const
 const FG = [28, 28, 28] as const
@@ -40,10 +40,15 @@ function drawHeader(doc: jsPDF, animal: FemaleFull, subtitle?: string) {
   doc.text(`Brinco ${animal.ear_tag ?? '-'} · ${animal.breed ?? '-'} · Pai: ${animal.sire_naab ?? '-'}`, 14, 33)
 }
 
-function drawIndices(doc: jsPDF, animal: FemaleFull, y: number): number {
+function femaleNumber(animal: FemaleFull, key: string): number | null {
+  const value = animal[key]
+  return typeof value === 'number' ? value : null
+}
+
+function drawIndices(doc: jsPDF, animal: FemaleFull, y: number, breed: BreedProofOptions): number {
   const indices = [
     ['HHP$', animal.hhp_dollar != null ? `$${animal.hhp_dollar}` : '-'],
-    ['GTPI', animal.tpi != null ? `+${animal.tpi}` : '-'],
+    [breed.indexLabel, femaleNumber(animal, breed.indexKey) != null ? `+${femaleNumber(animal, breed.indexKey)}` : '-'],
     ['NM$', animal.nm_dollar != null ? `$${animal.nm_dollar}` : '-'],
     ['CM$', animal.cm_dollar != null ? `$${animal.cm_dollar}` : '-'],
     ['FM$', animal.fm_dollar != null ? `$${animal.fm_dollar}` : '-'],
@@ -160,10 +165,10 @@ function drawSections(doc: jsPDF, startY: number, sections: { t: string; meta: s
   return y
 }
 
-function drawOnePage(doc: jsPDF, animal: FemaleFull, subtitle?: string) {
-  const animalProof = buildProofFromFemale(animal)
+function drawOnePage(doc: jsPDF, animal: FemaleFull, subtitle?: string, breed: BreedProofOptions = holsteinProofOptions) {
+  const animalProof = buildProofFromFemale(animal, breed)
   drawHeader(doc, animal, subtitle)
-  let y = drawIndices(doc, animal, 36)
+  let y = drawIndices(doc, animal, 36, breed)
   const pedLinY = y
   drawPedigree(doc, pedLinY, animalProof.ped)
   const linEndY = drawLinear(doc, pedLinY, animalProof.lin)
@@ -181,17 +186,17 @@ function drawOnePage(doc: jsPDF, animal: FemaleFull, subtitle?: string) {
   )
 }
 
-export function generateProofPdf(animal: FemaleFull) {
+export function generateProofPdf(animal: FemaleFull, breed: BreedProofOptions = holsteinProofOptions) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-  drawOnePage(doc, animal)
+  drawOnePage(doc, animal, undefined, breed)
   doc.save(`prova-${label(animal).replace(/\s+/g, '-')}.pdf`)
 }
 
-export function generateCatalogPdf(animals: FemaleFull[]) {
+export function generateCatalogPdf(animals: FemaleFull[], breed: BreedProofOptions = holsteinProofOptions) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   animals.forEach((animal, idx) => {
     if (idx > 0) doc.addPage()
-    drawOnePage(doc, animal, `Catálogo Genômico · Fêmea ${idx + 1} de ${animals.length}`)
+    drawOnePage(doc, animal, `Catálogo Genômico · Fêmea ${idx + 1} de ${animals.length}`, breed)
   })
   doc.save(`catalogo-genomico-${animals.length}-femeas-${new Date().toISOString().split('T')[0]}.pdf`)
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Activity, BarChart3, Container, FileText, LayoutDashboard, List, Menu, Search, TrendingUp } from 'lucide-react'
+import { Activity, BarChart3, Container, FileText, LayoutDashboard, List, Menu, Search } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -28,7 +28,6 @@ const navGroups = [
     title: 'Operação',
     items: [
       { to: '/semen', label: 'Botijão Virtual', icon: Container },
-      { to: '/nexus', label: 'Nexus 3', icon: TrendingUp, badge: 'NOVO' },
     ],
   },
 ]
@@ -38,7 +37,6 @@ const titles: Record<string, [string, string]> = {
   '/painel': ['Painel Genômico', 'Visão analítica do lote genotipado'],
   '/provas': ['Prova Individual', 'Formato oficial Select Sires'],
   '/semen': ['Botijão Virtual', 'Estoque, doses e nitrogênio'],
-  '/nexus': ['Nexus 3', 'Predição genética de progênie'],
   '/auditoria': ['Auditoria Genética', 'Fluxo sequencial 1→7 · Rebanho'],
   '/lista-rebanho': ['Lista do Rebanho', 'Todas as fêmeas genotipadas'],
   '/admin': ['Administração', 'Usuários, fazendas e permissões'],

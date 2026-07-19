@@ -8,7 +8,7 @@ interface AuthState {
   profile: Profile | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (email: string, password: string, fullName: string) => Promise<void>
+  signUp: (email: string, password: string, fullName: string, breed?: 'HO' | 'JE') => Promise<void>
   signOut: () => Promise<void>
   sendMagicLink: (email: string) => Promise<void>
 }
@@ -59,13 +59,19 @@ export function useAuth(): AuthState {
     if (error) throw error
   }, [])
 
-  const signUp = useCallback(async (email: string, password: string, fullName: string) => {
-    const { error } = await supabase.auth.signUp({
+  const signUp = useCallback(async (email: string, password: string, fullName: string, breed: 'HO' | 'JE' = 'HO') => {
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { full_name: fullName } },
     })
     if (error) throw error
+    if (data.user) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({ id: data.user.id, email, full_name: fullName, breed }, { onConflict: 'id' })
+      if (profileError) throw profileError
+    }
   }, [])
 
   const signOut = useCallback(async () => {

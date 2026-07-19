@@ -70,6 +70,7 @@ export interface FemaleFull {
   genomic_result_id: string | null
   hhp_dollar: number | null
   tpi: number | null
+  jpi: number | null
   nm_dollar: number | null
   cm_dollar: number | null
   fm_dollar: number | null
@@ -93,6 +94,7 @@ export interface FemaleFull {
   mf: number | null
   ptat: number | null
   udc: number | null
+  jui: number | null
   flc: number | null
   sce: number | null
   dce: number | null
@@ -199,7 +201,9 @@ export interface BreedCatalogItem {
 
 export interface BreedReference {
   index_label: string
+  index_key: string
   udder_label: string
+  udder_key: string
   genotyped_prefixes: string[]
   catalog: BreedCatalogItem[]
   benchmarks: [string, string, number, number, number][] | null

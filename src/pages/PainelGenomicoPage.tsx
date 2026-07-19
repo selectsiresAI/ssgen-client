@@ -24,7 +24,7 @@ export function PainelGenomicoPage() {
   const [spectrumCat, setSpectrumCat] = useState('all')
   const [showReport, setShowReport] = useState(false)
   const { data: fem, isLoading } = useFemalesFull({ page: 1, perPage: 5000 })
-  const { benchmarks, trend, breedLabel } = useBreed()
+  const { benchmarks, trend, breedLabel, indexKey, indexLabel } = useBreed()
   const females = fem?.data ?? []
   const herdAvg = useMemo(() => computeHerdAverage(females), [females])
   const [reportSections, setReportSections] = useState([
@@ -47,7 +47,7 @@ export function PainelGenomicoPage() {
   ] as const
   const visibleAttention = attention.filter((d) => d[2] != null)
   const maxGap = Math.max(1, ...visibleAttention.map((d) => Math.abs((d[2] ?? 0) - d[3])))
-  const gaugeKeys = ['hhp', 'gtpi', 'nm']
+  const gaugeKeys = ['hhp', indexKey, 'nm']
   const categoryTabs = [
     ['all', 'Todos'],
     ['indices', 'Índices'],
@@ -60,7 +60,7 @@ export function PainelGenomicoPage() {
   const canGenerateReport = hasReference && 'years' in trend
   const report = () => {
     if (!canGenerateReport) return
-    generateReportPdf({ sections: reportSections, herdAvg, benchmarks, trend: trend as Parameters<typeof generateReportPdf>[0]['trend'], animals: females, attention: visibleAttention })
+    generateReportPdf({ sections: reportSections, herdAvg, benchmarks, trend: trend as Parameters<typeof generateReportPdf>[0]['trend'], animals: females, attention: visibleAttention, breed: { indexKey, indexLabel } })
   }
   const toggleReportSection = (key: string) => setReportSections((items) => items.map((item) => item.key === key ? { ...item, enabled: !item.enabled } : item))
   const isEmpty = !isLoading && Object.keys(herdAvg).length === 0

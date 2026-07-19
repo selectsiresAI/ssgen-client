@@ -16,6 +16,10 @@ const AMBER = [183, 121, 31] as const
 
 type Benchmarks = [string, string, number, number, number][]
 type TrendData = typeof trendShape
+interface ReportBreedOptions {
+  indexLabel: string
+  indexKey: string
+}
 
 function header(doc: jsPDF, title: string, page: number) {
   doc.setFillColor(...PRIMARY)
@@ -76,12 +80,13 @@ export function generateReportPdf(options: {
   trend: TrendData
   animals: FemaleFull[]
   attention: readonly (readonly [string, string, number | null, number, string])[]
+  breed?: ReportBreedOptions
 }): void {
-  const { sections, herdAvg, benchmarks, trend, animals, attention } = options
+  const { sections, herdAvg, benchmarks, trend, animals, attention, breed = { indexLabel: 'GTPI', indexKey: 'tpi' } } = options
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
   page(doc, 'Resumo Executivo', 1)
-  const kpis = [['HHP$', fmt('hhp', herdAvg.hhp)], ['GTPI', fmt('gtpi', herdAvg.gtpi)], ['NM$', fmt('nm', herdAvg.nm)], ['Animais', String(animals.length)]]
+  const kpis = [['HHP$', fmt('hhp', herdAvg.hhp)], [breed.indexLabel, herdAvg[breed.indexKey] != null ? fmt(breed.indexKey, herdAvg[breed.indexKey]) : '-'], ['NM$', fmt('nm', herdAvg.nm)], ['Animais', String(animals.length)]]
   kpis.forEach(([label, value], i) => {
     const x = 14 + i * 46
     doc.setFillColor(i === 0 ? 251 : 245, i === 0 ? 233 : 245, i === 0 ? 236 : 245)
@@ -103,12 +108,13 @@ export function generateReportPdf(options: {
   benchmarks.slice(0, 18).forEach(([key, label], i) => drawBar(doc, label, herdAvg[key] ?? 0, Math.max(1, Math.abs(herdAvg[key] ?? 0), 1000), 46 + i * 7, i < 6 ? PRIMARY : GREEN))
 
   page(doc, 'Evolução Temporal', 3)
-  ;['hhp', 'gtpi', 'nm', 'milk'].forEach((key, block) => {
+  ;['hhp', breed.indexKey, 'nm', 'milk'].forEach((key, block) => {
     const data = trend[key as keyof TrendData] as number[]
+    if (!data) return
     const max = Math.max(...data)
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(9)
-    doc.text(traitLabel[key], 14, 48 + block * 48)
+    doc.text(key === breed.indexKey ? breed.indexLabel : traitLabel[key], 14, 48 + block * 48)
     data.forEach((v, i) => {
       const h = (v / max) * 30
       const x = 44 + i * 18
@@ -148,7 +154,8 @@ export function generateReportPdf(options: {
     doc.text(animal.name ?? animal.ear_tag ?? animal.id, 34, y - 3)
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(...MUTED)
-    doc.text(`${animal.sire_naab ?? '-'} · HHP$ ${animal.hhp_dollar ?? '-'} · GTPI ${animal.tpi ?? '-'}`, 34, y + 4)
+    const indexValue = animal[breed.indexKey]
+    doc.text(`${animal.sire_naab ?? '-'} · HHP$ ${animal.hhp_dollar ?? '-'} · ${breed.indexLabel} ${typeof indexValue === 'number' ? indexValue : '-'}`, 34, y + 4)
   })
 
   page(doc, 'Características de Atenção', 6)

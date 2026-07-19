@@ -9,7 +9,9 @@ type TrendData = typeof holsteinTrend | Record<string, number[]> | null
 interface BreedContextValue {
   breed: string
   breedLabel: string
+  indexKey: string
   indexLabel: string
+  udderKey: string
   udderLabel: string
   catalog: BreedCatalogItem[]
   traitLabels: Record<string, string>
@@ -27,7 +29,9 @@ const fallbackCatalog: BreedCatalogItem[] = Object.entries(traitLabel).map(([key
 const fallbackValue: BreedContextValue = {
   breed: 'HO',
   breedLabel: 'Holstein',
+  indexKey: 'tpi',
   indexLabel: 'GTPI',
+  udderKey: 'udc',
   udderLabel: 'UDC',
   catalog: fallbackCatalog,
   traitLabels: traitLabel,
@@ -58,7 +62,9 @@ export function BreedProvider({ children }: { children: ReactNode }) {
     return {
       breed: data?.breed || params.breed || fallbackValue.breed,
       breedLabel: params.label || data?.breed || fallbackValue.breedLabel,
+      indexKey: reference.index_key || fallbackValue.indexKey,
       indexLabel: reference.index_label || fallbackValue.indexLabel,
+      udderKey: reference.udder_key || fallbackValue.udderKey,
       udderLabel: reference.udder_label || fallbackValue.udderLabel,
       catalog,
       traitLabels,

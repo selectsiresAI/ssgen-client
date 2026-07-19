@@ -1,7 +1,7 @@
 import { ArrowDown, ArrowUp, ArrowUpDown, Download, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useFemalesFull } from '@/hooks/useApi'
-import { api, type FemaleFull } from '@/lib/api'
+import { api } from '@/lib/api'
 import { useBreed } from '@/lib/breed'
 import { fmt } from '@/lib/traits'
 
@@ -13,7 +13,7 @@ const CATEGORIES = [
   { key: 'Multípara', label: 'Multíparas', color: '#ef4444' },
 ] as const
 
-const herdCols: { key: keyof FemaleFull; label: string; mono?: boolean }[] = [
+const herdCols: { key: string; label: string; mono?: boolean; role?: 'index' | 'udder' }[] = [
   { key: 'ear_tag', label: 'Brinco', mono: true },
   { key: 'name', label: 'Nome' },
   { key: 'cdcb_id', label: 'CDCB', mono: true },
@@ -23,7 +23,7 @@ const herdCols: { key: keyof FemaleFull; label: string; mono?: boolean }[] = [
   { key: 'mgs_naab', label: 'MGS', mono: true },
   { key: 'mmgs_naab', label: 'MMGS', mono: true },
   { key: 'hhp_dollar', label: 'HHP$', mono: true },
-  { key: 'tpi', label: 'GTPI', mono: true },
+  { key: 'tpi', label: 'GTPI', mono: true, role: 'index' },
   { key: 'nm_dollar', label: 'NM$', mono: true },
   { key: 'cm_dollar', label: 'CM$', mono: true },
   { key: 'fm_dollar', label: 'FM$', mono: true },
@@ -51,7 +51,7 @@ const herdCols: { key: keyof FemaleFull; label: string; mono?: boolean }[] = [
   { key: 'ssb', label: 'SSB', mono: true },
   { key: 'dsb', label: 'DSB', mono: true },
   { key: 'ptat', label: 'Tipo', mono: true },
-  { key: 'udc', label: 'UDC', mono: true },
+  { key: 'udc', label: 'UDC', mono: true, role: 'udder' },
   { key: 'flc', label: 'FLC', mono: true },
   { key: 'sta', label: 'STA', mono: true },
   { key: 'str', label: 'STR', mono: true },
@@ -114,7 +114,7 @@ export function HerdListPage() {
   const [sortCol, setSortCol] = useState<string | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const { traitLabels } = useBreed()
+  const { indexKey, indexLabel, udderKey, udderLabel, traitLabels } = useBreed()
   const { data: femalesData } = useFemalesFull({ page: herdPage, perPage: 5000, search: herdSearch })
   const allFemales = femalesData?.data ?? []
   const totalFemales = femalesData?.total ?? 0
@@ -145,11 +145,17 @@ export function HerdListPage() {
     return filteredFemales.slice(from, from + PER_PAGE)
   }, [filteredFemales, herdPage])
 
+  const columns = useMemo(() => herdCols.map((col) => {
+    if (col.role === 'index') return { ...col, key: indexKey, label: indexLabel }
+    if (col.role === 'udder') return { ...col, key: udderKey, label: udderLabel }
+    return col
+  }), [indexKey, indexLabel, udderKey, udderLabel])
+
   const females = useMemo(() => {
     if (!sortCol || !sortDir) return rawFemales
     return [...rawFemales].sort((a, b) => {
-      const av = a[sortCol as keyof FemaleFull]
-      const bv = b[sortCol as keyof FemaleFull]
+      const av = a[sortCol]
+      const bv = b[sortCol]
       if (av == null && bv == null) return 0
       if (av == null) return 1
       if (bv == null) return -1
@@ -167,8 +173,8 @@ export function HerdListPage() {
   const exportFemales = async () => {
     const result = await api.getFemalesFull({ per_page: '9999' })
     const { utils, writeFile } = await import('xlsx')
-    const headers = herdCols.map((c) => traitLabels[traitKeyForColumn(String(c.key))] ?? c.label)
-    const rows = (result.data ?? []).map((f) => herdCols.map((c) => f[c.key] ?? ''))
+    const headers = columns.map((c) => traitLabels[traitKeyForColumn(String(c.key))] ?? c.label)
+    const rows = (result.data ?? []).map((f) => columns.map((c) => f[c.key] ?? ''))
     const ws = utils.aoa_to_sheet([headers, ...rows])
     const wb = utils.book_new()
     utils.book_append_sheet(wb, ws, 'Rebanho')
@@ -217,7 +223,7 @@ export function HerdListPage() {
           <table className="ss-table ss-table-herd">
             <thead>
               <tr>
-                {herdCols.map((c) => (
+                {columns.map((c) => (
                   <th key={c.key} onClick={() => toggleSort(String(c.key))} className="cursor-pointer select-none">
                     <span className="inline-flex items-center gap-1">
                       {traitLabels[traitKeyForColumn(String(c.key))] ?? c.label}
@@ -230,12 +236,12 @@ export function HerdListPage() {
             <tbody>
               {females.length > 0 ? females.map((f) => (
                 <tr key={f.id}>
-                  {herdCols.map((c) => (
+                  {columns.map((c) => (
                     <td key={c.key} className={c.mono ? 'ss-mono' : ''}>{fmtCell(String(c.key), f[c.key])}</td>
                   ))}
                 </tr>
               )) : (
-                <tr><td colSpan={herdCols.length} className="text-center text-[var(--ss-muted)]">Nenhuma fêmea encontrada</td></tr>
+                <tr><td colSpan={columns.length} className="text-center text-[var(--ss-muted)]">Nenhuma fêmea encontrada</td></tr>
               )}
             </tbody>
           </table>

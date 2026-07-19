@@ -6,7 +6,7 @@ export interface AnimalMetricColumn {
 
 export const ANIMAL_METRIC_COLUMNS: AnimalMetricColumn[] = [
   { key: 'hhp_dollar', label: 'HHP$', numeric: true },
-  { key: 'tpi', label: 'TPI', numeric: true },
+  { key: 'tpi', label: 'GTPI', numeric: true },
   { key: 'nm_dollar', label: 'NM$', numeric: true },
   { key: 'cm_dollar', label: 'CM$', numeric: true },
   { key: 'fm_dollar', label: 'FM$', numeric: true },
@@ -64,3 +64,16 @@ export const ANIMAL_METRIC_COLUMNS: AnimalMetricColumn[] = [
   { key: 'kappa_casein', label: 'Kappa-Casein' },
   { key: 'gfi', label: 'GFI', numeric: true },
 ]
+
+export function animalMetricColumnsForBreed(breed: {
+  indexKey: string
+  indexLabel: string
+  udderKey: string
+  udderLabel: string
+}): AnimalMetricColumn[] {
+  return ANIMAL_METRIC_COLUMNS.map((column) => {
+    if (column.key === 'tpi') return { ...column, key: breed.indexKey, label: breed.indexLabel }
+    if (column.key === 'udc') return { ...column, key: breed.udderKey, label: breed.udderLabel }
+    return column
+  })
+}
