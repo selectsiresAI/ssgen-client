@@ -12,6 +12,12 @@ interface CreateProducerRequest {
   full_name: string;
   phone?: string;
   platform_client_ids: string[]; // clients this producer can see
+  breed?: string; // 'HO' | 'JE' — grava clients.default_breed nas fazendas vinculadas
+}
+
+function normBreed(b: unknown): "HO" | "JE" {
+  const u = String(b ?? "").trim().toUpperCase();
+  return (u === "JE" || u === "JER" || u === "JERSEY") ? "JE" : "HO";
 }
 
 interface BulkCreateRequest {
@@ -163,6 +169,17 @@ Deno.serve(async (req: Request) => {
               platform_client_id: clientId,
             }));
             await clientDb.from("client_links").insert(links);
+
+            // Set default_breed on the linked Platform clients (onboarding breed flag)
+            if (p.breed) {
+              const platformDb = createClient(
+                Deno.env.get("PLATFORM_URL")!,
+                Deno.env.get("PLATFORM_SERVICE_ROLE_KEY")!,
+              );
+              await platformDb.from("clients")
+                .update({ default_breed: normBreed(p.breed) })
+                .in("id", p.platform_client_ids);
+            }
           }
 
           results.push({
@@ -213,7 +230,31 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    return new Response(JSON.stringify({ error: "Unknown action. Use /list, /create, or /link" }), {
+    // ============================
+    // POST /admin-create-producer/set-breed — Set default_breed on a Platform client
+    // ============================
+    if (req.method === "POST" && action === "set-breed") {
+      const { platform_client_id, breed } = await req.json() as {
+        platform_client_id: string; breed: string;
+      };
+      const platformDb = createClient(
+        Deno.env.get("PLATFORM_URL")!,
+        Deno.env.get("PLATFORM_SERVICE_ROLE_KEY")!,
+      );
+      const { error } = await platformDb.from("clients")
+        .update({ default_breed: normBreed(breed) })
+        .eq("id", platform_client_id);
+      if (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ success: true, breed: normBreed(breed) }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ error: "Unknown action. Use /list, /create, /link, or /set-breed" }), {
       status: 404,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

@@ -41,6 +41,8 @@ const HEADER_MAP: Record<string, string> = {
   "hhp$": "hhp_dollar", "hhp": "hhp_dollar",
   "indice de saude select sires": "hhp_dollar", "hth$": "hhp_dollar",
   "tpi": "tpi", "ipi": "tpi",
+  "jpi": "jpi", "jersey performance index": "jpi",
+  "jui": "jui", "jersey udder index": "jui", "jersey udder": "jui",
 
   // --- Production PTAs ---
   "milk": "pta_milk", "pta milk": "pta_milk", "pta_milk": "pta_milk",
@@ -180,7 +182,7 @@ const FEMALES_NUMERIC_FIELDS = new Set([
   "h_liv", "fi", "gl", "efc", "bwc",
   "sta", "str_num", "dfm", "rua", "rls", "rtp", "ftl", "rw", "rlr",
   "fta", "fls", "fua", "ruh", "ruw", "ucl", "udp", "ftp",
-  "mf_num", "gfi",
+  "mf_num", "gfi", "jpi", "jui",
 ]);
 
 const FEMALES_TEXT_FIELDS = new Set(["beta_casein", "kappa_casein"]);
@@ -463,6 +465,15 @@ Deno.serve(async (req: Request) => {
       if (parsed.sire_naab) update.sire_naab = parsed.sire_naab;
       if (parsed.mgs_naab) update.mgs_naab = parsed.mgs_naab;
       if (parsed.mmgs_naab) update.mmgs_naab = parsed.mmgs_naab;
+
+      // Breed: PROMOTE to Jersey only (JE is authoritative — never demote to HO here).
+      // Signal: the file's breed/raca column says Jersey, or JEUSA/JEBRA registration prefix.
+      const breedStr = String(parsed.breed ?? "").trim().toUpperCase();
+      const regStr = String(parsed.registration ?? "").trim().toUpperCase();
+      if (breedStr === "JE" || breedStr === "JER" || breedStr === "JERSEY"
+          || regStr.startsWith("JEUSA") || regStr.startsWith("JEBRA")) {
+        update.breed = "JE";
+      }
 
       // Match strategy: try cdcb_id first, then ear_tag + client_id
       let matched = false;

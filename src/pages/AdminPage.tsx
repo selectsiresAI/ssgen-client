@@ -45,6 +45,7 @@ function LinkManagement() {
   const [userEmail, setUserEmail] = useState('')
   const [clientSearch, setClientSearch] = useState('')
   const [selectedClient, setSelectedClient] = useState<PlatformClient | null>(null)
+  const [breedSel, setBreedSel] = useState<'HO' | 'JE'>('HO')
   const [searchPage, setSearchPage] = useState(1)
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
@@ -116,6 +117,20 @@ function LinkManagement() {
         body: `O cliente "${selectedClient.nome}" foi vinculado a sua conta.`,
         metadata: { client_id: selectedClient.id },
       })
+
+      // Set the client's breed on the Platform (front não escreve a Platform direto)
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-create-producer/set-breed`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ platform_client_id: selectedClient.id, breed: breedSel }),
+        })
+      }
     },
     onSuccess: () => {
       setMessage({ type: 'ok', text: 'Vinculo criado com sucesso!' })
@@ -206,6 +221,24 @@ function LinkManagement() {
               Selecionado: <strong>{selectedClient.nome}</strong>
             </p>
           )}
+
+          <div className="space-y-2">
+            <Label>Raça do rebanho</Label>
+            <div className="flex gap-2">
+              {(['HO', 'JE'] as const).map((b) => (
+                <button
+                  key={b}
+                  type="button"
+                  onClick={() => setBreedSel(b)}
+                  className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
+                    breedSel === b ? 'bg-primary/10 border-primary text-primary' : 'border-border text-foreground'
+                  }`}
+                >
+                  {b === 'HO' ? 'Holandês' : 'Jersey'}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <Button
             onClick={() => createLink.mutate()}
