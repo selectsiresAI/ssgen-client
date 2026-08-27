@@ -60,7 +60,9 @@ Deno.serve(async (req: Request) => {
       platformDb.from("females").select("id", { count: "exact", head: true }).in("client_id", clientIds).not("cdcb_id", "is", null).is("deleted_at", null),
       platformDb.from("service_orders").select("id", { count: "exact", head: true }).in("client_id", clientIds).not("etapa_atual", "in", '("Faturamento")').is("deleted_at", null),
       platformDb.from("service_orders").select("id", { count: "exact", head: true }).in("client_id", clientIds).eq("etapa_atual", "Faturamento").is("deleted_at", null),
-      platformDb.from("genomic_results").select("id", { count: "exact", head: true }).in("client_id", clientIds).eq("visivel_ssgen", true),
+      // Laudo = Relatório: 1 por Ordem de Serviço SSGEN que tem arquivo de resultado (result_file_path).
+      // NÃO é por animal (genomic_results é resultado por animal, não laudo).
+      platformDb.from("service_orders").select("id", { count: "exact", head: true }).in("client_id", clientIds).not("result_file_path", "is", null).is("deleted_at", null),
       platformDb.from("clients").select("id, nome, farm_name, cidade, estado").in("id", clientIds).is("deleted_at", null),
     ]);
 
