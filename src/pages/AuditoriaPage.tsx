@@ -9,11 +9,10 @@ import { SegmentedControl } from '@/components/SegmentedControl'
 import { TraitSelect } from '@/components/TraitSelect'
 import { agSteps, fmt, radarGroups, traitLabel } from '@/lib/traits'
 import { useBreed } from '@/lib/breed'
-import { useFemalesFull } from '@/hooks/useApi'
-import type { FemaleFull } from '@/lib/api'
+import { useFemalesFull, useAuditoria } from '@/hooks/useApi'
+import type { FemaleFull, TopParentRow } from '@/lib/api'
 import {
   computeParentesco,
-  computeTopParents,
   computeTrendByYear,
   computeDistribution,
   computeHerdAverage,
@@ -30,6 +29,20 @@ function breedTraits(traits: string[], indexKey: string, udderKey: string) {
   })
 }
 
+function birthDateCoverage(females: FemaleFull[]): { withDate: number; total: number } {
+  return { withDate: females.filter((f) => !!f.birth_date).length, total: females.length }
+}
+
+function NoTemporalTrend({ females }: { females: FemaleFull[] }) {
+  const { withDate, total } = birthDateCoverage(females)
+  return (
+    <div className="rounded-[10px] border border-[var(--ss-border)] bg-[var(--ss-wash)] p-5 text-center">
+      <div className="text-[14px] font-bold text-[var(--ss-fg)]">Sem data de nascimento suficiente para tendência temporal</div>
+      <div className="mt-1 text-[12px] text-[var(--ss-muted)]">{withDate} de {total} animais têm data de nascimento informada.</div>
+    </div>
+  )
+}
+
 function ProgressaoStep({ females }: { females: FemaleFull[] }) {
   const { indexKey, udderKey, traitLabels } = useBreed()
   const [count, setCount] = useState(3)
@@ -38,6 +51,14 @@ function ProgressaoStep({ females }: { females: FemaleFull[] }) {
 
   const allTraits = Object.keys(traitLabels)
   const trendResult = useMemo(() => computeTrendByYear(females, allTraits), [females])
+
+  if (trendResult.years.length === 0) {
+    return (
+      <div className="flex flex-col gap-3.5">
+        <NoTemporalTrend females={females} />
+      </div>
+    )
+  }
 
   const handleCount = (n: number) => {
     const clamped = Math.max(1, Math.min(10, n))
@@ -144,6 +165,14 @@ function EvolucaoStep({ females }: { females: FemaleFull[] }) {
   const [charts, setCharts] = useState<string[]>(() => breedTraits(defaultTraits, indexKey, udderKey))
   useEffect(() => setCharts((items) => breedTraits(items, indexKey, udderKey)), [indexKey, udderKey])
 
+  if (trendResult.years.length === 0) {
+    return (
+      <div className="flex flex-col gap-3.5">
+        <NoTemporalTrend females={females} />
+      </div>
+    )
+  }
+
   const handleCount = (n: number) => {
     const clamped = Math.max(1, Math.min(10, n))
     setCount(clamped)
@@ -219,6 +248,31 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
     return females.filter((_, i) => i % step === 0)
   }, [females])
 
+  const xLabel = traitLabels[xTrait] ?? traitLabel[xTrait] ?? xTrait
+  const yLabel = traitLabels[yTrait] ?? traitLabel[yTrait] ?? yTrait
+
+  const hasXData = sampled.some((a) => getTraitValue(a, xTrait) != null)
+  const hasYData = sampled.some((a) => getTraitValue(a, yTrait) != null)
+
+  if (sampled.length === 0 || !hasXData || !hasYData) {
+    return (
+      <div className="ss-card">
+        <div className="ss-card-header">
+          <h3 className="ss-card-title">Dispersão · {xLabel} × {yLabel}</h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="text-[11.5px] font-semibold text-[var(--ss-muted)]">X</label><TraitSelect value={xTrait} onChange={setXTrait} />
+            <label className="text-[11.5px] font-semibold text-[var(--ss-muted)]">Y</label><TraitSelect value={yTrait} onChange={setYTrait} />
+          </div>
+        </div>
+        <div className="ss-card-body">
+          <div className="rounded-[10px] border border-[var(--ss-border)] bg-[var(--ss-wash)] p-5 text-center">
+            <div className="text-[14px] font-bold text-[var(--ss-fg)]">Sem dados para os índices selecionados</div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const W = 920, H = 400, padL = 60, padR = 24, padT = 22, padB = 56
   const plotW = W - padL - padR, plotH = H - padT - padB
   const xs = sampled.map((a) => getTraitValue(a, xTrait) ?? 0)
@@ -245,8 +299,6 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
 
   const xTickCount = 5, yTickCount = 5
   const topA = sampled.reduce((a, b) => ((getTraitValue(a, xTrait) ?? 0) + (getTraitValue(a, yTrait) ?? 0) > (getTraitValue(b, xTrait) ?? 0) + (getTraitValue(b, yTrait) ?? 0) ? a : b))
-  const xLabel = traitLabels[xTrait] ?? traitLabel[xTrait] ?? xTrait
-  const yLabel = traitLabels[yTrait] ?? traitLabel[yTrait] ?? yTrait
   const qLabels = ['ELITE', `ALTO ${yLabel.toUpperCase()}`, `ALTO ${xLabel.toUpperCase()}`, 'ABAIXO']
 
   return (
@@ -420,24 +472,53 @@ export function AuditoriaPage() {
   const totalFemales = femalesData?.total ?? females.length
 
   const parentesco = useMemo(() => computeParentesco(females), [females])
-  const topSires = useMemo(() => computeTopParents(females, 'sire_naab', 10), [females])
-  const topMgs = useMemo(() => computeTopParents(females, 'mgs_naab', 10), [females])
+  const { data: sireParentsResp, isLoading: sireParentsLoading } = useAuditoria({ step: '2', parentType: 'sire', limit: '10' })
+  const { data: mgsParentsResp, isLoading: mgsParentsLoading } = useAuditoria({ step: '2', parentType: 'mgs', limit: '10' })
+  const topSires = (sireParentsResp?.data ?? []) as TopParentRow[]
+  const topMgs = (mgsParentsResp?.data ?? []) as TopParentRow[]
 
-  const block = (title: string, rows: { code: string; count: number; pct: number }[]) => {
-    const max = Math.max(...rows.map((r) => r.count))
-    const total = rows.reduce((s, r) => s + r.count, 0)
+  const block = (title: string, rows: TopParentRow[], loading?: boolean) => {
+    if (loading) {
+      return (
+        <div className="ss-card">
+          <div className="ss-card-header"><h3 className="ss-card-title">{title}</h3></div>
+          <div className="ss-card-body text-center text-[12px] text-[var(--ss-muted)]">Carregando...</div>
+        </div>
+      )
+    }
+    if (rows.length === 0) {
+      return (
+        <div className="ss-card">
+          <div className="ss-card-header"><h3 className="ss-card-title">{title}</h3></div>
+          <div className="ss-card-body text-center text-[12px] text-[var(--ss-muted)]">Sem dados de parentesco disponíveis.</div>
+        </div>
+      )
+    }
+    const max = Math.max(...rows.map((r) => r.daughters_count))
+    const total = rows.reduce((s, r) => s + r.daughters_count, 0)
     return (
       <div className="ss-card">
         <div className="ss-card-header"><h3 className="ss-card-title">{title}</h3></div>
         <div className="ss-card-body">
-          {rows.map((r) => (
-            <div key={r.code} className="grid grid-cols-[170px_1fr_44px_44px] items-center gap-2 py-[3px] text-xs">
-              <div className="overflow-hidden text-ellipsis text-right font-mono text-[var(--ss-fg)]">{r.code}</div>
-              <div className="h-[18px] rounded-sm bg-[var(--ss-primary-soft)]" style={{ width: `${(r.count / max) * 100}%` }} />
-              <div className="text-right font-mono font-semibold">{r.count}</div>
-              <div className="text-right font-mono text-[10px] text-[var(--ss-muted)]">{((r.count / total) * 100).toFixed(1)}%</div>
-            </div>
-          ))}
+          {rows.map((r) => {
+            const displayCode = r.parent_naab ?? r.parent_label
+            const isUnresolvedIntl = r.resolved === false
+            return (
+              <div key={r.parent_label} className="grid grid-cols-[170px_1fr_44px_44px] items-center gap-2 py-[3px] text-xs">
+                <div
+                  className="overflow-hidden text-ellipsis text-right font-mono text-[var(--ss-fg)]"
+                  title={isUnresolvedIntl ? 'Código internacional não resolvido para NAAB' : undefined}
+                >
+                  {displayCode}
+                  {r.parent_name && <span className="ml-1 font-sans text-[10px] font-normal text-[var(--ss-muted)]">{r.parent_name}</span>}
+                  {isUnresolvedIntl && <sup className="ml-1 text-[8px] font-semibold text-[var(--ss-amber)]">intl</sup>}
+                </div>
+                <div className="h-[18px] rounded-sm bg-[var(--ss-primary-soft)]" style={{ width: `${(r.daughters_count / max) * 100}%` }} />
+                <div className="text-right font-mono font-semibold">{r.daughters_count}</div>
+                <div className="text-right font-mono text-[10px] text-[var(--ss-muted)]">{((r.daughters_count / total) * 100).toFixed(1)}%</div>
+              </div>
+            )
+          })}
         </div>
       </div>
     )
@@ -488,8 +569,8 @@ export function AuditoriaPage() {
           <SegmentedControl options={['Top 20', '30', '50'].map((x) => ({ value: x, label: x }))} value="Top 20" onChange={() => undefined} />
         </div>
         <div className="ss-grid-2b">
-          {block('Top Sires', topSires)}
-          {block('Top Maternal Grandsires', topMgs)}
+          {block('Top Sires', topSires, sireParentsLoading)}
+          {block('Top Maternal Grandsires', topMgs, mgsParentsLoading)}
         </div>
       </>}
       {step === 2 && <ProgressaoStep females={females} />}

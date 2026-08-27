@@ -1,7 +1,7 @@
 import { ArrowDown, ArrowUp, ArrowUpDown, Download, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useFemalesFull } from '@/hooks/useApi'
-import { api } from '@/lib/api'
+import { api, type FemaleFull } from '@/lib/api'
 import { useBreed } from '@/lib/breed'
 import { fmt } from '@/lib/traits'
 
@@ -85,6 +85,18 @@ function fmtCell(key: string, val: unknown): string {
   if (key === 'birth_date') return new Date(String(val)).toLocaleDateString('pt-BR')
   if (typeof val === 'number') return fmt(traitKeyForColumn(key), val)
   return String(val)
+}
+
+const PARENT_NAME_FIELD: Record<string, 'sire_name' | 'mgs_name' | 'mmgs_name'> = {
+  sire_naab: 'sire_name',
+  mgs_naab: 'mgs_name',
+  mmgs_naab: 'mmgs_name',
+}
+
+function cellValue(f: FemaleFull, key: string): unknown {
+  const nameField = PARENT_NAME_FIELD[key]
+  if (nameField) return f[nameField] ?? f[key]
+  return f[key]
 }
 
 function traitKeyForColumn(key: string): string {
@@ -232,7 +244,7 @@ export function HerdListPage() {
               {females.length > 0 ? females.map((f) => (
                 <tr key={f.id}>
                   {columns.map((c) => (
-                    <td key={c.key} className={c.mono ? 'ss-mono' : ''}>{fmtCell(String(c.key), f[c.key])}</td>
+                    <td key={c.key} className={c.mono ? 'ss-mono' : ''}>{fmtCell(String(c.key), cellValue(f, String(c.key)))}</td>
                   ))}
                 </tr>
               )) : (

@@ -155,7 +155,7 @@ export function generateReportPdf(options: {
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(...MUTED)
     const indexValue = animal[breed.indexKey]
-    doc.text(`${animal.sire_naab ?? '-'} · HHP$ ${animal.hhp_dollar ?? '-'} · ${breed.indexLabel} ${typeof indexValue === 'number' ? indexValue : '-'}`, 34, y + 4)
+    doc.text(`${animal.sire_name ?? animal.sire_naab ?? '-'} · HHP$ ${animal.hhp_dollar ?? '-'} · ${breed.indexLabel} ${typeof indexValue === 'number' ? indexValue : '-'}`, 34, y + 4)
   })
 
   page(doc, 'Características de Atenção', 6)

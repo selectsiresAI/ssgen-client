@@ -57,8 +57,9 @@ export function BenchmarkSpectrum({ benchmarks, herdAvg, category }: BenchmarkSp
               </div>
             </div>
             <div className="text-right max-[720px]:text-left">
-              <div className="font-mono text-[18px] font-black tracking-[-1px]" style={{ color: mine.color }}>{diff > 0 ? '+' : ''}{diff.toFixed(1)}%</div>
-              <span className="inline-flex rounded-[6px] px-2.5 py-1 text-[10px] font-bold" style={{ background: `${mine.color}20`, color: mine.color }}>{mine.zone}</span>
+              <div className="font-mono text-[18px] font-black tracking-[-1px]" style={{ color: mine.color }} title={`O rebanho está dentro dos Top ${(100 - mine.pct).toFixed(1)}% da referência Nacional (SSGEN)`}>Top {(100 - mine.pct).toFixed(1)}%</div>
+              <div className="font-mono text-[9px] text-[var(--ss-muted)]">Nacional (SSGEN)</div>
+              <span className="mt-1 inline-flex rounded-[6px] px-2.5 py-1 text-[10px] font-bold" style={{ background: `${mine.color}20`, color: mine.color }}>{mine.zone} · {diff > 0 ? '+' : ''}{diff.toFixed(1)}% vs média</span>
             </div>
           </div>
         )

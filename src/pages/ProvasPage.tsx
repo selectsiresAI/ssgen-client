@@ -56,7 +56,7 @@ export function ProvasPage() {
   }, [herd, rankTrait])
 
   const filtered = useMemo(() => {
-    if (query) return sorted.filter(({ a }) => `${a.name ?? ''} ${a.ear_tag ?? ''} ${a.sire_naab ?? ''}`.toUpperCase().includes(query.toUpperCase()))
+    if (query) return sorted.filter(({ a }) => `${a.name ?? ''} ${a.ear_tag ?? ''} ${a.sire_naab ?? ''} ${a.sire_name ?? ''}`.toUpperCase().includes(query.toUpperCase()))
     return sorted
   }, [query, sorted])
 
@@ -93,7 +93,7 @@ export function ProvasPage() {
             {filtered.map(({ a, i }) => (
               <button key={a.id} onClick={() => setActive(i)} className={`ss-rrow w-full grid-cols-[28px_1fr_auto_auto] px-3.5 py-2.5 text-left ${i === active ? 'is-selected' : ''}`}>
                 <input type="checkbox" checked={selected.has(i)} onClick={(e) => e.stopPropagation()} onChange={() => toggle(i)} className="h-[15px] w-[15px] accent-[var(--ss-primary)]" />
-                <div><div className="text-[13px] font-medium text-[var(--ss-fg)]">{a.name ?? a.ear_tag ?? 'Sem identificação'}</div><div className="font-mono text-[11px] text-[var(--ss-muted)]">{a.sire_naab ?? '—'} · Brinco {a.ear_tag ?? '—'}</div></div>
+                <div><div className="text-[13px] font-medium text-[var(--ss-fg)]">{a.name ?? a.ear_tag ?? 'Sem identificação'}</div><div className="font-mono text-[11px] text-[var(--ss-muted)]">{a.sire_name ?? a.sire_naab ?? '—'} · Brinco {a.ear_tag ?? '—'}</div></div>
                 <div className="text-right"><b className="block font-mono text-xs text-[var(--ss-fg)]">{femaleTrait(a, rankTrait) != null ? fmt(rankTrait, femaleTrait(a, rankTrait) ?? 0) : '—'}</b><small className="text-[8.5px] text-[var(--ss-muted-2)]">{traitLabels[rankTrait] ?? traitLabel[rankTrait]}</small></div>
                 <div className="text-right"><b className="block font-mono text-xs text-[var(--ss-fg)]">{a.hhp_dollar != null ? `$${a.hhp_dollar}` : '—'}</b><small className="text-[8.5px] text-[var(--ss-muted-2)]">HHP$</small></div>
               </button>

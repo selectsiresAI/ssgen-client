@@ -59,7 +59,7 @@ Deno.serve(async (req: Request) => {
 
     let query = platformDb
       .from("females")
-      .select("id, client_id, ear_tag, name, registration, birth_date, breed, category, status, pta_milk, pta_fat, pta_protein, pta_pl, pta_scs, pta_dpr, tpi, nmpf, hhp_dollar, genomic_result_id, sire_naab, mgs_naab, created_at", { count: "exact" })
+      .select("id, client_id, ear_tag, name, registration, birth_date, breed, category, status, pta_milk, pta_fat, pta_protein, pta_pl, pta_scs, pta_dpr, tpi, nmpf, hhp_dollar, genomic_result_id, sire_naab, mgs_naab, mmgs_naab, created_at", { count: "exact" })
       .in("client_id", clientIds)
       .is("deleted_at", null)
       .order("name", { ascending: true })
@@ -80,7 +80,29 @@ Deno.serve(async (req: Request) => {
     const { data: females, count, error } = await query;
     if (error) throw error;
 
-    return new Response(JSON.stringify({ data: females ?? [], total: count, page, per_page: perPage }), {
+    // ── Enrich with sire/mgs/mmgs bull names (best-effort, batch lookup) ──
+    const naabCodes = Array.from(new Set(
+      (females ?? []).flatMap((f: Record<string, unknown>) => [f.sire_naab, f.mgs_naab, f.mmgs_naab])
+        .filter((c): c is string => typeof c === "string" && c.trim() !== ""),
+    ));
+
+    let bullNameByCode = new Map<string, string | null>();
+    if (naabCodes.length > 0) {
+      const { data: bulls } = await platformDb
+        .from("bulls_denorm")
+        .select("code, name")
+        .in("code", naabCodes);
+      bullNameByCode = new Map((bulls ?? []).map((b: { code: string; name: string | null }) => [b.code, b.name]));
+    }
+
+    const enrichedFemales = (females ?? []).map((f: Record<string, unknown>) => ({
+      ...f,
+      sire_name: typeof f.sire_naab === "string" ? bullNameByCode.get(f.sire_naab) ?? null : null,
+      mgs_name: typeof f.mgs_naab === "string" ? bullNameByCode.get(f.mgs_naab) ?? null : null,
+      mmgs_name: typeof f.mmgs_naab === "string" ? bullNameByCode.get(f.mmgs_naab) ?? null : null,
+    }));
+
+    return new Response(JSON.stringify({ data: enrichedFemales, total: count, page, per_page: perPage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {

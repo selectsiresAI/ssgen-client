@@ -199,7 +199,29 @@ Deno.serve(async (req: Request) => {
       return row;
     });
 
-    return new Response(JSON.stringify({ data: enriched, total: totalCount, page, per_page: perPage }), {
+    // ── Enrich with sire/mgs/mmgs bull names (best-effort, batch lookup) ──
+    const naabCodes = Array.from(new Set(
+      enriched.flatMap((f: Record<string, unknown>) => [f.sire_naab, f.mgs_naab, f.mmgs_naab])
+        .filter((c): c is string => typeof c === "string" && c.trim() !== ""),
+    ));
+
+    let bullNameByCode = new Map<string, string | null>();
+    if (naabCodes.length > 0) {
+      const { data: bulls } = await platformDb
+        .from("bulls_denorm")
+        .select("code, name")
+        .in("code", naabCodes);
+      bullNameByCode = new Map((bulls ?? []).map((b: { code: string; name: string | null }) => [b.code, b.name]));
+    }
+
+    const enrichedWithNames = enriched.map((f: Record<string, unknown>) => ({
+      ...f,
+      sire_name: typeof f.sire_naab === "string" ? bullNameByCode.get(f.sire_naab) ?? null : null,
+      mgs_name: typeof f.mgs_naab === "string" ? bullNameByCode.get(f.mgs_naab) ?? null : null,
+      mmgs_name: typeof f.mmgs_naab === "string" ? bullNameByCode.get(f.mmgs_naab) ?? null : null,
+    }));
+
+    return new Response(JSON.stringify({ data: enrichedWithNames, total: totalCount, page, per_page: perPage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {

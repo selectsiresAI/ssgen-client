@@ -37,7 +37,7 @@ function drawHeader(doc: jsPDF, animal: FemaleFull, subtitle?: string) {
   doc.setFontSize(8)
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(...MUTED)
-  doc.text(`Brinco ${animal.ear_tag ?? '-'} · ${animal.breed ?? '-'} · Pai: ${animal.sire_naab ?? '-'}`, 14, 33)
+  doc.text(`Brinco ${animal.ear_tag ?? '-'} · ${animal.breed ?? '-'} · Pai: ${animal.sire_name ?? animal.sire_naab ?? '-'}`, 14, 33)
 }
 
 function femaleNumber(animal: FemaleFull, key: string): number | null {

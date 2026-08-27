@@ -67,6 +67,9 @@ export interface FemaleFull {
   sire_naab: string | null
   mgs_naab: string | null
   mmgs_naab: string | null
+  sire_name?: string | null
+  mgs_name?: string | null
+  mmgs_name?: string | null
   genomic_result_id: string | null
   hhp_dollar: number | null
   tpi: number | null
@@ -184,6 +187,9 @@ export interface TopParentRow {
   parent_label: string
   daughters_count: number
   trait_mean: number | null
+  parent_naab?: string
+  parent_name?: string | null
+  resolved?: boolean
 }
 
 export interface LinearMeanRow {
@@ -305,6 +311,9 @@ export interface Female {
   genomic_result_id: string | null
   sire_naab: string | null
   mgs_naab: string | null
+  sire_name?: string | null
+  mgs_name?: string | null
+  mmgs_name?: string | null
   created_at: string
 }
 

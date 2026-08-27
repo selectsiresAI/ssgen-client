@@ -31,12 +31,18 @@ const femaleNumber = (f: FemaleFull, key: string) => {
   return typeof value === 'number' ? value : 0
 }
 
+const parentLabel = (naab: string | null | undefined, name: string | null | undefined) => {
+  if (!naab && !name) return '—'
+  if (name && naab) return `${name} (${naab})`
+  return name ?? naab ?? '—'
+}
+
 export function buildProofFromFemale(f: FemaleFull, opts: BreedProofOptions = holsteinProofOptions): Proof {
   return {
     ped: [
-      ['role', 'Pai:', f.sire_naab ?? '—'],
-      ['role', 'Avô Mat.:', f.mgs_naab ?? '—'],
-      ['role', 'Bisavô Mat.:', f.mmgs_naab ?? '—'],
+      ['role', 'Pai:', parentLabel(f.sire_naab, f.sire_name)],
+      ['role', 'Avô Mat.:', parentLabel(f.mgs_naab, f.mgs_name)],
+      ['role', 'Bisavô Mat.:', parentLabel(f.mmgs_naab, f.mmgs_name)],
     ],
     lin: [
       ['Estatura', n(f.sta), 'T'],

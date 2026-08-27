@@ -38,15 +38,23 @@ export function computeTopParents(
   females: FemaleFull[],
   field: 'sire_naab' | 'mgs_naab',
   limit: number,
-): { code: string; count: number; pct: number }[] {
+): { code: string; name: string | null; count: number; pct: number }[] {
+  const nameField = field === 'sire_naab' ? 'sire_name' : 'mgs_name'
   const counts: Record<string, number> = {}
+  const names: Record<string, string | null> = {}
   females.forEach((f) => {
     const val = f[field]
-    if (val) counts[val] = (counts[val] || 0) + 1
+    if (val) {
+      counts[val] = (counts[val] || 0) + 1
+      if (!names[val]) {
+        const n = f[nameField]
+        if (typeof n === 'string' && n) names[val] = n
+      }
+    }
   })
   const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, limit)
   const total = sorted.reduce((s, [, n]) => s + n, 0)
-  return sorted.map(([code, count]) => ({ code, count, pct: Math.round((count / total) * 1000) / 10 }))
+  return sorted.map(([code, count]) => ({ code, name: names[code] ?? null, count, pct: Math.round((count / total) * 1000) / 10 }))
 }
 
 export function computeTrendByYear(

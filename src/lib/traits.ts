@@ -153,14 +153,24 @@ export function femaleTrait(f: Record<string, unknown>, demoKey: string): number
   const value = f[field]
   return typeof value === 'number' && Number.isFinite(value) ? value : null
 }
+// Regra de casas decimais alinhada ao ToolSS (src/utils/ptaFormat.ts):
+// características de grandeza decimal (decimal/centesimal/milesimal) -> 2 casas;
+// índices e $ -> inteiro. Nada de valor cru com casas inconsistentes.
 export function fmt(trait: string, value: number): string {
-  const dec = ['dpr', 'pl', 'ptat', 'udc', 'flc', 'hcr', 'ccr', 'liv', 'sce', 'fat_pct', 'prot_pct', 'da', 'ket', 'met', 'rp', 'gl', 'sta', 'str', 'dfm', 'rua', 'rw', 'rls', 'rlr', 'fta', 'fls', 'fua', 'ruh', 'ruw', 'ucl', 'udp', 'ftp', 'rtp', 'ftl']
+  // 2 casas decimais (traits de magnitude decimal)
+  const dec = ['dpr', 'pl', 'ptat', 'udc', 'flc', 'hcr', 'ccr', 'liv', 'sce', 'dce', 'fat_pct', 'prot_pct',
+    'da', 'ket', 'met', 'rp', 'gl', 'sta', 'str', 'dfm', 'rua', 'rw', 'rls', 'rlr', 'fta', 'fls', 'fua',
+    'ruh', 'ruw', 'ucl', 'udp', 'ftp', 'rtp', 'ftl', 'mf', 'gfi', 'mast', 'ssb', 'dsb', 'hliv', 'fi',
+    'rfi', 'efc', 'fsav', 'f_sav', 'bwc', 'bd']
+  // índices em $ -> inteiro com prefixo
   if (['nm', 'hhp', 'cm', 'fm', 'gm'].includes(trait)) return `$${Math.round(value)}`
-  if (['gtpi', 'tpi', 'jpi', 'jui'].includes(trait)) return `${value > 0 ? '+' : ''}${Math.round(value)}`
+  // índices/PTAs de produção -> inteiro com sinal
+  if (['gtpi', 'tpi', 'jpi', 'jui', 'milk', 'fat', 'prot', 'cfp'].includes(trait)) return `${value > 0 ? '+' : ''}${Math.round(value)}`
+  // SCS -> 2 casas, sem sinal (menor é melhor)
   if (trait === 'scs') return value.toFixed(2)
   if (dec.includes(trait)) return `${value > 0 ? '+' : ''}${value.toFixed(2)}`
-  if (['mf', 'gfi', 'mast', 'ssb', 'dsb', 'hliv', 'fi'].includes(trait)) return value.toFixed(1)
-  return `${value > 0 ? '+' : ''}${value}`
+  // fallback: inteiro se for inteiro, senão 2 casas (nunca valor cru)
+  return Number.isInteger(value) ? `${value > 0 ? '+' : ''}${value}` : `${value > 0 ? '+' : ''}${value.toFixed(2)}`
 }
 
 export function initials(name: string): string {

@@ -1,7 +1,8 @@
 import { Download, X } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { BenchmarkSpectrum } from '@/components/BenchmarkSpectrum'
 import { GaugeChart } from '@/components/charts/GaugeChart'
+import { TraitSelect } from '@/components/TraitSelect'
 import { useFemalesFull } from '@/hooks/useApi'
 import { useBreed } from '@/lib/breed'
 import { computeHerdAverage } from '@/lib/herdStats'
@@ -23,6 +24,8 @@ function getZone(trait: string, val: number, natAvg: number, _top25: number, top
 export function PainelGenomicoPage() {
   const [spectrumCat, setSpectrumCat] = useState('all')
   const [showReport, setShowReport] = useState(false)
+  const [gauge2, setGauge2] = useState('gtpi')
+  const [gauge3, setGauge3] = useState('nm')
   const { data: fem, isLoading } = useFemalesFull({ page: 1, perPage: 5000 })
   const { benchmarks, trend, breedLabel, indexKey, indexLabel } = useBreed()
   const females = fem?.data ?? []
@@ -47,7 +50,20 @@ export function PainelGenomicoPage() {
   ] as const
   const visibleAttention = attention.filter((d) => d[2] != null)
   const maxGap = Math.max(1, ...visibleAttention.map((d) => Math.abs((d[2] ?? 0) - d[3])))
-  const gaugeKeys = ['hhp', indexKey, 'nm']
+  const renderGauge = (key: string, control: ReactNode) => {
+    const bench = benchmarks?.find(([bKey]) => bKey === key)
+    const val = herdAvg[key]
+    let gauge: ReactNode
+    if (bench && val != null) {
+      const [, label, natAvg, top25, top10] = bench
+      const zone = getZone(key, val, natAvg, top25, top10)
+      const min = Math.round(natAvg - Math.abs(top10 - natAvg))
+      gauge = <GaugeChart label={label} value={val} formattedValue={fmt(key, val)} min={min} max={top10} natAvg={natAvg} zone={zone.zone} zoneColor={zone.color} />
+    } else {
+      gauge = <div className="flex h-[130px] items-center justify-center rounded-[14px] border border-dashed border-[var(--ss-border)] bg-[var(--ss-wash)] px-4 text-center text-[12px] text-[var(--ss-muted)]">Sem referência para este índice</div>
+    }
+    return <div className="flex flex-col gap-2">{control}{gauge}</div>
+  }
   const categoryTabs = [
     ['all', 'Todos'],
     ['indices', 'Índices'],
@@ -130,15 +146,9 @@ export function PainelGenomicoPage() {
             <>
               <div className="ss-section-label">Performance vs Benchmark</div>
               <div className="mb-7 grid grid-cols-3 gap-5 max-[900px]:grid-cols-2 max-[600px]:grid-cols-1">
-                {gaugeKeys.map((key) => {
-                  const bench = benchmarks.find(([bKey]) => bKey === key)
-                  if (!bench || herdAvg[key] == null) return null
-                  const [, label, natAvg, top25, top10] = bench
-                  const val = herdAvg[key] ?? 0
-                  const zone = getZone(key, val, natAvg, top25, top10)
-                  const min = Math.round(natAvg - Math.abs(top10 - natAvg))
-                  return <GaugeChart key={key} label={label} value={val} formattedValue={fmt(key, val)} min={min} max={top10} natAvg={natAvg} zone={zone.zone} zoneColor={zone.color} />
-                })}
+                {renderGauge('hhp', <div className="rounded-[8px] bg-[var(--ss-primary-soft)] px-3 py-[7px] text-center text-[11px] font-bold uppercase tracking-[1px] text-[var(--ss-primary)]">HHP$ · Índice principal</div>)}
+                {renderGauge(gauge2, <TraitSelect value={gauge2} onChange={setGauge2} />)}
+                {renderGauge(gauge3, <TraitSelect value={gauge3} onChange={setGauge3} />)}
               </div>
               <div className="mb-6 flex flex-wrap gap-[2px] rounded-[10px] bg-[var(--ss-border-2)] p-[3px]">
                 {categoryTabs.map(([key, label]) => (

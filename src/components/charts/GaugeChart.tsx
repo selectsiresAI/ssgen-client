@@ -33,7 +33,8 @@ function clampPct(value: number, min: number, max: number) {
 }
 
 export function GaugeChart({ label, formattedValue, min, max, value, zone }: GaugeChartProps) {
-  const pct = clampPct(value, min, max)
+  const rawPct = clampPct(value, min, max)
+  const pct = Number.isFinite(rawPct) ? rawPct : 0.5
   const needleAngle = 180 - pct * 180
   const needle = polar(90, 92, 54, needleAngle)
 
@@ -49,8 +50,8 @@ export function GaugeChart({ label, formattedValue, min, max, value, zone }: Gau
         <g fill="none" strokeLinecap="round" strokeWidth="12">
           {zones.map(([color, start, end]) => <path key={color} d={arcPath(start, end)} stroke={color} />)}
         </g>
-        <line x1="90" y1="92" x2={needle.x} y2={needle.y} stroke="var(--ss-primary)" strokeWidth="3" strokeLinecap="round" filter="url(#gaugeGlow)" />
-        <circle cx="90" cy="92" r="6" fill="var(--ss-primary)" filter="url(#gaugeGlow)" />
+        <line x1="90" y1="92" x2={needle.x} y2={needle.y} stroke="var(--ss-primary)" strokeWidth="3.5" strokeLinecap="round" />
+        <circle cx="90" cy="92" r="6.5" fill="var(--ss-primary)" />
         <circle cx="90" cy="92" r="2.5" fill="white" />
       </svg>
       <div className="text-[11px] font-bold uppercase tracking-[2px] text-[var(--ss-muted)]">{label}</div>

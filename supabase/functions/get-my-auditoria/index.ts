@@ -6,6 +6,96 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// ── Detect "international" long-format codes (e.g. JE840003151455737) ──
+// vs standard short NAAB codes (e.g. 001HO12434)
+function isIntlCode(code: string): boolean {
+  if (/^[A-Za-z]{2}\d{6,}/.test(code)) return true;
+  if (/\d{9,}/.test(code)) return true;
+  return false;
+}
+
+interface ParentResolution {
+  naab: string;
+  name: string | null;
+  resolved: boolean;
+}
+
+// ── Batch-resolve parent codes to a standardized NAAB + bull name ──
+// deno-lint-ignore no-explicit-any
+async function resolveParentCodes(platformDb: any, codes: string[]): Promise<Map<string, ParentResolution>> {
+  const result = new Map<string, ParentResolution>();
+  const cleanCodes = Array.from(new Set(
+    codes.filter((c) => c && c.trim() !== "" && c !== "0" && c.toUpperCase() !== "DESCONHECIDO"),
+  ));
+  if (cleanCodes.length === 0) return result;
+
+  const stdCodes = cleanCodes.filter((c) => !isIntlCode(c));
+  const intlCodes = cleanCodes.filter((c) => isIntlCode(c));
+
+  // Standard NAAB codes: just fetch the bull name
+  if (stdCodes.length > 0) {
+    const { data } = await platformDb.from("bulls_denorm").select("code, name").in("code", stdCodes);
+    (data ?? []).forEach((b: { code: string; name: string | null }) => {
+      result.set(b.code, { naab: b.code, name: b.name, resolved: true });
+    });
+    stdCodes.forEach((c) => {
+      if (!result.has(c)) result.set(c, { naab: c, name: null, resolved: true });
+    });
+  }
+
+  if (intlCodes.length > 0) {
+    const remaining = new Set(intlCodes);
+
+    // 1) Try bull_naab_aliases (naab_variant → bull_id)
+    const { data: aliases } = await platformDb
+      .from("bull_naab_aliases")
+      .select("naab_variant, bull_id")
+      .in("naab_variant", intlCodes);
+
+    const bullIds = Array.from(new Set((aliases ?? []).map((a: { bull_id: string }) => a.bull_id)));
+    const bullsById = new Map<string, { naab_code: string | null; name: string | null }>();
+    if (bullIds.length > 0) {
+      const { data: bullsData } = await platformDb.from("bulls").select("id, naab_code, name").in("id", bullIds);
+      (bullsData ?? []).forEach((b: { id: string; naab_code: string | null; name: string | null }) => {
+        bullsById.set(b.id, { naab_code: b.naab_code, name: b.name });
+      });
+    }
+    (aliases ?? []).forEach((a: { naab_variant: string; bull_id: string }) => {
+      const bull = bullsById.get(a.bull_id);
+      if (bull && bull.naab_code) {
+        result.set(a.naab_variant, { naab: bull.naab_code, name: bull.name, resolved: true });
+        remaining.delete(a.naab_variant);
+      }
+    });
+
+    // 2) Fallback: match against bulls.registration
+    if (remaining.size > 0) {
+      const regCodes = Array.from(remaining);
+      const { data: regBulls } = await platformDb
+        .from("bulls")
+        .select("naab_code, name, registration")
+        .in("registration", regCodes);
+      (regBulls ?? []).forEach((b: { naab_code: string | null; name: string | null; registration: string | null }) => {
+        if (!b.registration) return;
+        if (b.naab_code) {
+          result.set(b.registration, { naab: b.naab_code, name: b.name, resolved: true });
+          remaining.delete(b.registration);
+        } else if (b.name) {
+          result.set(b.registration, { naab: b.registration, name: b.name, resolved: false });
+          remaining.delete(b.registration);
+        }
+      });
+    }
+
+    // 3) Still unresolved: keep the original code, no name, flagged as unresolved international
+    remaining.forEach((c) => {
+      result.set(c, { naab: c, name: null, resolved: false });
+    });
+  }
+
+  return result;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -157,7 +247,19 @@ Deno.serve(async (req: Request) => {
         .sort((a, b) => b.daughters_count - a.daughters_count)
         .slice(0, limit);
 
-      return new Response(JSON.stringify({ data: sorted }), {
+      // ── Standardize to NAAB + enrich with bull name (batch, server-side) ──
+      const resolutionMap = await resolveParentCodes(platformDb, sorted.map((s) => s.parent_label));
+      const enrichedSorted = sorted.map((s) => {
+        const r = resolutionMap.get(s.parent_label);
+        return {
+          ...s,
+          parent_naab: r?.naab ?? s.parent_label,
+          parent_name: r?.name ?? null,
+          resolved: r?.resolved ?? false,
+        };
+      });
+
+      return new Response(JSON.stringify({ data: enrichedSorted }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
