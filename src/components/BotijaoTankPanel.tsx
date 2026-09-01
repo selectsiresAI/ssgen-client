@@ -1,5 +1,3 @@
-import { useMemo, useState } from 'react'
-
 export interface TankItem {
   id: string
   touro: { code: string; name: string | null; breed?: string | null }
@@ -10,27 +8,13 @@ export interface TankItem {
 interface BotijaoTankPanelProps {
   items: TankItem[]
   totalDoses?: number
-  lastN2Date?: string | null
   totalCanecas?: number
-  capacidadeLitros?: number
-  aberturasDia?: number
 }
 
-/**
- * Modelo de consumo de N₂:
- * - Evaporação natural: 150 mL/dia
- * - Cada abertura (2-4 min): ~50 mL
- * - Default 2 aberturas/dia = 100 mL/dia
- * - Total default: 250 mL/dia (0.25 L/dia)
- * - Autonomia = capacidadeLitros / consumoDiarioL
- */
 export function BotijaoTankPanel({
   items,
   totalDoses,
-  lastN2Date = null,
   totalCanecas = 6,
-  capacidadeLitros = 35,
-  aberturasDia = 2,
 }: BotijaoTankPanelProps) {
   const total = totalDoses ?? items.reduce((s, i) => s + i.doses, 0)
   const bullCount = items.length
@@ -41,24 +25,6 @@ export function BotijaoTankPanel({
 
   const occupied = bullCount === 0 ? 0 : Math.max(1, Math.min(totalCanecas, Math.ceil(bullCount / 3)))
   const canecaOf = (idx: number) => (occupied ? (idx % occupied) + 1 : 0)
-
-  // Consumo diário: evaporação natural (0.15 L) + aberturas (0.05 L cada)
-  const consumoDiarioL = 0.15 + aberturasDia * 0.05
-  const fullAutonomyDays = Math.round(capacidadeLitros / consumoDiarioL)
-
-  const [now] = useState(() => Date.now())
-  const { level, autonomy, litrosRestantes } = useMemo(() => {
-    if (!lastN2Date) return { level: 0.7, autonomy: Math.round(0.7 * fullAutonomyDays), litrosRestantes: capacidadeLitros * 0.7 }
-    const days = Math.max(0, Math.floor((now - new Date(lastN2Date).getTime()) / 86_400_000))
-    const consumido = days * consumoDiarioL
-    const restante = Math.max(0, capacidadeLitros - consumido)
-    const lvl = Math.max(0, Math.min(1, restante / capacidadeLitros))
-    const diasRestantes = Math.max(0, Math.round(restante / consumoDiarioL))
-    return { level: lvl, autonomy: diasRestantes, litrosRestantes: restante }
-  }, [lastN2Date, fullAutonomyDays, capacidadeLitros, consumoDiarioL, now])
-
-  const levelColor = level > 0.6 ? 'var(--ss-green)' : level > 0.35 ? 'var(--ss-amber)' : 'var(--ss-primary)'
-  const levelPct = Math.round(level * 100)
 
   const SZ = 200, cx = SZ / 2, cy = SZ / 2, R = 66, cr = 20
   const slots = Array.from({ length: totalCanecas }, (_, i) => {
@@ -95,39 +61,6 @@ export function BotijaoTankPanel({
             <text x={cx} y={cy - 4} textAnchor="middle" fontSize="7.5" fontWeight="700" letterSpacing="1.3" fill="var(--ss-muted-2)">DOSES</text>
             <text x={cx} y={cy + 12} textAnchor="middle" fontSize="14" fontWeight="800" fontFamily="var(--ss-mono)" fill="var(--ss-fg)">{total}</text>
           </svg>
-
-          <div style={{ height: 1, background: 'var(--ss-border-2)', margin: '14px 0' }} />
-
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-[10px] font-semibold uppercase tracking-[1.2px] text-[var(--ss-muted)]">Nível de N₂ líquido</span>
-            <span className="font-mono text-[12px] font-bold" style={{ color: levelColor }}>{levelPct}%</span>
-          </div>
-          <div className="h-2.5 overflow-hidden rounded-full" style={{ background: 'var(--ss-border-2)' }}>
-            <div className="h-full rounded-full" style={{ width: `${levelPct}%`, background: levelColor }} />
-          </div>
-          <div className="mt-1.5 font-mono text-[10px] text-[var(--ss-muted)]">
-            ~{litrosRestantes.toFixed(1)}L restantes · {capacidadeLitros}L total · consumo {(consumoDiarioL * 1000).toFixed(0)} mL/dia
-          </div>
-          <div className="mt-2 text-[12px] font-medium" style={{ color: levelColor }}>
-            {level > 0.35
-              ? `Autonomia estimada: ${autonomy} dias`
-              : level > 0.15
-                ? `⚠ Reabastecer N₂ em até ${autonomy} dias`
-                : '🚨 CRÍTICO — Reabastecer N₂ imediatamente!'}
-          </div>
-          {level <= 0.35 && (
-            <div className="mt-2.5 flex items-start gap-2 rounded-lg border border-[var(--ss-amber)] bg-[var(--ss-amber-soft)] p-2.5">
-              <svg className="mt-0.5 h-4 w-4 shrink-0 text-[var(--ss-amber)]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
-              <div className="text-[11px] leading-[1.4] text-[var(--ss-fg)]">
-                <b>Alerta de reposição de nitrogênio</b>
-                <div className="mt-0.5 text-[var(--ss-text)]">
-                  {level <= 0.15
-                    ? `Nível crítico (${litrosRestantes.toFixed(1)}L). Risco de perda de material genético. Agende abastecimento urgente.`
-                    : `Nível baixo (${litrosRestantes.toFixed(1)}L). Com o consumo atual de ${(consumoDiarioL * 1000).toFixed(0)} mL/dia, restam apenas ${autonomy} dias de autonomia.`}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

@@ -276,9 +276,7 @@ export function BotijaoPage() {
       <BotijaoTankPanel
         items={filteredItens}
         totalDoses={activeBotijao ? (botijaoStats.get(activeBotijao)?.doses ?? 0) : stats.total}
-        lastN2Date={nitrogenRecords.at(-1)?.dataAbastecimento ?? null}
         totalCanecas={activeBotijao ? (botijoes.find((b) => b.id === activeBotijao)?.canecas ?? 6) : 6}
-        capacidadeLitros={activeBotijao ? (botijoes.find((b) => b.id === activeBotijao)?.capacidadeLitros ?? 35) : 35}
       />
 
       {/* Search + Add */}

@@ -1,4 +1,4 @@
-import { Check, Info, Loader2 } from 'lucide-react'
+import { Check, Download, Info, Loader2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { ComboChart } from '@/components/charts/ComboChart'
 import { EvoChart } from '@/components/charts/EvoChart'
@@ -227,7 +227,7 @@ function EvolucaoStep({ females }: { females: FemaleFull[] }) {
   )
 }
 
-// Etapa 6 (índice 5) — Scatter Plot — 4 quadrantes fixos
+// Etapa 6 (índice 5) — Matriz de Performance — 4 quadrantes fixos
 const Q_COLORS = [
   { label: 'Elite', color: '#166534' },
   { label: (y: string, labels: Record<string, string>) => `Alto ${labels[y] ?? traitLabel[y] ?? y.toUpperCase()}`, color: '#16A34A' },
@@ -239,6 +239,7 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
   const { indexKey, traitLabels } = useBreed()
   const [xTrait, setXTrait] = useState(indexKey)
   const [yTrait, setYTrait] = useState('hhp')
+  const [quadFilter, setQuadFilter] = useState('all')
   useEffect(() => setXTrait((trait) => breedTraits([trait], indexKey, 'udc')[0]), [indexKey])
 
   // Sample up to 500 animals for scatter performance
@@ -258,7 +259,7 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
     return (
       <div className="ss-card">
         <div className="ss-card-header">
-          <h3 className="ss-card-title">Dispersão · {xLabel} × {yLabel}</h3>
+          <h3 className="ss-card-title">Matriz de Performance · {xLabel} × {yLabel}</h3>
           <div className="flex flex-wrap items-center gap-2">
             <label className="text-[11.5px] font-semibold text-[var(--ss-muted)]">X</label><TraitSelect value={xTrait} onChange={setXTrait} />
             <label className="text-[11.5px] font-semibold text-[var(--ss-muted)]">Y</label><TraitSelect value={yTrait} onChange={setYTrait} />
@@ -275,12 +276,12 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
 
   const W = 920, H = 400, padL = 60, padR = 24, padT = 22, padB = 56
   const plotW = W - padL - padR, plotH = H - padT - padB
-  const xs = sampled.map((a) => getTraitValue(a, xTrait) ?? 0)
-  const ys = sampled.map((a) => getTraitValue(a, yTrait) ?? 0)
-  const xMin = Math.min(...xs) * 0.96
-  const xMax = Math.max(...xs) * 1.04
-  const yMin = Math.min(...ys) * 0.96
-  const yMax = Math.max(...ys) * 1.04
+  // Min/max APENAS de valores não-null — um único null viraria 0 e contaminaria o limiar (e o CSV do quadrante)
+  const xs = sampled.map((a) => getTraitValue(a, xTrait)).filter((v): v is number => v != null)
+  const ys = sampled.map((a) => getTraitValue(a, yTrait)).filter((v): v is number => v != null)
+  const padRange = (lo: number, hi: number) => { const p = (hi - lo) * 0.04 || Math.abs(hi) * 0.04 || 1; return [lo - p, hi + p] as const }
+  const [xMin, xMax] = padRange(Math.min(...xs), Math.max(...xs))
+  const [yMin, yMax] = padRange(Math.min(...ys), Math.max(...ys))
   const xThr = (xMin + xMax) / 2
   const yThr = (yMin + yMax) / 2
   const X = (v: number) => padL + ((v - xMin) / (xMax - xMin)) * plotW
@@ -295,16 +296,58 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
     return 3
   }
   const counts = [0, 0, 0, 0]
-  sampled.forEach((a) => counts[quadrant(a)]++)
+  sampled.forEach((a) => { if (getTraitValue(a, xTrait) != null && getTraitValue(a, yTrait) != null) counts[quadrant(a)]++ })
 
   const xTickCount = 5, yTickCount = 5
   const topA = sampled.reduce((a, b) => ((getTraitValue(a, xTrait) ?? 0) + (getTraitValue(a, yTrait) ?? 0) > (getTraitValue(b, xTrait) ?? 0) + (getTraitValue(b, yTrait) ?? 0) ? a : b))
   const qLabels = ['ELITE', `ALTO ${yLabel.toUpperCase()}`, `ALTO ${xLabel.toUpperCase()}`, 'ABAIXO']
 
+  // Tabela/export: rebanho COMPLETO (não a amostra de 500 do gráfico), classificado pelos mesmos limiares
+  const QUAD_LABELS = ['Elite', `Alto ${yLabel}`, `Alto ${xLabel}`, 'Abaixo da média']
+  const fullRows = females
+    .filter((a) => getTraitValue(a, xTrait) != null && getTraitValue(a, yTrait) != null)
+    .map((a) => ({ a, q: quadrant(a), xv: getTraitValue(a, xTrait) as number, yv: getTraitValue(a, yTrait) as number, hhp: getTraitValue(a, 'hhp') }))
+  const fullCounts = [0, 0, 0, 0]
+  fullRows.forEach((r) => fullCounts[r.q]++)
+  const tableRows = fullRows
+    .filter((r) => quadFilter === 'all' || r.q === Number(quadFilter))
+    .sort((a, b) => (b.xv + b.yv) - (a.xv + a.yv))
+  const quadOptions = [
+    { value: 'all', label: `Todos (${fullRows.length})` },
+    ...QUAD_LABELS.map((lbl, i) => ({ value: String(i), label: `${lbl} (${fullCounts[i]})` })),
+  ]
+
+  const exportCsv = () => {
+    const header = ['Brinco', 'Pai (NAAB)', xLabel, yLabel, 'HHP$', 'Quadrante']
+    const cells = tableRows.map((r) => [
+      r.a.ear_tag || r.a.cdcb_id || r.a.id.slice(0, 8),
+      r.a.sire_naab ?? '',
+      Math.round(r.xv),
+      Math.round(r.yv),
+      r.hhp != null ? Math.round(r.hhp) : '',
+      QUAD_LABELS[r.q],
+    ])
+    const csv = [header, ...cells]
+      .map((row) => row.map((c) => {
+        const s = String(c)
+        return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+      }).join(';'))
+      .join('\n')
+    const blob = new Blob([String.fromCharCode(0xFEFF) + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    const scope = quadFilter === 'all' ? 'todos' : QUAD_LABELS[Number(quadFilter)].toLowerCase().replace(/\s+/g, '-')
+    link.download = `matriz-performance-${xTrait}-${yTrait}-${scope}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
+    <div className="flex flex-col gap-3.5">
     <div className="ss-card">
       <div className="ss-card-header">
-        <h3 className="ss-card-title">Dispersão · {xLabel} × {yLabel}</h3>
+        <h3 className="ss-card-title">Matriz de Performance · {xLabel} × {yLabel}</h3>
         <div className="flex flex-wrap items-center gap-2">
           <label className="text-[11.5px] font-semibold text-[var(--ss-muted)]">X</label><TraitSelect value={xTrait} onChange={setXTrait} />
           <label className="text-[11.5px] font-semibold text-[var(--ss-muted)]">Y</label><TraitSelect value={yTrait} onChange={setYTrait} />
@@ -383,6 +426,58 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
         </div>
       </div>
     </div>
+
+    <div className="ss-card">
+      <div className="ss-card-header">
+        <h3 className="ss-card-title">Animais por quadrante</h3>
+        <div className="flex flex-wrap items-center gap-2">
+          <SegmentedControl options={quadOptions} value={quadFilter} onChange={setQuadFilter} wrap size="sm" />
+          <button type="button" className="ss-button ss-button-ghost ss-button-sm" onClick={exportCsv} disabled={tableRows.length === 0}>
+            <Download className="h-3.5 w-3.5" />Exportar CSV
+          </button>
+        </div>
+      </div>
+      <div className="ss-card-body">
+        {sampled.length < females.length && (
+          <div className="mb-2.5 text-[11px] text-[var(--ss-muted)]">Gráfico exibe uma amostra de {sampled.length}; a tabela e o export usam o rebanho completo ({fullRows.length}).</div>
+        )}
+        <div style={{ overflowX: 'auto', maxHeight: 460, overflowY: 'auto' }}>
+          <table className="ss-table">
+            <thead>
+              <tr>
+                <th style={{ width: 40, textAlign: 'right' }}>#</th>
+                <th>Brinco</th>
+                <th>Pai</th>
+                <th style={{ textAlign: 'right' }}>{xLabel}</th>
+                <th style={{ textAlign: 'right' }}>{yLabel}</th>
+                <th style={{ textAlign: 'right' }}>HHP$</th>
+                <th>Quadrante</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tableRows.length === 0 ? (
+                <tr><td colSpan={7} style={{ textAlign: 'center', color: 'var(--ss-muted)', padding: '24px 0' }}>Sem animais neste quadrante.</td></tr>
+              ) : tableRows.map((r, i) => (
+                <tr key={r.a.id}>
+                  <td className="ss-mono" style={{ textAlign: 'right', color: 'var(--ss-muted)' }}>{i + 1}</td>
+                  <td style={{ fontWeight: 600, color: 'var(--ss-fg)' }}>{r.a.ear_tag || r.a.cdcb_id || r.a.id.slice(0, 8)}</td>
+                  <td className="ss-mono" style={{ color: 'var(--ss-muted)' }}>{r.a.sire_naab ?? '—'}</td>
+                  <td className="ss-mono" style={{ textAlign: 'right', color: 'var(--ss-fg)' }}>{Math.round(r.xv)}</td>
+                  <td className="ss-mono" style={{ textAlign: 'right', color: 'var(--ss-fg)' }}>{Math.round(r.yv)}</td>
+                  <td className="ss-mono" style={{ textAlign: 'right', color: 'var(--ss-fg)' }}>{r.hhp != null ? `$${Math.round(r.hhp)}` : '—'}</td>
+                  <td>
+                    <span className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold" style={{ color: Q_COLORS[r.q].color }}>
+                      <span className="h-2 w-2 rounded-full" style={{ background: Q_COLORS[r.q].color }} />{QUAD_LABELS[r.q]}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    </div>
   )
 }
 
@@ -412,6 +507,14 @@ function ForcasStep({ females }: { females: FemaleFull[] }) {
   const groupTraits = breedTraits(grp.traits, indexKey, udderKey)
   const displayGroup = { ...grp, traits: groupTraits, names: groupTraits.map((t, i) => traitLabels[t] ?? grp.names[i]) }
   const animalData = groupTraits.reduce((o, t) => { o[t] = getTraitValue(animal, t) ?? 0; return o }, {} as Record<string, number>)
+
+  // Escala dinâmica: domínio p5–p95 do rebanho por eixo — evita o colapso do radar quando um trait tem valor baixo
+  const radarDomain = groupTraits.map((t) => {
+    const vals = females.map((f) => getTraitValue(f, t)).filter((v): v is number => v != null).sort((a, b) => a - b)
+    if (vals.length < 2) return { min: 0, max: 1 }
+    const q = (p: number) => vals[Math.min(vals.length - 1, Math.max(0, Math.round(p * (vals.length - 1))))]
+    return { min: q(0.05), max: q(0.95) }
+  })
 
   return (
     <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1.55fr_1fr]">
@@ -443,7 +546,7 @@ function ForcasStep({ females }: { females: FemaleFull[] }) {
         <div className="ss-card-header"><h3 className="ss-card-title">Perfil · {animal.ear_tag || animal.cdcb_id || animal.id.slice(0, 8)}</h3></div>
         <div className="ss-card-body">
           <SegmentedControl options={Object.entries(radarGroups).map(([value, g]) => ({ value, label: g.label }))} value={radar} onChange={setRadar} wrap size="sm" />
-          <div className="mx-auto max-w-[320px]"><RadarChart animal={animalData} avg={herdAvg} group={displayGroup} /></div>
+          <div className="mx-auto max-w-[320px]"><RadarChart animal={animalData} avg={herdAvg} group={displayGroup} domain={radarDomain} /></div>
           <div className="mt-3 grid grid-cols-2 gap-2">
             {groupTraits.map((t, i) => {
               const av = getTraitValue(animal, t) ?? 0

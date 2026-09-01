@@ -86,7 +86,7 @@ export const traitLabel: Record<string, string> = {
   ftp: 'FTP', rtp: 'RTP', ftl: 'FTL', mf: 'MF', gfi: 'GFI',
 }
 
-export const agSteps = [{ n: 0, t: 'Parentesco' }, { n: 1, t: 'Top Pais' }, { n: 3, t: 'Progressão' }, { n: 6, t: 'Distribuição' }, { n: 7, t: 'Evolução vs Nacional' }, { n: 8, t: 'Scatter Plot' }, { n: 9, t: 'Análise de Forças' }]
+export const agSteps = [{ n: 0, t: 'Parentesco' }, { n: 1, t: 'Top Pais' }, { n: 3, t: 'Progressão' }, { n: 6, t: 'Distribuição' }, { n: 7, t: 'Evolução vs Nacional' }, { n: 8, t: 'Matriz de Performance' }, { n: 9, t: 'Análise de Forças' }]
 
 // REFERÊNCIA NACIONAL DA RAÇA (Holstein US) — não é dado do cliente. Fonte: médias oficiais.
 export const benchmarks: [string, string, number, number, number][] = [

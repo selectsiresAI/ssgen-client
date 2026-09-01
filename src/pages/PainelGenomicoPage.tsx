@@ -38,7 +38,7 @@ export function PainelGenomicoPage() {
     { key: 'top5', label: 'Top 5 Animais', enabled: true },
     { key: 'atencao', label: 'Fraquezas e Recomendações', enabled: true },
     { key: 'haplotipo', label: 'Haplotipo Comparativo', enabled: false },
-    { key: 'scatter', label: 'Scatter Plot', enabled: false },
+    { key: 'scatter', label: 'Matriz de Performance', enabled: false },
   ])
   const attention = [
     ['SCS', 'Células Somáticas', herdAvg.scs ?? null, 2.50, '↓ menor é melhor'],

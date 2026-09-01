@@ -6,19 +6,29 @@ interface RadarChartProps {
   group: RadarGroup
   width?: number
   height?: number
+  /** Domínio dinâmico por eixo (min–max do rebanho), alinhado a group.traits.
+   *  Quando presente, a escala de cada eixo se adapta ao rebanho em vez do teto fixo. */
+  domain?: { min: number; max: number }[]
 }
 
-export function RadarChart({ animal, avg, group, width = 260, height = 220 }: RadarChartProps) {
+export function RadarChart({ animal, avg, group, width = 260, height = 220, domain }: RadarChartProps) {
   const cx = width / 2
   const cy = height / 2 - 2
   const radius = Math.min(width, height) * 0.35
   const count = group.names.length
   const angle = (idx: number) => -Math.PI / 2 + (idx * 2 * Math.PI) / count
   const normalize = (value: number, idx: number) => {
-    const max = group.max[idx]
-    const off = group.offset?.[idx] ?? 0
     const inv = group.inv?.[idx]
-    let n = (value + off) / (max + off)
+    const d = domain?.[idx]
+    let n: number
+    if (d) {
+      const { min, max } = d
+      n = max > min ? (value - min) / (max - min) : 0.5
+    } else {
+      const max = group.max[idx]
+      const off = group.offset?.[idx] ?? 0
+      n = (value + off) / (max + off)
+    }
     if (inv) n = 1 - n
     return Math.max(0.05, Math.min(1, n))
   }
