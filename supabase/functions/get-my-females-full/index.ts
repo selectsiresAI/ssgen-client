@@ -19,45 +19,27 @@ function autoCategory(birthDate: string | null): { category: string; parity_orde
 }
 
 // ── Auto-calculate HHP$ ──
-// Formula: Select Sires HHP+ Index (15 traits)
-function calcHHP(f: Record<string, unknown>): number | null {
+// Fórmula NÃO é mais duplicada aqui: delega pra calculate_hhp_dollar_breed()
+// na Platform (fonte única, HO+JE via breed_index_params). Evita a cópia local
+// desalinhar da Platform de novo (ver incidente 2026-06-02) e cobre Jersey.
+async function calcHHP(
+  platformDb: ReturnType<typeof createClient>,
+  f: Record<string, unknown>,
+): Promise<number | null> {
   const n = (k: string) => typeof f[k] === "number" ? f[k] as number : null;
-  const ptaf = n("ptaf");
-  const ptap = n("ptap");
-  const pl = n("pl");
-  const liv = n("liv");
-  const scs = n("scs");
-  const dpr = n("dpr");
-  const ccr = n("ccr");
-  const rfi = n("rfi");
-  const sta = n("sta");
-  const dfm = n("dfm");
-  const ruw = n("ruw");
-  const udp = n("udp");
-  const rtp = n("rtp");
-  const ftl = n("ftl");
-  const mast = n("mast");
-
-  // Need at least the core traits
-  if (ptaf == null || ptap == null || pl == null || scs == null || dpr == null) return null;
-
-  return Math.round((
-    4.91 * ptaf +
-    6.01 * ptap +
-    12.83 * pl +
-    10.69 * (liv ?? 0) +
-    (-158.56) * ((scs) - 3) +
-    19.3 * dpr +
-    15.84 * (ccr ?? 0) +
-    (-0.19) * (rfi ?? 0) +
-    (-13.32) * (sta ?? 0) +
-    (-8.88) * (dfm ?? 0) +
-    8.88 * (ruw ?? 0) +
-    13.32 * (udp ?? 0) +
-    (-14.80) * (Math.abs(rtp ?? 0.65) - 0.65) +
-    (-26.64) * (Math.abs(ftl ?? 0.50) - 0.50) +
-    25.37 * (mast ?? 0)
-  ) * 100) / 100;
+  const { data, error } = await platformDb.rpc("calculate_hhp_dollar_breed", {
+    p_breed: typeof f.breed === "string" && f.breed ? f.breed : "HO",
+    p_ptaf: n("ptaf"), p_ptap: n("ptap"), p_pl: n("pl"), p_liv: n("liv"),
+    p_scs: n("scs"), p_dpr: n("dpr"), p_ccr: n("ccr"), p_udp: n("udp"), p_mast: n("mast"),
+    p_rfi: n("rfi"), p_sta: n("sta"), p_dfm: n("dfm"), p_ruw: n("ruw"),
+    p_rtp: n("rtp"), p_ftl: n("ftl"),
+    p_ptat: n("ptat"), p_da: n("da"), p_hliv: n("h_liv"),
+  });
+  if (error) {
+    console.error("calculate_hhp_dollar_breed RPC failed:", error.message);
+    return null;
+  }
+  return typeof data === "number" ? data : null;
 }
 
 Deno.serve(async (req: Request) => {
@@ -181,7 +163,7 @@ Deno.serve(async (req: Request) => {
     const females = allFemales;
 
     // ── Auto-enrich: category + HHP$ ──
-    const enriched = (females ?? []).map((f: Record<string, unknown>) => {
+    const enriched = await Promise.all((females ?? []).map(async (f: Record<string, unknown>) => {
       const row = { ...f };
 
       // Auto-classify category from birth_date if missing
@@ -191,13 +173,13 @@ Deno.serve(async (req: Request) => {
         row.parity_order = parity_order;
       }
 
-      // Auto-calculate HHP$ if missing
+      // Auto-calculate HHP$ if missing (breed-aware, via Platform RPC)
       if (row.hhp_dollar == null) {
-        row.hhp_dollar = calcHHP(row);
+        row.hhp_dollar = await calcHHP(platformDb, row);
       }
 
       return row;
-    });
+    }));
 
     // ── Enrich with sire/mgs/mmgs bull names (best-effort, batch lookup) ──
     const naabCodes = Array.from(new Set(
