@@ -47,10 +47,20 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("PLATFORM_SERVICE_ROLE_KEY")!,
     );
 
+    const { data: matches, error: matchErr } = await platformDb.rpc("find_bulls_smart_batch", { p_queries: codeList });
+    if (matchErr) throw matchErr;
+    const resolvedCodes = Array.from(new Set((matches ?? []).map((m: { code?: string | null }) => m.code).filter(Boolean)));
+
+    if (resolvedCodes.length === 0) {
+      return new Response(JSON.stringify({ data: [] }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { data: bulls, error } = await platformDb
       .from("bulls_denorm")
       .select("code, name, hhp_dollar, tpi, nm_dollar, ptam, ptaf, ptap, cfp, pl, dpr, scs, ptat, udc")
-      .in("code", codeList);
+      .in("code", resolvedCodes);
 
     if (error) throw error;
 

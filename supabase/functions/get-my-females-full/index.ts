@@ -187,20 +187,23 @@ Deno.serve(async (req: Request) => {
         .filter((c): c is string => typeof c === "string" && c.trim() !== ""),
     ));
 
-    let bullNameByCode = new Map<string, string | null>();
+    const bullNameByCode = new Map<string, string | null>();
     if (naabCodes.length > 0) {
-      const { data: bulls } = await platformDb
-        .from("bulls_denorm")
-        .select("code, name")
-        .in("code", naabCodes);
-      bullNameByCode = new Map((bulls ?? []).map((b: { code: string; name: string | null }) => [b.code, b.name]));
+      const { data: matches, error: matchErr } = await platformDb.rpc("find_bulls_smart_batch", { p_queries: naabCodes });
+      if (matchErr) {
+        console.error("[get-my-females-full] find_bulls_smart_batch error", matchErr);
+      } else {
+        for (const row of matches ?? []) {
+          bullNameByCode.set(String(row.input_query).toUpperCase(), row.name ?? null);
+        }
+      }
     }
 
     const enrichedWithNames = enriched.map((f: Record<string, unknown>) => ({
       ...f,
-      sire_name: typeof f.sire_naab === "string" ? bullNameByCode.get(f.sire_naab) ?? null : null,
-      mgs_name: typeof f.mgs_naab === "string" ? bullNameByCode.get(f.mgs_naab) ?? null : null,
-      mmgs_name: typeof f.mmgs_naab === "string" ? bullNameByCode.get(f.mmgs_naab) ?? null : null,
+      sire_name: typeof f.sire_naab === "string" ? bullNameByCode.get((f.sire_naab as string).toUpperCase()) ?? null : null,
+      mgs_name: typeof f.mgs_naab === "string" ? bullNameByCode.get((f.mgs_naab as string).toUpperCase()) ?? null : null,
+      mmgs_name: typeof f.mmgs_naab === "string" ? bullNameByCode.get((f.mmgs_naab as string).toUpperCase()) ?? null : null,
     }));
 
     return new Response(JSON.stringify({ data: enrichedWithNames, total: totalCount, page, per_page: perPage }), {

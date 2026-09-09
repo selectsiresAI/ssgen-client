@@ -40,11 +40,20 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    const { data: matches, error: matchErr } = await platformDb.rpc("find_bull_smart", { p_query: search });
+    if (matchErr) throw matchErr;
+
+    const codes = (matches ?? []).map((m: { code?: string | null }) => m.code).filter(Boolean);
+    if (codes.length === 0) {
+      return new Response(JSON.stringify({ data: [] }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { data: bulls, error } = await platformDb
       .from("bulls_denorm")
       .select("code, name, registration, company, hhp_dollar, tpi")
-      .or(`code.ilike.%${search}%,name.ilike.%${search}%`)
-      .limit(30);
+      .in("code", codes);
 
     if (error) throw error;
 
