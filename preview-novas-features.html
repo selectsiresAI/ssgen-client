@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSGEN Cliente — Preview Novas Features</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ss-primary: #CE0E2D;
+    --ss-primary-d: #A50A23;
+    --ss-primary-soft: #FBE9EC;
+    --ss-green: #3F8A66;
+    --ss-green-soft: #E8F2EC;
+    --ss-amber: #B7791F;
+    --ss-amber-soft: #FBF1DF;
+    --ss-c2: #9A7B6B;
+    --ss-c3: #C99A4B;
+    --ss-bg: #FAFAF9;
+    --ss-card: #FFFFFF;
+    --ss-fg: #1C1917;
+    --ss-text: #44403C;
+    --ss-muted: #78716C;
+    --ss-muted-2: #A8A29E;
+    --ss-border: #EBE7E2;
+    --ss-border-2: #F3F0EC;
+    --ss-wash: #FAF8F6;
+    --ss-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--ss-bg); color: var(--ss-text); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+
+  .page { max-width: 1320px; margin: 0 auto; padding: 32px 28px; }
+
+  /* ═══ Page Header ═══ */
+  .page-header { margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid var(--ss-border); }
+  .page-header h1 { font-size: 26px; font-weight: 800; color: var(--ss-fg); margin-bottom: 5px; letter-spacing: -.3px; }
+  .page-header p { font-size: 14px; color: var(--ss-muted); }
+
+  /* ═══ Feature Section ═══ */
+  .feature-section { margin-bottom: 56px; }
+  .feature-badge { display: inline-flex; align-items: center; gap: 7px; background: linear-gradient(135deg, var(--ss-primary-soft), #fdd); color: var(--ss-primary); font-size: 10.5px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; padding: 5px 13px; border-radius: 20px; margin-bottom: 12px; border: 1px solid rgba(206,14,45,.12); }
+  .feature-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ss-primary); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+  .feature-title { font-size: 20px; font-weight: 800; color: var(--ss-fg); margin-bottom: 6px; letter-spacing: -.3px; }
+  .feature-desc { font-size: 13.5px; color: var(--ss-muted); margin-bottom: 20px; max-width: 720px; line-height: 1.6; }
+
+  /* ═══ Cards ═══ */
+  .ss-card { background: var(--ss-card); border: 1px solid var(--ss-border); border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.02); }
+  .ss-card-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 22px; border-bottom: 1px solid var(--ss-border-2); }
+  .ss-card-title { font-size: 14px; font-weight: 700; color: var(--ss-fg); padding-left: 12px; border-left: 3px solid var(--ss-primary); }
+  .ss-card-body { padding: 22px; }
+
+  /* ═══ Nav hint ═══ */
+  .nav-hint { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; color: var(--ss-muted); background: var(--ss-wash); border: 1px solid var(--ss-border-2); border-radius: 7px; padding: 5px 12px; margin-bottom: 18px; }
+  .nav-hint svg { width: 13px; height: 13px; }
+
+  /* ═══ Tabs ═══ */
+  .tab-bar { display: flex; gap: 2px; background: var(--ss-border-2); border-radius: 9px; padding: 3px; }
+  .tab-item { padding: 7px 16px; font-size: 12px; font-weight: 500; color: var(--ss-muted); border-radius: 7px; cursor: pointer; transition: all .15s; border: none; background: transparent; font-family: inherit; }
+  .tab-item.active { background: white; color: var(--ss-fg); font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+
+  /* ═══ Divider ═══ */
+  .feature-divider { height: 1px; background: linear-gradient(90deg, transparent 5%, var(--ss-border) 50%, transparent 95%); margin: 48px 0; }
+
+  /* ═══ Buttons ═══ */
+  .ss-button { display: inline-flex; align-items: center; gap: 8px; background: var(--ss-primary); color: white; border: none; border-radius: 9px; padding: 11px 20px; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all .15s; font-family: inherit; box-shadow: 0 2px 8px rgba(206,14,45,.25); }
+  .ss-button:hover { background: var(--ss-primary-d); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(206,14,45,.3); }
+  .ss-button-ghost { display: inline-flex; align-items: center; gap: 8px; background: white; color: var(--ss-text); border: 1px solid var(--ss-border); border-radius: 9px; padding: 11px 20px; font-size: 13.5px; font-weight: 500; cursor: pointer; transition: all .15s; font-family: inherit; }
+  .ss-button-ghost:hover { background: var(--ss-wash); border-color: var(--ss-muted-2); }
+
+  /* ═══ Grids ═══ */
+  .ss-grid-2b { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  /* ═══ Animate ═══ */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+  .animate-in { animation: fadeUp .5s ease-out both; }
+  .delay-1 { animation-delay: .1s; }
+  .delay-2 { animation-delay: .2s; }
+  .delay-3 { animation-delay: .3s; }
+  .delay-4 { animation-delay: .4s; }
+
+  /* ═══════════════════════════════════════════════════ */
+  /* FEATURE 1: Gauges + Espectro                       */
+  /* ═══════════════════════════════════════════════════ */
+  .gauge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; padding: 8px 0; }
+  .gauge-container { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .gauge-svg { overflow: visible; }
+  .gauge-label { font-size: 12px; font-weight: 600; color: var(--ss-muted); letter-spacing: .3px; }
+  .gauge-value { font-family: var(--ss-mono); font-size: 22px; font-weight: 800; line-height: 1; }
+  .gauge-range { display: flex; justify-content: space-between; width: 100%; font-family: var(--ss-mono); font-size: 9.5px; color: var(--ss-muted-2); padding: 0 4px; }
+  .benchmark-zone { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 12px; display: inline-block; margin-top: 4px; letter-spacing: .2px; }
+  .zone-elite { background: #dcfce7; color: #166534; }
+  .zone-top25 { background: var(--ss-green-soft); color: var(--ss-green); }
+  .zone-medio { background: var(--ss-amber-soft); color: var(--ss-amber); }
+  .zone-abaixo { background: #FEE2E2; color: #DC2626; }
+
+  /* Espectro */
+  .benchmark-row { display: grid; grid-template-columns: 100px 1fr 110px; align-items: center; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--ss-border-2); }
+  .benchmark-row:last-child { border-bottom: none; }
+  .benchmark-label { font-size: 15px; font-weight: 800; color: var(--ss-fg); letter-spacing: -.2px; }
+  .benchmark-sublabel { font-size: 10.5px; color: var(--ss-muted); margin-top: 2px; }
+  .benchmark-vals { text-align: right; }
+  .benchmark-val-main { font-family: var(--ss-mono); font-size: 17px; font-weight: 800; letter-spacing: -.3px; }
+  .benchmark-val-sub { font-family: var(--ss-mono); font-size: 10.5px; color: var(--ss-muted); margin-top: 2px; }
+
+  .spectrum-bar { position: relative; height: 32px; border-radius: 7px; background: linear-gradient(90deg, #FECACA 0%, #FDE68A 32%, #BBF7D0 62%, #6EE7B7 100%); box-shadow: inset 0 1px 2px rgba(0,0,0,.06); }
+  .spectrum-marker { position: absolute; top: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; }
+  .marker-national { z-index: 2; }
+  .marker-national .marker-line { width: 2px; height: 100%; background: repeating-linear-gradient(to bottom, var(--ss-muted) 0, var(--ss-muted) 3px, transparent 3px, transparent 6px); }
+  .marker-national .marker-tag { position: absolute; top: -20px; white-space: nowrap; font-size: 9.5px; font-weight: 600; color: var(--ss-muted); background: var(--ss-wash); border: 1px solid var(--ss-border); padding: 2px 7px; border-radius: 5px; transform: translateX(-50%); left: 50%; }
+  .marker-top25 { z-index: 2; }
+  .marker-top25 .marker-line { width: 2.5px; height: 100%; background: #166534; border-radius: 1px; }
+  .marker-top25 .marker-tag { position: absolute; bottom: -20px; white-space: nowrap; font-size: 9.5px; font-weight: 700; color: #166534; background: #dcfce7; border: 1px solid #BBF7D0; padding: 2px 7px; border-radius: 5px; transform: translateX(-50%); left: 50%; }
+  .marker-mine { z-index: 3; }
+  .marker-mine .marker-diamond { width: 20px; height: 20px; background: var(--ss-primary); border-radius: 4px; transform: rotate(45deg); position: absolute; top: 6px; left: 50%; margin-left: -10px; box-shadow: 0 2px 8px rgba(206,14,45,.4); }
+  .marker-mine .marker-val { position: absolute; top: -24px; white-space: nowrap; font-family: var(--ss-mono); font-size: 12.5px; font-weight: 800; color: var(--ss-primary); transform: translateX(-50%); left: 50%; background: white; padding: 2px 8px; border-radius: 6px; border: 2px solid var(--ss-primary); box-shadow: 0 2px 6px rgba(206,14,45,.15); }
+
+  .spectrum-legend { display: flex; gap: 18px; justify-content: center; margin-top: 8px; }
+  .spectrum-legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--ss-muted); font-weight: 500; }
+
+  /* ═══════════════════════════════════════════════════ */
+  /* FEATURE 2: Scatter Plot                            */
+  /* ═══════════════════════════════════════════════════ */
+  .scatter-container { position: relative; background: linear-gradient(180deg, #FAFAF9, #F5F3F0); border-radius: 10px; border: 1px solid var(--ss-border-2); overflow: hidden; }
+  .scatter-svg { display: block; }
+  .scatter-dot { cursor: pointer; transition: all .2s; }
+  .scatter-dot:hover { filter: brightness(1.1); }
+  .scatter-legend { display: flex; gap: 18px; padding: 12px 18px; border-top: 1px solid var(--ss-border-2); background: white; }
+  .scatter-legend-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ss-muted); font-weight: 500; }
+  .scatter-legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .scatter-controls { display: flex; gap: 10px; align-items: center; }
+  .scatter-controls select { font-family: var(--ss-mono); font-size: 11.5px; padding: 6px 12px; border: 1px solid var(--ss-border); border-radius: 8px; background: white; color: var(--ss-fg); outline: none; font-weight: 500; }
+  .scatter-controls label { font-size: 11.5px; color: var(--ss-muted); font-weight: 600; }
+
+  /* ═══════════════════════════════════════════════════ */
+  /* FEATURE 3: Comparativo Temporal                    */
+  /* ═══════════════════════════════════════════════════ */
+  .temporal-header { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+  .period-selector { display: flex; align-items: center; gap: 8px; background: white; border: 1.5px solid var(--ss-border); border-radius: 10px; padding: 8px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+  .period-selector label { font-size: 12px; color: var(--ss-muted); font-weight: 600; }
+  .period-selector select { font-family: var(--ss-mono); font-size: 14px; border: none; background: transparent; color: var(--ss-fg); font-weight: 700; outline: none; cursor: pointer; }
+  .period-vs { font-size: 13px; font-weight: 800; color: var(--ss-muted-2); letter-spacing: 1px; }
+  .period-span { font-size: 12px; color: var(--ss-muted); background: var(--ss-wash); border: 1px solid var(--ss-border-2); padding: 4px 12px; border-radius: 8px; font-weight: 500; }
+
+  .delta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .delta-card { background: white; border: 1px solid var(--ss-border-2); border-radius: 12px; padding: 20px 22px; position: relative; overflow: hidden; transition: transform .2s, box-shadow .2s; }
+  .delta-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,.07); }
+  .delta-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+  .delta-card.positive::before { background: linear-gradient(90deg, var(--ss-green), #5AAF83); }
+  .delta-card.negative::before { background: linear-gradient(90deg, #C0633A, #E8724A); }
+  .delta-card.neutral::before { background: linear-gradient(90deg, var(--ss-amber), #D4A02A); }
+
+  .delta-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .delta-trait { font-size: 15px; font-weight: 800; color: var(--ss-fg); letter-spacing: -.2px; }
+  .delta-sub { font-size: 11px; color: var(--ss-muted); font-weight: 500; }
+  .delta-pct { font-family: var(--ss-mono); font-size: 13px; font-weight: 800; padding: 4px 10px; border-radius: 8px; }
+  .delta-pct.up { background: var(--ss-green-soft); color: var(--ss-green); }
+  .delta-pct.down { background: #FEE2E2; color: #DC2626; }
+  .delta-pct.neutral { background: var(--ss-amber-soft); color: var(--ss-amber); }
+
+  .delta-body { display: flex; align-items: baseline; gap: 10px; }
+  .delta-from { font-family: var(--ss-mono); font-size: 18px; color: var(--ss-muted-2); font-weight: 500; position: relative; }
+  .delta-from::after { content: ''; position: absolute; left: -2px; right: -2px; top: 50%; height: 2px; background: var(--ss-muted-2); border-radius: 1px; }
+  .delta-arrow { font-size: 20px; font-weight: 300; }
+  .delta-arrow.up { color: var(--ss-green); }
+  .delta-arrow.down { color: #C0633A; }
+  .delta-arrow.mid { color: var(--ss-amber); }
+  .delta-to { font-family: var(--ss-mono); font-size: 28px; font-weight: 900; letter-spacing: -1px; line-height: 1; }
+  .delta-to.up { color: var(--ss-green); }
+  .delta-to.down { color: #C0633A; }
+  .delta-to.mid { color: var(--ss-amber); }
+
+  /* Mini sparkline dentro do delta card */
+  .delta-spark { margin-top: 14px; height: 32px; display: flex; align-items: flex-end; gap: 3px; }
+  .delta-spark-bar { flex: 1; border-radius: 3px 3px 0 0; transition: height .3s; min-height: 3px; }
+
+  /* Combo chart */
+  .combo-legend { display: flex; gap: 18px; margin-top: 10px; justify-content: center; }
+  .combo-legend-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ss-muted); font-weight: 500; }
+  .combo-legend-line { width: 18px; height: 2.5px; border-radius: 1px; }
+  .combo-legend-bar { width: 12px; height: 12px; border-radius: 3px; }
+
+  /* ═══════════════════════════════════════════════════ */
+  /* FEATURE 4: Relatorio PDF                           */
+  /* ═══════════════════════════════════════════════════ */
+  .report-preview { background: linear-gradient(135deg, var(--ss-wash), white); border: 2px dashed var(--ss-border); border-radius: 14px; padding: 36px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .report-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; width: 100%; max-width: 560px; }
+  .report-opt { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1.5px solid var(--ss-border-2); border-radius: 10px; cursor: pointer; transition: all .15s; font-size: 13px; color: var(--ss-text); font-weight: 500; }
+  .report-opt:hover { border-color: var(--ss-primary); background: var(--ss-primary-soft); }
+  .report-opt.active { border-color: var(--ss-primary); background: var(--ss-primary-soft); color: var(--ss-primary); font-weight: 600; }
+  .report-opt .check { width: 18px; height: 18px; border: 2px solid var(--ss-border); border-radius: 5px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .report-opt.active .check { background: var(--ss-primary); border-color: var(--ss-primary); }
+  .report-pages { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  .report-page { width: 148px; height: 210px; background: white; border: 1px solid var(--ss-border); border-radius: 6px; box-shadow: 0 3px 12px rgba(0,0,0,.08); position: relative; overflow: hidden; padding: 10px; transition: transform .2s; }
+  .report-page:hover { transform: translateY(-4px); box-shadow: 0 6px 20px rgba(0,0,0,.12); }
+  .report-page-header { height: 16px; background: var(--ss-primary); border-radius: 3px; margin-bottom: 7px; }
+  .report-page-line { height: 3px; background: var(--ss-border-2); border-radius: 1px; margin-bottom: 4px; }
+  .report-page-line.w80 { width: 80%; }
+  .report-page-line.w60 { width: 60%; }
+  .report-page-line.w90 { width: 90%; }
+  .report-page-chart { height: 32px; background: var(--ss-primary-soft); border-radius: 4px; margin: 8px 0; display: flex; align-items: flex-end; gap: 2px; padding: 3px; }
+  .report-page-bar { flex: 1; background: var(--ss-primary); border-radius: 1px; opacity: .5; }
+  .report-page-label { position: absolute; bottom: 7px; left: 0; right: 0; text-align: center; font-size: 7.5px; font-weight: 700; color: var(--ss-muted); letter-spacing: .2px; }
+  .report-actions { display: flex; gap: 12px; }
+
+  /* ═══ Arch summary ═══ */
+  .arch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .arch-card { padding: 18px 22px; }
+  .arch-title { font-size: 14px; font-weight: 800; color: var(--ss-fg); margin-bottom: 12px; letter-spacing: -.2px; }
+  .arch-line { font-size: 12px; color: var(--ss-text); line-height: 2.2; }
+  .arch-line.muted { color: var(--ss-muted); }
+  .arch-line.new { border-left: 3px solid var(--ss-primary); padding-left: 10px; font-weight: 600; color: var(--ss-primary); }
+  .arch-file { font-family: var(--ss-mono); font-size: 11.5px; line-height: 2.4; color: var(--ss-text); }
+
+  @media (max-width: 900px) {
+    .ss-grid-2b { grid-template-columns: 1fr; }
+    .delta-grid { grid-template-columns: 1fr 1fr; }
+    .gauge-grid { grid-template-columns: repeat(2, 1fr); }
+    .arch-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .delta-grid { grid-template-columns: 1fr; }
+    .gauge-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="page-header animate-in">
+    <h1>Preview — Novas Features SSGEN Cliente</h1>
+    <p>4 features adicionais ao Painel Genomico existente. Tudo abaixo e ADICAO, nada e substituido.</p>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- FEATURE 1: REBANHO VS NACIONAL                     -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="feature-section animate-in delay-1">
+    <div class="feature-badge"><span class="dot"></span> Feature 1 — Prioridade 1</div>
+    <div class="feature-title">Rebanho vs Nacional</div>
+    <div class="feature-desc">Barra espectro colorida com 3 marcadores: losango vermelho = seu rebanho, linha tracejada = media nacional, linha verde = top 25%. Gauges semicirculares para indices-chave.</div>
+    <div class="nav-hint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      Painel Genomico → nova secao abaixo dos KPIs existentes
+    </div>
+
+    <!-- Gauges -->
+    <div class="ss-card" style="margin-bottom:16px">
+      <div class="ss-card-header">
+        <h3 class="ss-card-title">Posicionamento Nacional — Indices</h3>
+        <div class="tab-bar">
+          <button class="tab-item active">Indices</button>
+          <button class="tab-item">Producao</button>
+          <button class="tab-item">Funcionais</button>
+          <button class="tab-item">Saude</button>
+        </div>
+      </div>
+      <div class="ss-card-body">
+        <div class="gauge-grid">
+          <div class="gauge-container">
+            <div class="gauge-label">HHP$</div>
+            <svg class="gauge-svg" width="180" height="105" viewBox="0 0 180 105">
+              <path d="M 15 95 A 75 75 0 0 1 165 95" fill="none" stroke="#F3F0EC" stroke-width="14" stroke-linecap="round"/>
+              <path d="M 15 95 A 75 75 0 0 1 52 30" fill="none" stroke="#C0633A" stroke-width="14" stroke-linecap="round" opacity=".7"/>
+              <path d="M 52 30 A 75 75 0 0 1 90 20" fill="none" stroke="var(--ss-amber)" stroke-width="14" stroke-linecap="round" opacity=".7"/>
+              <path d="M 90 20 A 75 75 0 0 1 128 30" fill="none" stroke="var(--ss-green)" stroke-width="14" stroke-linecap="round" opacity=".7"/>
+              <path d="M 128 30 A 75 75 0 0 1 165 95" fill="none" stroke="#1a7a42" stroke-width="14" stroke-linecap="round" opacity=".7"/>
+              <line x1="90" y1="95" x2="135" y2="38" stroke="var(--ss-fg)" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="90" cy="95" r="6" fill="var(--ss-fg)"/>
+              <circle cx="90" cy="20" r="4" fill="none" stroke="var(--ss-muted-2)" stroke-width="1.5" stroke-dasharray="2,2"/>
+              <text x="90" y="14" text-anchor="middle" font-size="8" fill="var(--ss-muted-2)" font-weight="500">Nacional</text>
+            </svg>
+            <div class="gauge-value" style="color: var(--ss-green)">$874</div>
+            <div class="gauge-range"><span>$400</span><span>$680 avg</span><span>$1.100</span></div>
+            <span class="benchmark-zone zone-top25" style="margin-top:6px">Top 25%</span>
+          </div>
+          <div class="gauge-container">
+            <div class="gauge-label">GTPI</div>
+            <svg class="gauge-svg" width="180" height="105" viewBox="0 0 180 105">
+              <path d="M 15 95 A 75 75 0 0 1 165 95" fill="none" stroke="#F3F0EC" stroke-width="14" stroke-linecap="round"/>
+              <path d="M 15 95 A 75 75 0 0 1 52 30" fill="none" stroke="#C0633A" stroke-width="14" stroke-linecap="round" opacity=".7"/>
+              <path d="M 52 30 A 75 75 0 0 1 90 20" fill="none" stroke="var(--ss-amber)" stroke-width="14" stroke-linecap="round" opacity=".7"/>
+              <path d="M 90 20 A 75 75 0 0 1 128 30" fill="none" stroke="var(--ss-green)" stroke-width="14" stroke-linecap="round" opacity=".7"/>
+              <path d="M 128 30 A 75 75 0 0 1 165 95" fill="none" stroke="#1a7a42" stroke-width="14" stroke-linecap="round" opacity=".7"/>
+              <line x1="90" y1="95" x2="145" y2="48" stroke="var(--ss-fg)" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="90" cy="95" r="6" fill="var(--ss-fg)"/>
+            </svg>
+            <div class="gauge-value" style="color: #1a7a42">+2.687</div>
+            <div class="gauge-range"><span>2.000</span><span>2.450 avg</span><span>3.000</span></div>
+            <span class="benchmark-zone zone-elite" style="margin-top:6px">Elite</span>
+          </div>
+          <div class="gauge-container">
+            <div class="gauge-label">NM$</div>
+            <svg class="gauge-svg" width="180" height="105" viewBox="0 0 180 105">
+              <path d="M 15 95 A 75 75 0 0 1 165 95" fill="none" stroke="#F3F0EC" stroke-width="14" stroke-linecap="round"/>
+              <path d="M 15 95 A 75 75 0 0 1 52 30" fill="none" stroke="#C0633A" stroke-width="14" stroke-linecap="round" opacity=".7"/>
+              <path d="M 52 30 A 75 75 0 0 1 90 20" fill="none" stroke="var(--ss-amber)" stroke-width="14" stroke-linecap="round" opacity=".7"/>
+              <path d="M 90 20 A 75 75 0 0 1 128 30" fill="none" stroke="var(--ss-green)" stroke-width="14" stroke-linecap="round" opacity=".7"/>
+              <path d="M 128 30 A 75 75 0 0 1 165 95" fill="none" stroke="#1a7a42" stroke-width="14" stroke-linecap="round" opacity=".7"/>
+              <line x1="90" y1="95" x2="138" y2="42" stroke="var(--ss-fg)" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="90" cy="95" r="6" fill="var(--ss-fg)"/>
+            </svg>
+            <div class="gauge-value" style="color: var(--ss-green)">$921</div>
+            <div class="gauge-range"><span>$350</span><span>$720 avg</span><span>$1.100</span></div>
+            <span class="benchmark-zone zone-top25" style="margin-top:6px">Top 25%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Espectro -->
+    <div class="ss-card">
+      <div class="ss-card-header">
+        <h3 class="ss-card-title">Posicionamento no Espectro Nacional</h3>
+        <div class="tab-bar">
+          <button class="tab-item active">Indices</button>
+          <button class="tab-item">Producao</button>
+          <button class="tab-item">Funcionais</button>
+          <button class="tab-item">Tipo</button>
+          <button class="tab-item">Saude</button>
+        </div>
+      </div>
+      <div class="ss-card-body" style="padding-top:8px">
+        <div style="margin-bottom:8px">
+          <div class="spectrum-legend">
+            <div class="spectrum-legend-item"><div style="width:10px; height:10px; background:var(--ss-primary); border-radius:3px; transform:rotate(45deg)"></div><b style="color:var(--ss-fg)">Meu Rebanho</b></div>
+            <div class="spectrum-legend-item"><div style="width:16px; height:2px; background: repeating-linear-gradient(to right, var(--ss-muted) 0, var(--ss-muted) 3px, transparent 3px, transparent 6px)"></div>Media Nacional</div>
+            <div class="spectrum-legend-item"><div style="width:16px; height:2.5px; background:#166534; border-radius:1px"></div>Top 25%</div>
+            <div class="spectrum-legend-item" style="margin-left:auto; font-size:10px; color:var(--ss-muted-2)">Abaixo → Medio → Top 25% → Elite</div>
+          </div>
+        </div>
+        <!-- HHP$ -->
+        <div class="benchmark-row">
+          <div><div class="benchmark-label">HHP$</div><div class="benchmark-sublabel">Health & Profit</div></div>
+          <div style="position:relative; padding: 26px 0 24px">
+            <div class="spectrum-bar">
+              <div class="spectrum-marker marker-national" style="left:50%"><div class="marker-line"></div><div class="marker-tag">Nacional $680</div></div>
+              <div class="spectrum-marker marker-top25" style="left:74%"><div class="marker-line"></div><div class="marker-tag">Top 25% $850</div></div>
+              <div class="spectrum-marker marker-mine" style="left:78%"><div class="marker-diamond"></div><div class="marker-val">$874</div></div>
+            </div>
+          </div>
+          <div class="benchmark-vals"><div class="benchmark-val-main" style="color:var(--ss-green)">+28%</div><div class="benchmark-val-sub">vs nacional</div><span class="benchmark-zone zone-top25">Top 25%</span></div>
+        </div>
+        <!-- GTPI -->
+        <div class="benchmark-row">
+          <div><div class="benchmark-label">GTPI</div><div class="benchmark-sublabel">Total Performance</div></div>
+          <div style="position:relative; padding: 26px 0 24px">
+            <div class="spectrum-bar">
+              <div class="spectrum-marker marker-national" style="left:50%"><div class="marker-line"></div><div class="marker-tag">Nacional +2.450</div></div>
+              <div class="spectrum-marker marker-top25" style="left:78%"><div class="marker-line"></div><div class="marker-tag">Top 25% +2.650</div></div>
+              <div class="spectrum-marker marker-mine" style="left:88%"><div class="marker-diamond"></div><div class="marker-val">+2.687</div></div>
+            </div>
+          </div>
+          <div class="benchmark-vals"><div class="benchmark-val-main" style="color:#166534">+9.7%</div><div class="benchmark-val-sub">vs nacional</div><span class="benchmark-zone zone-elite">Elite</span></div>
+        </div>
+        <!-- NM$ -->
+        <div class="benchmark-row">
+          <div><div class="benchmark-label">NM$</div><div class="benchmark-sublabel">Net Merit</div></div>
+          <div style="position:relative; padding: 26px 0 24px">
+            <div class="spectrum-bar">
+              <div class="spectrum-marker marker-national" style="left:50%"><div class="marker-line"></div><div class="marker-tag">Nacional $720</div></div>
+              <div class="spectrum-marker marker-top25" style="left:72%"><div class="marker-line"></div><div class="marker-tag">Top 25% $880</div></div>
+              <div class="spectrum-marker marker-mine" style="left:76%"><div class="marker-diamond"></div><div class="marker-val">$921</div></div>
+            </div>
+          </div>
+          <div class="benchmark-vals"><div class="benchmark-val-main" style="color:var(--ss-green)">+28%</div><div class="benchmark-val-sub">vs nacional</div><span class="benchmark-zone zone-top25">Top 25%</span></div>
+        </div>
+        <!-- SCS -->
+        <div class="benchmark-row">
+          <div><div class="benchmark-label">SCS</div><div class="benchmark-sublabel">Cel. Somaticas ↓</div></div>
+          <div style="position:relative; padding: 26px 0 24px">
+            <div class="spectrum-bar">
+              <div class="spectrum-marker marker-national" style="left:50%"><div class="marker-line"></div><div class="marker-tag">Nacional 2.90</div></div>
+              <div class="spectrum-marker marker-top25" style="left:68%"><div class="marker-line"></div><div class="marker-tag">Top 25% 2.78</div></div>
+              <div class="spectrum-marker marker-mine" style="left:55%"><div class="marker-diamond"></div><div class="marker-val">2.82</div></div>
+            </div>
+          </div>
+          <div class="benchmark-vals"><div class="benchmark-val-main" style="color:var(--ss-amber)">-2.8%</div><div class="benchmark-val-sub">vs nacional</div><span class="benchmark-zone zone-medio">Medio</span></div>
+        </div>
+        <!-- DPR -->
+        <div class="benchmark-row">
+          <div><div class="benchmark-label">DPR</div><div class="benchmark-sublabel">Taxa Prenhez</div></div>
+          <div style="position:relative; padding: 26px 0 24px">
+            <div class="spectrum-bar">
+              <div class="spectrum-marker marker-national" style="left:50%"><div class="marker-line"></div><div class="marker-tag">Nacional 0.50</div></div>
+              <div class="spectrum-marker marker-top25" style="left:72%"><div class="marker-line"></div><div class="marker-tag">Top 25% 1.50</div></div>
+              <div class="spectrum-marker marker-mine" style="left:55%"><div class="marker-diamond"></div><div class="marker-val">0.72</div></div>
+            </div>
+          </div>
+          <div class="benchmark-vals"><div class="benchmark-val-main" style="color:var(--ss-green)">+44%</div><div class="benchmark-val-sub">vs nacional</div><span class="benchmark-zone zone-medio">Medio</span></div>
+        </div>
+        <!-- PL -->
+        <div class="benchmark-row">
+          <div><div class="benchmark-label">PL</div><div class="benchmark-sublabel">Vida Produtiva</div></div>
+          <div style="position:relative; padding: 26px 0 24px">
+            <div class="spectrum-bar">
+              <div class="spectrum-marker marker-national" style="left:50%"><div class="marker-line"></div><div class="marker-tag">Nacional 4.00</div></div>
+              <div class="spectrum-marker marker-top25" style="left:78%"><div class="marker-line"></div><div class="marker-tag">Top 25% 5.80</div></div>
+              <div class="spectrum-marker marker-mine" style="left:74%"><div class="marker-diamond"></div><div class="marker-val">5.40</div></div>
+            </div>
+          </div>
+          <div class="benchmark-vals"><div class="benchmark-val-main" style="color:var(--ss-green)">+35%</div><div class="benchmark-val-sub">vs nacional</div><span class="benchmark-zone zone-top25">Top 25%</span></div>
+        </div>
+        <!-- Gordura -->
+        <div class="benchmark-row">
+          <div><div class="benchmark-label">Gordura</div><div class="benchmark-sublabel">PTAM Fat</div></div>
+          <div style="position:relative; padding: 26px 0 24px">
+            <div class="spectrum-bar">
+              <div class="spectrum-marker marker-national" style="left:50%"><div class="marker-line"></div><div class="marker-tag">Nacional 55</div></div>
+              <div class="spectrum-marker marker-top25" style="left:72%"><div class="marker-line"></div><div class="marker-tag">Top 25% 70</div></div>
+              <div class="spectrum-marker marker-mine" style="left:70%"><div class="marker-diamond"></div><div class="marker-val">68</div></div>
+            </div>
+          </div>
+          <div class="benchmark-vals"><div class="benchmark-val-main" style="color:var(--ss-green)">+23.6%</div><div class="benchmark-val-sub">vs nacional</div><span class="benchmark-zone zone-top25">Top 25%</span></div>
+        </div>
+        <!-- PTAT -->
+        <div class="benchmark-row">
+          <div><div class="benchmark-label">PTAT</div><div class="benchmark-sublabel">Tipo</div></div>
+          <div style="position:relative; padding: 26px 0 24px">
+            <div class="spectrum-bar">
+              <div class="spectrum-marker marker-national" style="left:50%"><div class="marker-line"></div><div class="marker-tag">Nacional 0.20</div></div>
+              <div class="spectrum-marker marker-top25" style="left:72%"><div class="marker-line"></div><div class="marker-tag">Top 25% 0.40</div></div>
+              <div class="spectrum-marker marker-mine" style="left:80%"><div class="marker-diamond"></div><div class="marker-val">0.42</div></div>
+            </div>
+          </div>
+          <div class="benchmark-vals"><div class="benchmark-val-main" style="color:#166534">+110%</div><div class="benchmark-val-sub">vs nacional</div><span class="benchmark-zone zone-elite">Elite</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="feature-divider"></div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- FEATURE 2: SCATTER PLOT                             -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="feature-section animate-in delay-2">
+    <div class="feature-badge"><span class="dot"></span> Feature 4 — Prioridade 4</div>
+    <div class="feature-title">Scatter Plot Individual</div>
+    <div class="feature-desc">Cada ponto = 1 animal. Eixos configuraveis. Cor por quartil. Clique no ponto para abrir ficha.</div>
+    <div class="nav-hint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      Painel Genomico → nova secao abaixo de "Top 5 por caracteristica"
+    </div>
+
+    <div class="ss-card">
+      <div class="ss-card-header">
+        <h3 class="ss-card-title">Mapa de Animais — Scatter</h3>
+        <div class="scatter-controls">
+          <label>Eixo X:</label>
+          <select><option selected>GTPI</option><option>NM$</option><option>HHP$</option></select>
+          <label>Eixo Y:</label>
+          <select><option>NM$</option><option selected>Leite</option></select>
+          <label>Cor:</label>
+          <select><option selected>Quartil HHP$</option><option>Grupo</option></select>
+        </div>
+      </div>
+      <div class="ss-card-body" style="padding:0">
+        <div class="scatter-container">
+          <svg class="scatter-svg" width="100%" viewBox="0 0 720 400">
+            <defs>
+              <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FAFAF9"/><stop offset="100%" stop-color="#F5F3F0"/></linearGradient>
+            </defs>
+            <rect x="60" y="20" width="630" height="330" fill="url(#bgGrad)" rx="8"/>
+            <g stroke="var(--ss-border)" stroke-width=".5" stroke-dasharray="4,4">
+              <line x1="60" y1="86" x2="690" y2="86"/><line x1="60" y1="152" x2="690" y2="152"/>
+              <line x1="60" y1="218" x2="690" y2="218"/><line x1="60" y1="284" x2="690" y2="284"/>
+              <line x1="186" y1="20" x2="186" y2="350"/><line x1="312" y1="20" x2="312" y2="350"/>
+              <line x1="438" y1="20" x2="438" y2="350"/><line x1="564" y1="20" x2="564" y2="350"/>
+            </g>
+            <line x1="60" y1="350" x2="690" y2="350" stroke="var(--ss-muted-2)" stroke-width="1"/>
+            <line x1="60" y1="20" x2="60" y2="350" stroke="var(--ss-muted-2)" stroke-width="1"/>
+            <!-- X labels -->
+            <text x="60" y="368" font-size="10" fill="var(--ss-muted)" font-family="var(--ss-mono)">2.200</text>
+            <text x="186" y="368" font-size="10" fill="var(--ss-muted)" font-family="var(--ss-mono)" text-anchor="middle">2.400</text>
+            <text x="312" y="368" font-size="10" fill="var(--ss-muted)" font-family="var(--ss-mono)" text-anchor="middle">2.600</text>
+            <text x="438" y="368" font-size="10" fill="var(--ss-muted)" font-family="var(--ss-mono)" text-anchor="middle">2.800</text>
+            <text x="564" y="368" font-size="10" fill="var(--ss-muted)" font-family="var(--ss-mono)" text-anchor="middle">3.000</text>
+            <text x="690" y="368" font-size="10" fill="var(--ss-muted)" font-family="var(--ss-mono)" text-anchor="end">3.200</text>
+            <text x="375" y="393" font-size="12" fill="var(--ss-fg)" font-weight="700" text-anchor="middle">GTPI</text>
+            <!-- Y labels -->
+            <text x="54" y="352" font-size="10" fill="var(--ss-muted)" font-family="var(--ss-mono)" text-anchor="end">800</text>
+            <text x="54" y="286" font-size="10" fill="var(--ss-muted)" font-family="var(--ss-mono)" text-anchor="end">1.100</text>
+            <text x="54" y="220" font-size="10" fill="var(--ss-muted)" font-family="var(--ss-mono)" text-anchor="end">1.400</text>
+            <text x="54" y="154" font-size="10" fill="var(--ss-muted)" font-family="var(--ss-mono)" text-anchor="end">1.700</text>
+            <text x="54" y="88" font-size="10" fill="var(--ss-muted)" font-family="var(--ss-mono)" text-anchor="end">2.000</text>
+            <text x="54" y="22" font-size="10" fill="var(--ss-muted)" font-family="var(--ss-mono)" text-anchor="end">2.300</text>
+            <text x="14" y="190" font-size="12" fill="var(--ss-fg)" font-weight="700" text-anchor="middle" transform="rotate(-90,14,190)">Leite (lbs)</text>
+            <!-- Mean lines -->
+            <line x1="350" y1="20" x2="350" y2="350" stroke="var(--ss-primary)" stroke-width="1" stroke-dasharray="6,4" opacity=".3"/>
+            <line x1="60" y1="185" x2="690" y2="185" stroke="var(--ss-primary)" stroke-width="1" stroke-dasharray="6,4" opacity=".3"/>
+            <text x="354" y="16" font-size="9" fill="var(--ss-primary)" opacity=".5" font-weight="600">Media GTPI</text>
+            <text x="692" y="182" font-size="9" fill="var(--ss-primary)" opacity=".5" text-anchor="end" font-weight="600">Media Leite</text>
+            <!-- Abaixo -->
+            <circle cx="120" cy="305" r="5.5" fill="#C0633A" opacity=".65"/><circle cx="148" cy="318" r="5.5" fill="#C0633A" opacity=".65"/>
+            <circle cx="172" cy="292" r="5.5" fill="#C0633A" opacity=".65"/><circle cx="98" cy="325" r="5.5" fill="#C0633A" opacity=".65"/>
+            <circle cx="200" cy="310" r="5.5" fill="#C0633A" opacity=".65"/>
+            <!-- Medio -->
+            <circle cx="245" cy="240" r="6" fill="var(--ss-amber)" opacity=".65"/><circle cx="280" cy="205" r="6" fill="var(--ss-amber)" opacity=".65"/>
+            <circle cx="265" cy="260" r="6" fill="var(--ss-amber)" opacity=".65"/><circle cx="318" cy="220" r="6" fill="var(--ss-amber)" opacity=".65"/>
+            <circle cx="300" cy="270" r="6" fill="var(--ss-amber)" opacity=".65"/><circle cx="338" cy="195" r="6" fill="var(--ss-amber)" opacity=".65"/>
+            <circle cx="225" cy="225" r="6" fill="var(--ss-amber)" opacity=".65"/>
+            <!-- Top 25% -->
+            <circle cx="410" cy="148" r="7" fill="var(--ss-green)" opacity=".7"/><circle cx="450" cy="128" r="7" fill="var(--ss-green)" opacity=".7"/>
+            <circle cx="388" cy="168" r="7" fill="var(--ss-green)" opacity=".7"/><circle cx="472" cy="158" r="7" fill="var(--ss-green)" opacity=".7"/>
+            <circle cx="430" cy="108" r="7" fill="var(--ss-green)" opacity=".7"/><circle cx="378" cy="138" r="7" fill="var(--ss-green)" opacity=".7"/>
+            <circle cx="500" cy="142" r="7" fill="var(--ss-green)" opacity=".7"/>
+            <!-- Elite -->
+            <circle cx="555" cy="75" r="8" fill="#1a7a42" opacity=".85" stroke="white" stroke-width="2"/>
+            <circle cx="595" cy="58" r="8" fill="#1a7a42" opacity=".85" stroke="white" stroke-width="2"/>
+            <circle cx="575" cy="90" r="8" fill="#1a7a42" opacity=".85" stroke="white" stroke-width="2"/>
+            <circle cx="625" cy="44" r="8" fill="#1a7a42" opacity=".85" stroke="white" stroke-width="2"/>
+            <circle cx="535" cy="100" r="8" fill="#1a7a42" opacity=".85" stroke="white" stroke-width="2"/>
+            <circle cx="655" cy="62" r="8" fill="#1a7a42" opacity=".85" stroke="white" stroke-width="2"/>
+            <!-- Highlight -->
+            <circle cx="595" cy="58" r="14" fill="none" stroke="var(--ss-primary)" stroke-width="2" stroke-dasharray="3,2"/>
+            <rect x="608" y="38" width="76" height="32" rx="7" fill="var(--ss-fg)" opacity=".95"/>
+            <text x="646" y="51" font-size="9.5" fill="white" text-anchor="middle" font-weight="700">SS Dominance</text>
+            <text x="646" y="63" font-size="8.5" fill="#A8A29E" text-anchor="middle" font-family="var(--ss-mono)">GTPI +3.012</text>
+          </svg>
+          <div class="scatter-legend">
+            <div class="scatter-legend-item"><div class="scatter-legend-dot" style="background:#1a7a42"></div>Elite (Top 10%)</div>
+            <div class="scatter-legend-item"><div class="scatter-legend-dot" style="background:var(--ss-green)"></div>Top 25%</div>
+            <div class="scatter-legend-item"><div class="scatter-legend-dot" style="background:var(--ss-amber)"></div>Medio</div>
+            <div class="scatter-legend-item"><div class="scatter-legend-dot" style="background:#C0633A"></div>Abaixo</div>
+            <div class="scatter-legend-item" style="margin-left:auto; font-weight:700; color:var(--ss-fg); font-size:12px">25 animais</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="feature-divider"></div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- FEATURE 3: COMPARATIVO TEMPORAL                     -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="feature-section animate-in delay-3">
+    <div class="feature-badge"><span class="dot"></span> Feature 7 — Prioridade 7</div>
+    <div class="feature-title">Comparativo Temporal</div>
+    <div class="feature-desc">Selecione dois periodos e veja o delta de cada caracteristica com valores expressivos, sparklines e combo chart com media nacional.</div>
+    <div class="nav-hint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      Painel Genomico → nova secao "Evolucao Comparativa"
+    </div>
+
+    <div class="temporal-header">
+      <div class="period-selector">
+        <label>De:</label>
+        <select><option>2019</option><option>2020</option><option selected>2021</option><option>2022</option></select>
+      </div>
+      <span class="period-vs">VS</span>
+      <div class="period-selector">
+        <label>Ate:</label>
+        <select><option>2023</option><option>2024</option><option selected>2025</option></select>
+      </div>
+      <span class="period-span">4 anos de evolucao</span>
+    </div>
+
+    <!-- Delta Cards -->
+    <div class="delta-grid" style="margin-bottom:18px">
+      <!-- HHP$ -->
+      <div class="delta-card positive">
+        <div class="delta-top">
+          <div><div class="delta-trait">HHP$</div><div class="delta-sub">Health & Profit Index</div></div>
+          <span class="delta-pct up">+18.9%</span>
+        </div>
+        <div class="delta-body">
+          <span class="delta-from">$735</span>
+          <span class="delta-arrow up">→</span>
+          <span class="delta-to up">$874</span>
+        </div>
+        <div class="delta-spark">
+          <div class="delta-spark-bar" style="height:42%; background:rgba(63,138,102,.25)"></div>
+          <div class="delta-spark-bar" style="height:50%; background:rgba(63,138,102,.3)"></div>
+          <div class="delta-spark-bar" style="height:58%; background:rgba(63,138,102,.35)"></div>
+          <div class="delta-spark-bar" style="height:68%; background:rgba(63,138,102,.45)"></div>
+          <div class="delta-spark-bar" style="height:78%; background:rgba(63,138,102,.55)"></div>
+          <div class="delta-spark-bar" style="height:88%; background:rgba(63,138,102,.7)"></div>
+          <div class="delta-spark-bar" style="height:100%; background:var(--ss-green)"></div>
+        </div>
+      </div>
+      <!-- GTPI -->
+      <div class="delta-card positive">
+        <div class="delta-top">
+          <div><div class="delta-trait">GTPI</div><div class="delta-sub">Total Performance Index</div></div>
+          <span class="delta-pct up">+7.5%</span>
+        </div>
+        <div class="delta-body">
+          <span class="delta-from">+2.499</span>
+          <span class="delta-arrow up">→</span>
+          <span class="delta-to up">+2.687</span>
+        </div>
+        <div class="delta-spark">
+          <div class="delta-spark-bar" style="height:55%; background:rgba(63,138,102,.25)"></div>
+          <div class="delta-spark-bar" style="height:60%; background:rgba(63,138,102,.3)"></div>
+          <div class="delta-spark-bar" style="height:68%; background:rgba(63,138,102,.35)"></div>
+          <div class="delta-spark-bar" style="height:74%; background:rgba(63,138,102,.45)"></div>
+          <div class="delta-spark-bar" style="height:82%; background:rgba(63,138,102,.55)"></div>
+          <div class="delta-spark-bar" style="height:92%; background:rgba(63,138,102,.7)"></div>
+          <div class="delta-spark-bar" style="height:100%; background:var(--ss-green)"></div>
+        </div>
+      </div>
+      <!-- NM$ -->
+      <div class="delta-card positive">
+        <div class="delta-top">
+          <div><div class="delta-trait">NM$</div><div class="delta-sub">Net Merit Dollar</div></div>
+          <span class="delta-pct up">+14.7%</span>
+        </div>
+        <div class="delta-body">
+          <span class="delta-from">$803</span>
+          <span class="delta-arrow up">→</span>
+          <span class="delta-to up">$921</span>
+        </div>
+        <div class="delta-spark">
+          <div class="delta-spark-bar" style="height:48%; background:rgba(63,138,102,.25)"></div>
+          <div class="delta-spark-bar" style="height:54%; background:rgba(63,138,102,.3)"></div>
+          <div class="delta-spark-bar" style="height:62%; background:rgba(63,138,102,.35)"></div>
+          <div class="delta-spark-bar" style="height:70%; background:rgba(63,138,102,.45)"></div>
+          <div class="delta-spark-bar" style="height:80%; background:rgba(63,138,102,.55)"></div>
+          <div class="delta-spark-bar" style="height:90%; background:rgba(63,138,102,.7)"></div>
+          <div class="delta-spark-bar" style="height:100%; background:var(--ss-green)"></div>
+        </div>
+      </div>
+      <!-- Leite -->
+      <div class="delta-card positive">
+        <div class="delta-top">
+          <div><div class="delta-trait">Leite</div><div class="delta-sub">PTAM Milk</div></div>
+          <span class="delta-pct up">+32.8%</span>
+        </div>
+        <div class="delta-body">
+          <span class="delta-from">+1.340</span>
+          <span class="delta-arrow up">→</span>
+          <span class="delta-to up">+1.780</span>
+        </div>
+        <div class="delta-spark">
+          <div class="delta-spark-bar" style="height:38%; background:rgba(63,138,102,.25)"></div>
+          <div class="delta-spark-bar" style="height:48%; background:rgba(63,138,102,.3)"></div>
+          <div class="delta-spark-bar" style="height:55%; background:rgba(63,138,102,.35)"></div>
+          <div class="delta-spark-bar" style="height:65%; background:rgba(63,138,102,.45)"></div>
+          <div class="delta-spark-bar" style="height:76%; background:rgba(63,138,102,.55)"></div>
+          <div class="delta-spark-bar" style="height:88%; background:rgba(63,138,102,.7)"></div>
+          <div class="delta-spark-bar" style="height:100%; background:var(--ss-green)"></div>
+        </div>
+      </div>
+      <!-- DPR (negativo) -->
+      <div class="delta-card negative">
+        <div class="delta-top">
+          <div><div class="delta-trait">DPR</div><div class="delta-sub">Taxa Prenhez Filhas</div></div>
+          <span class="delta-pct down">-24.2%</span>
+        </div>
+        <div class="delta-body">
+          <span class="delta-from">0.95</span>
+          <span class="delta-arrow down">→</span>
+          <span class="delta-to down">0.72</span>
+        </div>
+        <div class="delta-spark">
+          <div class="delta-spark-bar" style="height:100%; background:rgba(192,99,58,.7)"></div>
+          <div class="delta-spark-bar" style="height:92%; background:rgba(192,99,58,.55)"></div>
+          <div class="delta-spark-bar" style="height:85%; background:rgba(192,99,58,.45)"></div>
+          <div class="delta-spark-bar" style="height:78%; background:rgba(192,99,58,.35)"></div>
+          <div class="delta-spark-bar" style="height:72%; background:rgba(192,99,58,.3)"></div>
+          <div class="delta-spark-bar" style="height:68%; background:rgba(192,99,58,.25)"></div>
+          <div class="delta-spark-bar" style="height:62%; background:#C0633A"></div>
+        </div>
+      </div>
+      <!-- SCS (neutro) -->
+      <div class="delta-card neutral">
+        <div class="delta-top">
+          <div><div class="delta-trait">SCS</div><div class="delta-sub">Celulas Somaticas</div></div>
+          <span class="delta-pct neutral">-0.7%</span>
+        </div>
+        <div class="delta-body">
+          <span class="delta-from">2.84</span>
+          <span class="delta-arrow mid">→</span>
+          <span class="delta-to mid">2.82</span>
+        </div>
+        <div class="delta-spark">
+          <div class="delta-spark-bar" style="height:82%; background:rgba(183,121,31,.3)"></div>
+          <div class="delta-spark-bar" style="height:80%; background:rgba(183,121,31,.3)"></div>
+          <div class="delta-spark-bar" style="height:78%; background:rgba(183,121,31,.3)"></div>
+          <div class="delta-spark-bar" style="height:82%; background:rgba(183,121,31,.3)"></div>
+          <div class="delta-spark-bar" style="height:80%; background:rgba(183,121,31,.3)"></div>
+          <div class="delta-spark-bar" style="height:79%; background:rgba(183,121,31,.3)"></div>
+          <div class="delta-spark-bar" style="height:78%; background:var(--ss-amber)"></div>
+        </div>
+      </div>
+      <!-- PL -->
+      <div class="delta-card positive">
+        <div class="delta-top">
+          <div><div class="delta-trait">PL</div><div class="delta-sub">Vida Produtiva</div></div>
+          <span class="delta-pct up">+31.7%</span>
+        </div>
+        <div class="delta-body">
+          <span class="delta-from">4.10</span>
+          <span class="delta-arrow up">→</span>
+          <span class="delta-to up">5.40</span>
+        </div>
+        <div class="delta-spark">
+          <div class="delta-spark-bar" style="height:40%; background:rgba(63,138,102,.25)"></div>
+          <div class="delta-spark-bar" style="height:50%; background:rgba(63,138,102,.3)"></div>
+          <div class="delta-spark-bar" style="height:58%; background:rgba(63,138,102,.35)"></div>
+          <div class="delta-spark-bar" style="height:68%; background:rgba(63,138,102,.45)"></div>
+          <div class="delta-spark-bar" style="height:80%; background:rgba(63,138,102,.55)"></div>
+          <div class="delta-spark-bar" style="height:90%; background:rgba(63,138,102,.7)"></div>
+          <div class="delta-spark-bar" style="height:100%; background:var(--ss-green)"></div>
+        </div>
+      </div>
+      <!-- Gordura -->
+      <div class="delta-card positive">
+        <div class="delta-top">
+          <div><div class="delta-trait">Gordura</div><div class="delta-sub">PTAM Fat</div></div>
+          <span class="delta-pct up">+41.7%</span>
+        </div>
+        <div class="delta-body">
+          <span class="delta-from">48</span>
+          <span class="delta-arrow up">→</span>
+          <span class="delta-to up">68</span>
+        </div>
+        <div class="delta-spark">
+          <div class="delta-spark-bar" style="height:35%; background:rgba(63,138,102,.25)"></div>
+          <div class="delta-spark-bar" style="height:42%; background:rgba(63,138,102,.3)"></div>
+          <div class="delta-spark-bar" style="height:52%; background:rgba(63,138,102,.35)"></div>
+          <div class="delta-spark-bar" style="height:62%; background:rgba(63,138,102,.45)"></div>
+          <div class="delta-spark-bar" style="height:75%; background:rgba(63,138,102,.55)"></div>
+          <div class="delta-spark-bar" style="height:88%; background:rgba(63,138,102,.7)"></div>
+          <div class="delta-spark-bar" style="height:100%; background:var(--ss-green)"></div>
+        </div>
+      </div>
+      <!-- PTAT -->
+      <div class="delta-card positive">
+        <div class="delta-top">
+          <div><div class="delta-trait">PTAT</div><div class="delta-sub">Tipo</div></div>
+          <span class="delta-pct up">+133%</span>
+        </div>
+        <div class="delta-body">
+          <span class="delta-from">0.18</span>
+          <span class="delta-arrow up">→</span>
+          <span class="delta-to up">0.42</span>
+        </div>
+        <div class="delta-spark">
+          <div class="delta-spark-bar" style="height:22%; background:rgba(63,138,102,.25)"></div>
+          <div class="delta-spark-bar" style="height:32%; background:rgba(63,138,102,.3)"></div>
+          <div class="delta-spark-bar" style="height:45%; background:rgba(63,138,102,.35)"></div>
+          <div class="delta-spark-bar" style="height:58%; background:rgba(63,138,102,.45)"></div>
+          <div class="delta-spark-bar" style="height:72%; background:rgba(63,138,102,.55)"></div>
+          <div class="delta-spark-bar" style="height:86%; background:rgba(63,138,102,.7)"></div>
+          <div class="delta-spark-bar" style="height:100%; background:var(--ss-green)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Combo Chart -->
+    <div class="ss-card">
+      <div class="ss-card-header">
+        <h3 class="ss-card-title">Evolucao HHP$ — Rebanho vs Nacional vs Top 25%</h3>
+        <div class="scatter-controls">
+          <select><option selected>HHP$</option><option>GTPI</option><option>NM$</option><option>Leite</option></select>
+        </div>
+      </div>
+      <div class="ss-card-body" style="padding: 18px 18px 10px">
+        <svg viewBox="0 0 720 280" width="100%">
+          <defs>
+            <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--ss-primary)" stop-opacity=".85"/><stop offset="100%" stop-color="var(--ss-primary)" stop-opacity=".5"/></linearGradient>
+          </defs>
+          <g stroke="var(--ss-border-2)" stroke-width=".5">
+            <line x1="50" y1="40" x2="695" y2="40"/><line x1="50" y1="80" x2="695" y2="80"/>
+            <line x1="50" y1="120" x2="695" y2="120"/><line x1="50" y1="160" x2="695" y2="160"/>
+            <line x1="50" y1="200" x2="695" y2="200"/>
+          </g>
+          <text x="44" y="44" font-size="10" fill="var(--ss-muted)" text-anchor="end" font-family="var(--ss-mono)">$950</text>
+          <text x="44" y="84" font-size="10" fill="var(--ss-muted)" text-anchor="end" font-family="var(--ss-mono)">$850</text>
+          <text x="44" y="124" font-size="10" fill="var(--ss-muted)" text-anchor="end" font-family="var(--ss-mono)">$750</text>
+          <text x="44" y="164" font-size="10" fill="var(--ss-muted)" text-anchor="end" font-family="var(--ss-mono)">$650</text>
+          <text x="44" y="204" font-size="10" fill="var(--ss-muted)" text-anchor="end" font-family="var(--ss-mono)">$550</text>
+          <!-- Bars -->
+          <rect x="80" y="166" width="58" height="54" rx="4" fill="url(#barGrad)"/>
+          <rect x="172" y="152" width="58" height="68" rx="4" fill="url(#barGrad)"/>
+          <rect x="264" y="132" width="58" height="88" rx="4" fill="url(#barGrad)"/>
+          <rect x="356" y="110" width="58" height="110" rx="4" fill="url(#barGrad)"/>
+          <rect x="448" y="90" width="58" height="130" rx="4" fill="url(#barGrad)"/>
+          <rect x="540" y="68" width="58" height="152" rx="4" fill="url(#barGrad)"/>
+          <rect x="632" y="48" width="58" height="172" rx="4" fill="url(#barGrad)"/>
+          <!-- Bar labels -->
+          <text x="109" y="159" font-size="10" fill="var(--ss-fg)" text-anchor="middle" font-weight="800" font-family="var(--ss-mono)">$645</text>
+          <text x="201" y="145" font-size="10" fill="var(--ss-fg)" text-anchor="middle" font-weight="800" font-family="var(--ss-mono)">$680</text>
+          <text x="293" y="125" font-size="10" fill="var(--ss-fg)" text-anchor="middle" font-weight="800" font-family="var(--ss-mono)">$735</text>
+          <text x="385" y="103" font-size="10" fill="var(--ss-fg)" text-anchor="middle" font-weight="800" font-family="var(--ss-mono)">$790</text>
+          <text x="477" y="83" font-size="10" fill="var(--ss-fg)" text-anchor="middle" font-weight="800" font-family="var(--ss-mono)">$830</text>
+          <text x="569" y="61" font-size="10" fill="var(--ss-fg)" text-anchor="middle" font-weight="800" font-family="var(--ss-mono)">$856</text>
+          <text x="661" y="41" font-size="11" fill="var(--ss-primary)" text-anchor="middle" font-weight="900" font-family="var(--ss-mono)">$874</text>
+          <!-- X labels -->
+          <text x="109" y="236" font-size="11" fill="var(--ss-muted)" text-anchor="middle" font-weight="600">2019</text>
+          <text x="201" y="236" font-size="11" fill="var(--ss-muted)" text-anchor="middle" font-weight="600">2020</text>
+          <text x="293" y="236" font-size="11" fill="var(--ss-muted)" text-anchor="middle" font-weight="600">2021</text>
+          <text x="385" y="236" font-size="11" fill="var(--ss-muted)" text-anchor="middle" font-weight="600">2022</text>
+          <text x="477" y="236" font-size="11" fill="var(--ss-muted)" text-anchor="middle" font-weight="600">2023</text>
+          <text x="569" y="236" font-size="11" fill="var(--ss-muted)" text-anchor="middle" font-weight="600">2024</text>
+          <text x="661" y="236" font-size="12" fill="var(--ss-primary)" text-anchor="middle" font-weight="800">2025</text>
+          <!-- Nacional line -->
+          <polyline points="109,162 201,153 293,143 385,132 477,122 569,114 661,108" fill="none" stroke="var(--ss-muted-2)" stroke-width="2.5" stroke-dasharray="6,3" stroke-linecap="round"/>
+          <circle cx="661" cy="108" r="4.5" fill="var(--ss-muted-2)"/>
+          <text x="680" y="104" font-size="10" fill="var(--ss-muted)" font-weight="700">Nacional $680</text>
+          <!-- Top 25% line -->
+          <polyline points="109,124 201,116 293,106 385,94 477,82 569,72 661,60" fill="none" stroke="var(--ss-green)" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="661" cy="60" r="4.5" fill="var(--ss-green)"/>
+          <text x="680" y="56" font-size="10" fill="var(--ss-green)" font-weight="700">Top 25% $850</text>
+        </svg>
+        <div class="combo-legend">
+          <div class="combo-legend-item"><div class="combo-legend-bar" style="background:var(--ss-primary)"></div>Meu Rebanho</div>
+          <div class="combo-legend-item"><div class="combo-legend-line" style="background:var(--ss-muted-2); border-top:2.5px dashed var(--ss-muted-2); height:0"></div>Media Nacional</div>
+          <div class="combo-legend-item"><div class="combo-legend-line" style="background:var(--ss-green)"></div>Top 25%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="feature-divider"></div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- FEATURE 4: RELATORIO PDF                            -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="feature-section animate-in delay-4">
+    <div class="feature-badge"><span class="dot"></span> Feature 3 — Prioridade 3</div>
+    <div class="feature-title">Relatorio Executivo PDF</div>
+    <div class="feature-desc">Relatorio profissional automatico com resumo de KPIs, perfil genetico, progressao, fraquezas e recomendacoes. Ideal para compartilhar com socios e consultores.</div>
+    <div class="nav-hint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      Painel Genomico → botao "Gerar Relatorio" no topo da pagina
+    </div>
+
+    <div class="ss-card">
+      <div class="ss-card-header">
+        <h3 class="ss-card-title">Gerar Relatorio Executivo</h3>
+        <span style="font-size:11px; color:var(--ss-muted); background:var(--ss-wash); padding:4px 10px; border-radius:6px; font-weight:500">PDF • A4 • Branding Select Sires</span>
+      </div>
+      <div class="ss-card-body">
+        <div class="report-preview">
+          <div class="report-options">
+            <div class="report-opt active"><span class="check"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2 2 4-4" fill="none" stroke="white" stroke-width="1.5"/></svg></span>Resumo Executivo (KPIs)</div>
+            <div class="report-opt active"><span class="check"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2 2 4-4" fill="none" stroke="white" stroke-width="1.5"/></svg></span>Perfil Genetico (barras)</div>
+            <div class="report-opt active"><span class="check"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2 2 4-4" fill="none" stroke="white" stroke-width="1.5"/></svg></span>Progressao Temporal</div>
+            <div class="report-opt active"><span class="check"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2 2 4-4" fill="none" stroke="white" stroke-width="1.5"/></svg></span>Rebanho vs Nacional</div>
+            <div class="report-opt active"><span class="check"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2 2 4-4" fill="none" stroke="white" stroke-width="1.5"/></svg></span>Top 5 Animais</div>
+            <div class="report-opt active"><span class="check"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2 2 4-4" fill="none" stroke="white" stroke-width="1.5"/></svg></span>Fraquezas e Recomendacoes</div>
+            <div class="report-opt"><span class="check"></span>Haplotipo Comparativo</div>
+            <div class="report-opt"><span class="check"></span>Scatter Plot</div>
+          </div>
+          <div class="report-pages">
+            <div class="report-page">
+              <div class="report-page-header"></div><div class="report-page-line w90"></div><div class="report-page-line w60"></div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:3px; margin:6px 0">
+                <div style="background:var(--ss-primary-soft); border-radius:3px; padding:5px; text-align:center"><div style="font-size:5px; color:var(--ss-muted)">HHP$</div><div style="font-size:8px; font-weight:800; color:var(--ss-fg)">$874</div></div>
+                <div style="background:var(--ss-green-soft); border-radius:3px; padding:5px; text-align:center"><div style="font-size:5px; color:var(--ss-muted)">GTPI</div><div style="font-size:8px; font-weight:800; color:var(--ss-fg)">+2.687</div></div>
+              </div>
+              <div class="report-page-line w80"></div><div class="report-page-line w90"></div><div class="report-page-line w60"></div>
+              <div class="report-page-label">Pag 1 — Resumo</div>
+            </div>
+            <div class="report-page">
+              <div class="report-page-header"></div><div class="report-page-line w60"></div>
+              <div style="display:flex; flex-direction:column; gap:3px; margin:5px 0">
+                <div style="display:flex; align-items:center; gap:2px"><div style="font-size:4.5px; width:22px; color:var(--ss-muted)">HHP$</div><div style="height:5px; width:70%; background:linear-gradient(90deg,#f0c4b8,#b8e0c8); border-radius:1px"></div></div>
+                <div style="display:flex; align-items:center; gap:2px"><div style="font-size:4.5px; width:22px; color:var(--ss-muted)">GTPI</div><div style="height:5px; width:85%; background:linear-gradient(90deg,#f0c4b8,#b8e0c8); border-radius:1px"></div></div>
+                <div style="display:flex; align-items:center; gap:2px"><div style="font-size:4.5px; width:22px; color:var(--ss-muted)">NM$</div><div style="height:5px; width:75%; background:linear-gradient(90deg,#f0c4b8,#b8e0c8); border-radius:1px"></div></div>
+                <div style="display:flex; align-items:center; gap:2px"><div style="font-size:4.5px; width:22px; color:var(--ss-muted)">PL</div><div style="height:5px; width:68%; background:linear-gradient(90deg,#f0c4b8,#b8e0c8); border-radius:1px"></div></div>
+                <div style="display:flex; align-items:center; gap:2px"><div style="font-size:4.5px; width:22px; color:var(--ss-muted)">DPR</div><div style="height:5px; width:40%; background:linear-gradient(90deg,#f0c4b8,#b8e0c8); border-radius:1px"></div></div>
+                <div style="display:flex; align-items:center; gap:2px"><div style="font-size:4.5px; width:22px; color:var(--ss-muted)">SCS</div><div style="height:5px; width:55%; background:linear-gradient(90deg,#f0c4b8,#b8e0c8); border-radius:1px"></div></div>
+              </div>
+              <div class="report-page-line w80"></div>
+              <div class="report-page-label">Pag 2 — Perfil</div>
+            </div>
+            <div class="report-page">
+              <div class="report-page-header"></div><div class="report-page-line w80"></div>
+              <div class="report-page-chart"><div class="report-page-bar" style="height:30%"></div><div class="report-page-bar" style="height:45%"></div><div class="report-page-bar" style="height:55%"></div><div class="report-page-bar" style="height:70%"></div><div class="report-page-bar" style="height:78%"></div><div class="report-page-bar" style="height:85%"></div><div class="report-page-bar" style="height:95%"></div></div>
+              <div class="report-page-chart" style="background:var(--ss-green-soft)"><div class="report-page-bar" style="height:40%; background:var(--ss-green)"></div><div class="report-page-bar" style="height:55%; background:var(--ss-green)"></div><div class="report-page-bar" style="height:70%; background:var(--ss-green)"></div><div class="report-page-bar" style="height:60%; background:var(--ss-green)"></div><div class="report-page-bar" style="height:75%; background:var(--ss-green)"></div><div class="report-page-bar" style="height:90%; background:var(--ss-green)"></div><div class="report-page-bar" style="height:95%; background:var(--ss-green)"></div></div>
+              <div class="report-page-label">Pag 3 — Evolucao</div>
+            </div>
+            <div class="report-page">
+              <div class="report-page-header"></div><div class="report-page-line w80"></div>
+              <div style="display:flex; flex-direction:column; gap:4px; margin:5px 0">
+                <div style="display:flex; gap:2px; align-items:center"><div style="font-size:4.5px; width:16px">HHP$</div><div style="height:6px; background:var(--ss-primary); width:70%; border-radius:1px"></div><div style="height:6px; background:var(--ss-muted-2); width:50%; border-radius:1px"></div></div>
+                <div style="display:flex; gap:2px; align-items:center"><div style="font-size:4.5px; width:16px">GTPI</div><div style="height:6px; background:var(--ss-primary); width:85%; border-radius:1px"></div><div style="height:6px; background:var(--ss-muted-2); width:72%; border-radius:1px"></div></div>
+                <div style="display:flex; gap:2px; align-items:center"><div style="font-size:4.5px; width:16px">NM$</div><div style="height:6px; background:var(--ss-primary); width:75%; border-radius:1px"></div><div style="height:6px; background:var(--ss-muted-2); width:58%; border-radius:1px"></div></div>
+              </div>
+              <div class="report-page-line w90"></div><div class="report-page-line w60"></div><div class="report-page-line w80"></div>
+              <div class="report-page-label">Pag 4 — Nacional</div>
+            </div>
+            <div class="report-page">
+              <div class="report-page-header"></div><div class="report-page-line w60"></div>
+              <div style="display:flex; flex-direction:column; gap:3px; margin:5px 0">
+                <div style="display:flex; align-items:center; gap:3px"><div style="width:9px; height:9px; border-radius:50%; background:#C99A4B; flex-shrink:0"></div><div class="report-page-line" style="margin:0; width:80%"></div></div>
+                <div style="display:flex; align-items:center; gap:3px"><div style="width:9px; height:9px; border-radius:50%; background:#A9A9A9; flex-shrink:0"></div><div class="report-page-line" style="margin:0; width:70%"></div></div>
+                <div style="display:flex; align-items:center; gap:3px"><div style="width:9px; height:9px; border-radius:50%; background:#B07A4B; flex-shrink:0"></div><div class="report-page-line" style="margin:0; width:60%"></div></div>
+              </div>
+              <div class="report-page-line w90"></div><div class="report-page-line w80"></div><div class="report-page-line w60"></div>
+              <div class="report-page-label">Pag 5 — Top 5</div>
+            </div>
+            <div class="report-page">
+              <div class="report-page-header"></div><div class="report-page-line w80"></div>
+              <div style="margin:5px 0">
+                <div style="display:flex; align-items:center; gap:3px; margin-bottom:4px"><div style="width:6px; height:6px; border-radius:50%; background:#C0633A"></div><div class="report-page-line" style="margin:0; width:60%"></div></div>
+                <div style="display:flex; align-items:center; gap:3px; margin-bottom:4px"><div style="width:6px; height:6px; border-radius:50%; background:#C0633A"></div><div class="report-page-line" style="margin:0; width:50%"></div></div>
+                <div style="display:flex; align-items:center; gap:3px"><div style="width:6px; height:6px; border-radius:50%; background:var(--ss-amber)"></div><div class="report-page-line" style="margin:0; width:70%"></div></div>
+              </div>
+              <div class="report-page-line w90"></div><div class="report-page-line w60"></div><div class="report-page-line w80"></div>
+              <div class="report-page-label">Pag 6 — Atencao</div>
+            </div>
+          </div>
+          <div class="report-actions">
+            <button class="ss-button">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Gerar PDF (6 paginas)
+            </button>
+            <button class="ss-button-ghost">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copiar Link
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="feature-divider"></div>
+
+  <!-- Resumo arquitetura -->
+  <div class="feature-section" style="margin-bottom:24px">
+    <div class="feature-title">Resumo — Onde cada feature fica</div>
+    <div class="arch-grid">
+      <div class="ss-card arch-card">
+        <div class="arch-title">PainelGenomicoPage.tsx</div>
+        <div class="arch-line muted">1. KPIs existentes ✓</div>
+        <div class="arch-line muted">2. Evolucao + Perfil (existente) ✓</div>
+        <div class="arch-line new">3. NOVO — Rebanho vs Nacional (gauges + espectro)</div>
+        <div class="arch-line muted">4. Top 5 + Atencao (existente) ✓</div>
+        <div class="arch-line new">5. NOVO — Scatter Plot Individual</div>
+        <div class="arch-line new">6. NOVO — Comparativo Temporal (deltas + combo)</div>
+        <div class="arch-line new">7. NOVO — Botao "Gerar Relatorio"</div>
+      </div>
+      <div class="ss-card arch-card">
+        <div class="arch-title">Novos arquivos a criar</div>
+        <div class="arch-file">src/components/charts/<b>GaugeChart.tsx</b></div>
+        <div class="arch-file">src/components/charts/<b>ScatterChart.tsx</b></div>
+        <div class="arch-file">src/components/charts/<b>ComboChart.tsx</b></div>
+        <div class="arch-file">src/components/<b>BenchmarkSpectrum.tsx</b></div>
+        <div class="arch-file">src/components/<b>DeltaCard.tsx</b></div>
+        <div class="arch-file">src/lib/<b>reportPdf.ts</b></div>
+        <div style="margin-top:12px; font-size:11px; color:var(--ss-muted)">+ Edicoes em: PainelGenomicoPage.tsx, index.css, demoData.ts</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

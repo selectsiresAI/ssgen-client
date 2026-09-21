@@ -31,15 +31,16 @@ const HEADER_MAP: Record<string, string> = {
 
   // --- Economic indexes ---
   "nm$": "nm_dollar", "nm": "nm_dollar", "nmpf": "nm_dollar",
-  "merito liquido ($)": "nm_dollar",
+  "merito liquido ($)": "nm_dollar", "ml $": "nm_dollar", "ml $ ranking": "nm_dollar",
   "fm$": "fm_dollar", "fm": "fm_dollar",
-  "merito fluido ($)": "fm_dollar",
+  "merito fluido ($)": "fm_dollar", "merito fluido": "fm_dollar",
   "cm$": "cm_dollar", "cm": "cm_dollar", "cheese merit": "cm_dollar",
-  "merito queijo ($)": "cm_dollar",
+  "merito queijo ($)": "cm_dollar", "merito queijo": "cm_dollar",
   "gm$": "gm_dollar", "gm": "gm_dollar", "grazing merit": "gm_dollar",
-  "mp ($$)": "gm_dollar",
+  "mp ($$)": "gm_dollar", "mp$": "gm_dollar",
   "hhp$": "hhp_dollar", "hhp": "hhp_dollar",
   "indice de saude select sires": "hhp_dollar", "hth$": "hhp_dollar",
+  "ssi high health index": "hhp_dollar",
   "tpi": "tpi", "ipi": "tpi",
   "jpi": "jpi", "jersey performance index": "jpi",
   "jui": "jui", "jersey udder index": "jui", "jersey udder": "jui",
@@ -50,7 +51,7 @@ const HEADER_MAP: Record<string, string> = {
   "fat (lbs)": "pta_fat", "fat lbs": "pta_fat", "fat": "pta_fat", "pta fat": "pta_fat",
   "pta_fat": "pta_fat", "gordura": "pta_fat", "gord. (lbs.)": "pta_fat",
   "fat (%)": "pta_fat_pct", "fat pct": "pta_fat_pct", "fat%": "pta_fat_pct",
-  "pta_fat_pct": "pta_fat_pct", "%g": "pta_fat_pct", "gord. %": "pta_fat_pct",
+  "pta_fat_pct": "pta_fat_pct", "%g": "pta_fat_pct", "gord. %": "pta_fat_pct", "gord.%": "pta_fat_pct",
   "pro (lbs.)": "pta_protein", "pro (lbs)": "pta_protein", "pro lbs": "pta_protein",
   "protein": "pta_protein", "pta protein": "pta_protein", "pta_protein": "pta_protein",
   "proteina": "pta_protein", "prot. (lbs.)": "pta_protein",
@@ -92,8 +93,8 @@ const HEADER_MAP: Record<string, string> = {
   "mas": "mast", "mast": "mast",
   "met": "met",
   "rp": "rp", "rpl": "rp",
-  "ssb": "ssb", "natimortos touro": "ssb",
-  "dsb": "dsb", "natimortos filhas": "dsb",
+  "ssb": "ssb", "natimortos touro": "ssb", "natimorto touro": "ssb",
+  "dsb": "dsb", "natimortos filhas": "dsb", "natimorto filhas": "dsb",
   "hliv": "h_liv", "h_liv": "h_liv", "herd livability": "h_liv",
   "liv nov.": "h_liv",
   "fi": "fi",
@@ -103,34 +104,36 @@ const HEADER_MAP: Record<string, string> = {
   "hipoc": "cfp",
 
   // --- Linear type traits ---
-  "sta": "sta", "estatura": "sta",
+  "sta": "sta", "estatura": "sta", "est.": "sta",
   "str": "str_num", "str_num": "str_num", "forca": "str_num",
-  "dfm": "dfm", "forma leiteira": "dfm",
+  "dfm": "dfm", "forma leiteira": "dfm", "caract. leit.": "dfm",
   "rpa": "rua", "rua": "rua", "rump angle": "rua", "ang. garupa": "rua",
   "rls": "rls", "p.lateral": "rls",
-  "rtp": "rtp", "coloc. tetos posteriores": "rtp",
-  "tlg": "ftl", "ftl": "ftl", "teat length": "ftl", "comprimento de tetos": "ftl",
+  "rtp": "rtp", "coloc. tetos posteriores": "rtp", "coloc. tetos post.": "rtp",
+  "tlg": "ftl", "ftl": "ftl", "teat length": "ftl", "comprimento de tetos": "ftl", "comp. teto": "ftl",
   "rtw": "rw", "rw": "rw", "rump width": "rw", "larg. garupa": "rw",
   "rlr": "rlr", "rear legs rear": "rlr", "p.posterior": "rlr",
   "fta": "fta", "foot angle": "fta", "ang.casco": "fta",
-  "fls": "fls", "fore legs": "fls", "escore de pernas e pes": "fls",
-  "fua": "fua", "fore udder": "fua", "insercao de ubere anterior": "fua",
-  "ruh": "ruh", "rear udder height": "ruh", "alt.ub.post.": "ruh",
+  "fls": "fls", "fore legs": "fls", "escore de pernas e pes": "fls", "p&p escore": "fls",
+  "fua": "fua", "fore udder": "fua", "insercao de ubere anterior": "fua", "ub. anterior": "fua",
+  "ruh": "ruh", "rear udder height": "ruh", "alt.ub.post.": "ruh", "alt.ub. post.": "ruh",
   "ruw": "ruw", "rear udder width": "ruw",
-  "largura de ubere vista posterior": "ruw",
-  "ucl": "ucl", "udder cleft": "ucl", "lig medio": "ucl",
-  "udp": "udp", "udder depth": "udp", "profundidade de ubere": "udp",
+  "largura de ubere vista posterior": "ruw", "larg.ub. post.": "ruw",
+  "ucl": "ucl", "udder cleft": "ucl", "lig medio": "ucl", "lig. medio": "ucl",
+  "udp": "udp", "udder depth": "udp", "profundidade de ubere": "udp", "prof. ubere": "udp",
   "ftp": "ftp", "front teat placement": "ftp",
-  "colocacao de tetos anteriores": "ftp",
-  "prof corp": "dfm",
+  "colocacao de tetos anteriores": "ftp", "coloc. tetos ant.": "ftp",
+  "prof corp": "dfm", "prof. corp.": "dfm",
+  "comp. ub.": "ucl",
   "gfi": "gfi",
   "mfv": "mf_num", "mf_num": "mf_num", "mf": "mf_num",
   "msp": "mf_num",
 
   // --- Casein ---
   "a2 beta cas": "beta_casein", "beta casein": "beta_casein", "beta_casein": "beta_casein",
-  "a2 beta casein": "beta_casein",
+  "a2 beta casein": "beta_casein", "a2 beta caseina": "beta_casein",
   "kappa cas": "kappa_casein", "kappa casein": "kappa_casein", "kappa_casein": "kappa_casein",
+  "kappa caseina": "kappa_casein",
 
   // --- Reliabilities ---
   "rel milk": "rel_milk", "rel_milk": "rel_milk",
@@ -140,7 +143,10 @@ const HEADER_MAP: Record<string, string> = {
 
   // --- Haplotypes ---
   "bvh": "bvh", "blad": "blad", "dumps": "dumps", "cvm": "cvm",
-  "brachyspina": "bvh",
+  "brachyspina": "bvh", "atrof. colun. vert.": "bvh",
+  "desm. colun.vert": "dumps", "mieloencefalopatia": "cvm",
+  "pai genomico": "sire_naab",
+  "p&p": "fls",
 };
 
 // Fields that go into genomic_results table
@@ -284,13 +290,13 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // Download file from Platform storage
-    const platformStorage = createClient(
-      Deno.env.get("PLATFORM_URL")!,
-      Deno.env.get("PLATFORM_SERVICE_ROLE_KEY")!,
+    // Download file from Tracker storage (files are uploaded there by Gabriely)
+    const trackerStorage = createClient(
+      Deno.env.get("TRACKER_URL")!,
+      Deno.env.get("TRACKER_SERVICE_ROLE_KEY")!,
     );
 
-    const { data: fileData, error: dlError } = await platformStorage.storage
+    const { data: fileData, error: dlError } = await trackerStorage.storage
       .from("order-results")
       .download(file_path);
 

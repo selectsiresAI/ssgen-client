@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preview — Reorganização Painel + Auditoria</title>
+<style>
+  :root {
+    --ss-primary: #CE0E2D; --ss-primary-soft: #FBE9EC;
+    --ss-green: #3F8A66; --ss-green-soft: #E8F5EE;
+    --ss-amber: #B7791F; --ss-amber-soft: #FEF3C7;
+    --ss-fg: #1C1C1C; --ss-text: #333; --ss-muted: #8C8C8C; --ss-muted-2: #B0B0B0;
+    --ss-border: #E2DDD8; --ss-border-2: #EDEBE8; --ss-wash: #FAF9F7;
+    --ss-mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: #F5F3F0; color: var(--ss-fg); }
+  .page-wrap { max-width: 1120px; margin: 0 auto; padding: 24px 20px; }
+  .page-label { display: inline-flex; align-items: center; gap: 8px; background: var(--ss-primary); color: white;
+    padding: 10px 22px; border-radius: 10px; font-size: 15px; font-weight: 800; margin-bottom: 18px; letter-spacing: .3px; }
+  .page-label small { font-weight: 500; opacity: .8; font-size: 12px; }
+  .divider { border: none; border-top: 3px dashed var(--ss-border); margin: 40px 0; }
+
+  .card { background: white; border: 1px solid var(--ss-border-2); border-radius: 12px; overflow: hidden; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--ss-border-2); }
+  .card-title { font-size: 14px; font-weight: 800; color: var(--ss-fg); }
+  .card-body { padding: 18px; }
+
+  /* Gauges */
+  .gauge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 24px; }
+  .gauge-box { text-align: center; padding: 16px; border-radius: 12px; border: 1px solid var(--ss-border-2); background: linear-gradient(180deg, #FAFAF9, #F5F3F0); }
+  .gauge-svg { width: 180px; height: 100px; margin: 0 auto; }
+  .gauge-label { font-size: 13px; font-weight: 700; color: var(--ss-fg); margin-top: 6px; }
+  .gauge-value { font-family: var(--ss-mono); font-size: 22px; font-weight: 900; margin-top: 2px; }
+  .gauge-zone { font-size: 11px; font-weight: 600; margin-top: 2px; }
+
+  /* Spectrum */
+  .tabs { display: flex; gap: 4px; background: var(--ss-border-2); border-radius: 9px; padding: 4px; margin-bottom: 20px; }
+  .tab { padding: 8px 16px; border-radius: 7px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; background: transparent; color: var(--ss-muted); }
+  .tab.active { background: white; color: var(--ss-fg); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
+  .spectrum-row { display: grid; grid-template-columns: 80px 1fr 80px; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--ss-border-2); }
+  .spectrum-row:last-child { border-bottom: none; }
+  .spectrum-bar { position: relative; height: 12px; border-radius: 8px; background: linear-gradient(90deg, #FECACA, #FDE68A 40%, #BBF7D0 70%, #6EE7B7); }
+  .spectrum-marker { position: absolute; top: -3px; width: 4px; height: 18px; border-radius: 3px; }
+
+  /* Grid layouts */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px; }
+
+  /* Delta cards */
+  .delta { position: relative; border-radius: 12px; border: 1px solid var(--ss-border-2); background: white; padding: 18px 22px; overflow: hidden; }
+  .delta-top { height: 4px; position: absolute; left: 0; right: 0; top: 0; }
+  .delta-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .delta-label { font-size: 15px; font-weight: 800; }
+  .delta-sub { font-size: 11px; color: var(--ss-muted); font-weight: 500; }
+  .delta-badge { padding: 4px 10px; border-radius: 8px; font-family: var(--ss-mono); font-size: 13px; font-weight: 800; }
+  .delta-values { display: flex; align-items: baseline; gap: 10px; }
+  .delta-from { font-family: var(--ss-mono); font-size: 18px; font-weight: 500; color: var(--ss-muted-2); text-decoration: line-through; }
+  .delta-to { font-family: var(--ss-mono); font-size: 28px; font-weight: 900; letter-spacing: -1px; line-height: 1; }
+  .delta-arrow { font-size: 20px; font-weight: 300; }
+  .delta-spark { display: flex; align-items: flex-end; gap: 3px; height: 32px; margin-top: 14px; }
+  .delta-spark span { flex: 1; border-radius: 3px 3px 0 0; }
+
+  /* Top 5 */
+  .rank-row { display: grid; grid-template-columns: 22px 1fr 60px auto; align-items: center; gap: 12px; padding: 10px 4px; border-bottom: 1px solid var(--ss-border-2); }
+  .rank-row:last-child { border-bottom: none; }
+  .rank-medal { width: 19px; height: 19px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 9px; font-weight: 700; }
+  .rank-bar { height: 6px; border-radius: 4px; background: var(--ss-border-2); overflow: hidden; }
+  .rank-bar i { display: block; height: 100%; border-radius: 4px; background: var(--ss-primary); }
+
+  /* Attention */
+  .att-row { display: grid; grid-template-columns: 1fr 76px 1fr; align-items: center; gap: 12px; padding: 8px 4px; border-bottom: 1px solid var(--ss-border-2); }
+  .att-row:last-child { border-bottom: none; }
+  .att-bar { height: 6px; border-radius: 4px; background: var(--ss-border-2); overflow: hidden; }
+  .att-bar i { display: block; height: 100%; border-radius: 4px; background: var(--ss-amber); opacity: .8; }
+
+  /* Auditoria steps */
+  .steps { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 16px; }
+  .step-btn { display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; border: 1px solid var(--ss-border);
+    padding: 7px 13px; font-size: 12.5px; font-weight: 500; background: white; color: var(--ss-text); cursor: pointer; }
+  .step-btn.active { border-color: var(--ss-primary); background: var(--ss-primary); color: white; }
+  .step-btn .n { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-family: var(--ss-mono); font-size: 10px; font-weight: 600; background: var(--ss-wash); color: var(--ss-muted); }
+  .step-btn.active .n { background: rgba(255,255,255,.25); color: white; }
+
+  /* Combo chart mock */
+  .combo-mock { position: relative; height: 220px; background: linear-gradient(180deg, #FAFAF9, #F5F3F0); border-radius: 8px; border: 1px solid var(--ss-border-2); display: flex; align-items: flex-end; padding: 0 30px 30px; gap: 16px; }
+  .combo-bar { flex: 1; border-radius: 4px 4px 0 0; background: linear-gradient(180deg, rgba(206,14,45,.85), rgba(206,14,45,.5)); position: relative; }
+  .combo-bar .val { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-family: var(--ss-mono); font-size: 10px; font-weight: 800; }
+  .combo-bar .yr { position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 600; color: var(--ss-muted); }
+  .combo-legend { display: flex; justify-content: center; gap: 20px; margin-top: 10px; }
+  .combo-legend span { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 500; color: var(--ss-muted); }
+  .combo-legend i { display: inline-block; }
+
+  /* Scatter mock */
+  .scatter-mock { position: relative; height: 300px; background: linear-gradient(180deg, white, var(--ss-wash)); border-radius: 8px; border: 1px solid var(--ss-border-2); overflow: hidden; }
+  .scatter-dot { position: absolute; border-radius: 50%; border: 2px solid rgba(255,255,255,.8); }
+  .scatter-axis-x { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 800; }
+  .scatter-axis-y { position: absolute; left: 8px; top: 50%; transform: translateY(-50%) rotate(-90deg); font-size: 12px; font-weight: 800; }
+  .scatter-legend { display: flex; flex-wrap: wrap; gap: 14px; border-top: 1px solid var(--ss-border-2); background: white; padding: 10px 14px; }
+  .scatter-legend div { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 500; color: var(--ss-muted); }
+  .scatter-legend .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  .select-mock { border: 1px solid var(--ss-border); border-radius: 7px; padding: 5px 10px; font-size: 11.5px; font-family: var(--ss-mono); background: white; }
+
+  .removed { background: #FEE2E2; border: 2px dashed #EF4444; opacity: .5; position: relative; }
+  .removed::after { content: 'REMOVIDO'; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 18px; font-weight: 900; color: #EF4444; letter-spacing: 2px; }
+  .moved { background: #DBEAFE; border: 2px dashed #3B82F6; position: relative; }
+  .moved::after { content: 'MOVIDO P/ AUDITORIA'; position: absolute; top: 8px; right: 12px; font-size: 10px; font-weight: 800; color: #3B82F6; background: #EFF6FF; padding: 3px 8px; border-radius: 6px; }
+  .new-step { border: 2px solid var(--ss-green); position: relative; }
+  .new-step::before { content: 'NOVA ETAPA'; position: absolute; top: -10px; left: 16px; font-size: 10px; font-weight: 800; color: white; background: var(--ss-green); padding: 2px 8px; border-radius: 6px; z-index: 1; }
+
+  .info-banner { display: flex; gap: 10px; padding: 12px 16px; border-radius: 10px; font-size: 13px; line-height: 1.6; margin-bottom: 16px; }
+  .info-banner.blue { background: #EFF6FF; border: 1px solid #BFDBFE; color: #1E40AF; }
+  .info-banner.red { background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; }
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- ==================== PAINEL GENOMICO ==================== -->
+  <div class="page-label">PAINEL GENOMICO <small>(depois da reorganizacao)</small></div>
+
+  <div class="info-banner red">
+    <b>REMOVIDOS:</b>&nbsp; KPI Cards (HHP$, GTPI, NM$, Portadores HH) · Evolucao genetica por geracao · Distribuicao · Perfil genetico do rebanho
+  </div>
+  <div class="info-banner blue">
+    <b>MOVIDOS P/ AUDITORIA:</b>&nbsp; Combo Chart (Evolucao vs Nacional vs Top 25%) · Scatter Plot Individual
+  </div>
+
+  <!-- Gerar Relatorio button -->
+  <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+    <button style="display:inline-flex; align-items:center; gap:6px; background:var(--ss-primary); color:white; border:none; padding:9px 18px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v8m0 0l-3-3m3 3l3-3M3 13h10"/></svg>
+      Gerar Relatorio
+    </button>
+  </div>
+
+  <!-- REBANHO VS NACIONAL — gauges + spectrum (MANTIDO) -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Rebanho vs Nacional</div>
+        <div style="font-size:12px; color:var(--ss-muted); margin-top:3px;">Gauges para indices-chave e espectro comparativo por caracteristica.</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="gauge-grid">
+        <div class="gauge-box">
+          <svg class="gauge-svg" viewBox="0 0 200 110">
+            <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#FECACA" stroke-width="14" stroke-linecap="round"/>
+            <path d="M20 100 A80 80 0 0 1 60 35" fill="none" stroke="#FDE68A" stroke-width="14" stroke-linecap="round"/>
+            <path d="M100 20 A80 80 0 0 1 140 35" fill="none" stroke="#BBF7D0" stroke-width="14" stroke-linecap="round"/>
+            <path d="M140 35 A80 80 0 0 1 180 100" fill="none" stroke="#6EE7B7" stroke-width="14" stroke-linecap="round"/>
+            <line x1="100" y1="100" x2="145" y2="45" stroke="var(--ss-fg)" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="100" cy="100" r="5" fill="var(--ss-fg)"/>
+          </svg>
+          <div class="gauge-label">HHP$</div>
+          <div class="gauge-value" style="color:var(--ss-green)">$874</div>
+          <div class="gauge-zone" style="color:var(--ss-green)">Top 25%</div>
+        </div>
+        <div class="gauge-box">
+          <svg class="gauge-svg" viewBox="0 0 200 110">
+            <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#FECACA" stroke-width="14" stroke-linecap="round"/>
+            <path d="M20 100 A80 80 0 0 1 60 35" fill="none" stroke="#FDE68A" stroke-width="14" stroke-linecap="round"/>
+            <path d="M100 20 A80 80 0 0 1 140 35" fill="none" stroke="#BBF7D0" stroke-width="14" stroke-linecap="round"/>
+            <path d="M140 35 A80 80 0 0 1 180 100" fill="none" stroke="#6EE7B7" stroke-width="14" stroke-linecap="round"/>
+            <line x1="100" y1="100" x2="155" y2="55" stroke="var(--ss-fg)" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="100" cy="100" r="5" fill="var(--ss-fg)"/>
+          </svg>
+          <div class="gauge-label">GTPI</div>
+          <div class="gauge-value" style="color:var(--ss-green)">+2.687</div>
+          <div class="gauge-zone" style="color:var(--ss-green)">Top 25%</div>
+        </div>
+        <div class="gauge-box">
+          <svg class="gauge-svg" viewBox="0 0 200 110">
+            <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#FECACA" stroke-width="14" stroke-linecap="round"/>
+            <path d="M20 100 A80 80 0 0 1 60 35" fill="none" stroke="#FDE68A" stroke-width="14" stroke-linecap="round"/>
+            <path d="M100 20 A80 80 0 0 1 140 35" fill="none" stroke="#BBF7D0" stroke-width="14" stroke-linecap="round"/>
+            <path d="M140 35 A80 80 0 0 1 180 100" fill="none" stroke="#6EE7B7" stroke-width="14" stroke-linecap="round"/>
+            <line x1="100" y1="100" x2="150" y2="50" stroke="var(--ss-fg)" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="100" cy="100" r="5" fill="var(--ss-fg)"/>
+          </svg>
+          <div class="gauge-label">NM$</div>
+          <div class="gauge-value" style="color:var(--ss-green)">$921</div>
+          <div class="gauge-zone" style="color:var(--ss-green)">Top 25%</div>
+        </div>
+      </div>
+      <div class="tabs">
+        <button class="tab active">Todos</button>
+        <button class="tab">Indices</button>
+        <button class="tab">Producao</button>
+        <button class="tab">Funcionais</button>
+        <button class="tab">Tipo</button>
+        <button class="tab">Saude</button>
+      </div>
+      <div class="spectrum-row"><div style="font-size:12px; font-weight:600;">HHP$</div><div class="spectrum-bar"><div class="spectrum-marker" style="left:72%; background:var(--ss-fg); border-radius:2px; width:6px; height:18px; clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div><div class="spectrum-marker" style="left:40%; border-left:2px dashed var(--ss-muted); background:none; width:0; height:18px;"></div><div class="spectrum-marker" style="left:60%; background:var(--ss-green); width:3px;"></div></div><div style="text-align:right"><b style="font-family:var(--ss-mono); font-size:11.5px; color:var(--ss-green)">$874</b><div style="font-size:8px; color:var(--ss-green); font-weight:600;">Top 25%</div></div></div>
+      <div class="spectrum-row"><div style="font-size:12px; font-weight:600;">GTPI</div><div class="spectrum-bar"><div class="spectrum-marker" style="left:68%; background:var(--ss-fg); border-radius:2px; width:6px; height:18px; clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div><div class="spectrum-marker" style="left:38%; border-left:2px dashed var(--ss-muted); background:none; width:0; height:18px;"></div><div class="spectrum-marker" style="left:58%; background:var(--ss-green); width:3px;"></div></div><div style="text-align:right"><b style="font-family:var(--ss-mono); font-size:11.5px; color:var(--ss-green)">+2687</b><div style="font-size:8px; color:var(--ss-green); font-weight:600;">Top 25%</div></div></div>
+      <div class="spectrum-row"><div style="font-size:12px; font-weight:600;">NM$</div><div class="spectrum-bar"><div class="spectrum-marker" style="left:75%; background:var(--ss-fg); border-radius:2px; width:6px; height:18px; clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div><div class="spectrum-marker" style="left:42%; border-left:2px dashed var(--ss-muted); background:none; width:0; height:18px;"></div><div class="spectrum-marker" style="left:62%; background:var(--ss-green); width:3px;"></div></div><div style="text-align:right"><b style="font-family:var(--ss-mono); font-size:11.5px; color:var(--ss-green)">$921</b><div style="font-size:8px; color:var(--ss-green); font-weight:600;">Top 25%</div></div></div>
+      <div class="spectrum-row"><div style="font-size:12px; font-weight:600;">Leite</div><div class="spectrum-bar"><div class="spectrum-marker" style="left:64%; background:var(--ss-fg); border-radius:2px; width:6px; height:18px; clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div><div class="spectrum-marker" style="left:35%; border-left:2px dashed var(--ss-muted); background:none; width:0; height:18px;"></div><div class="spectrum-marker" style="left:55%; background:var(--ss-green); width:3px;"></div></div><div style="text-align:right"><b style="font-family:var(--ss-mono); font-size:11.5px; color:var(--ss-green)">+1812</b><div style="font-size:8px; color:var(--ss-green); font-weight:600;">Top 25%</div></div></div>
+      <div style="text-align:center; color:var(--ss-muted); font-size:11px; padding:8px 0;">... demais caracteristicas ...</div>
+    </div>
+  </div>
+
+  <!-- TOP 5 + ATENCAO (MANTIDO) -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Top 5 por caracteristica</div>
+        <select class="select-mock"><option>HHP$</option></select>
+      </div>
+      <div class="card-body">
+        <div class="rank-row"><span class="rank-medal" style="background:#C99A4B">1</span><div><div style="font-size:13px; font-weight:600;">DELTA LAMBDA</div><div style="font-family:var(--ss-mono); font-size:10px; color:var(--ss-muted)">7HO15264</div></div><div class="rank-bar"><i style="width:100%"></i></div><div style="text-align:right; font-family:var(--ss-mono); font-size:13px; font-weight:600;">$1.042</div></div>
+        <div class="rank-row"><span class="rank-medal" style="background:#A9A9A9">2</span><div><div style="font-size:13px; font-weight:600;">PINE-TREE ALCHEMY</div><div style="font-family:var(--ss-mono); font-size:10px; color:var(--ss-muted)">7HO14921</div></div><div class="rank-bar"><i style="width:88%"></i></div><div style="text-align:right; font-family:var(--ss-mono); font-size:13px; font-weight:600;">$998</div></div>
+        <div class="rank-row"><span class="rank-medal" style="background:#B07A4B">3</span><div><div style="font-size:13px; font-weight:600;">PEAK ALTAHOTROD</div><div style="font-family:var(--ss-mono); font-size:10px; color:var(--ss-muted)">250HO16021</div></div><div class="rank-bar"><i style="width:76%"></i></div><div style="text-align:right; font-family:var(--ss-mono); font-size:13px; font-weight:600;">$961</div></div>
+        <div class="rank-row"><span class="rank-medal" style="background:#CBC4BC">4</span><div><div style="font-size:13px; font-weight:600;">STGEN GAMEDAY</div><div style="font-family:var(--ss-mono); font-size:10px; color:var(--ss-muted)">7HO15388</div></div><div class="rank-bar"><i style="width:64%"></i></div><div style="text-align:right; font-family:var(--ss-mono); font-size:13px; font-weight:600;">$925</div></div>
+        <div class="rank-row"><span class="rank-medal" style="background:#CBC4BC">5</span><div><div style="font-size:13px; font-weight:600;">COOKIECUTTER HEROIC</div><div style="font-family:var(--ss-mono); font-size:10px; color:var(--ss-muted)">7HO15102</div></div><div class="rank-bar"><i style="width:52%"></i></div><div style="text-align:right; font-family:var(--ss-mono); font-size:13px; font-weight:600;">$889</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Caracteristicas de atencao</div></div>
+      <div class="card-body">
+        <div style="border-bottom:1px solid var(--ss-border-2); padding-bottom:10px; margin-bottom:10px; font-family:var(--ss-mono); font-size:11.5px; color:var(--ss-muted);">Caracteristicas do rebanho que estao <b style="color:var(--ss-primary)">abaixo do ideal</b> e merecem atencao na selecao de touros</div>
+        <div class="att-row"><div><div style="font-size:13px; font-weight:600;">SCS</div><div style="font-size:10px; color:var(--ss-muted)">Celulas Somaticas</div></div><div class="att-bar"><i style="width:65%"></i></div><div style="text-align:right; font-family:var(--ss-mono); font-size:11.5px;"><b>2.82</b> → ideal 2.50<div style="font-size:9px; color:var(--ss-muted);">↓ menor e melhor</div></div></div>
+        <div class="att-row"><div><div style="font-size:13px; font-weight:600;">FLC</div><div style="font-size:10px; color:var(--ss-muted)">Escore Pernas/Pes</div></div><div class="att-bar"><i style="width:80%"></i></div><div style="text-align:right; font-family:var(--ss-mono); font-size:11.5px;"><b>-0.82</b> → ideal 0.00<div style="font-size:9px; color:var(--ss-muted);">↑ maior e melhor</div></div></div>
+        <div class="att-row"><div><div style="font-size:13px; font-weight:600;">DPR</div><div style="font-size:10px; color:var(--ss-muted)">Taxa Prenhez Filhas</div></div><div class="att-bar"><i style="width:40%"></i></div><div style="text-align:right; font-family:var(--ss-mono); font-size:11.5px;"><b>1.20</b> → ideal 2.50<div style="font-size:9px; color:var(--ss-muted);">↑ maior e melhor</div></div></div>
+        <div class="att-row"><div><div style="font-size:13px; font-weight:600;">RFI</div><div style="font-size:10px; color:var(--ss-muted)">Feed Intake Residual</div></div><div class="att-bar"><i style="width:55%"></i></div><div style="text-align:right; font-family:var(--ss-mono); font-size:11.5px;"><b>-42.00</b> → ideal -80.00<div style="font-size:9px; color:var(--ss-muted);">↓ menor e melhor</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPARATIVO TEMPORAL — delta cards ONLY (combo chart moved) -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Comparativo Temporal</div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:12px; font-weight:600; color:var(--ss-muted)">De</span>
+        <select class="select-mock"><option>2019</option></select>
+        <span style="font-weight:700; color:var(--ss-muted-2)">VS</span>
+        <select class="select-mock"><option>2024</option></select>
+        <span style="border:1px solid var(--ss-border-2); background:var(--ss-wash); padding:4px 10px; border-radius:6px; font-size:12px; color:var(--ss-muted)">2024 - 2019</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="grid-3">
+        <!-- Delta Card 1 -->
+        <div class="delta">
+          <div class="delta-top" style="background:var(--ss-green)"></div>
+          <div class="delta-header">
+            <div><div class="delta-label">HHP$</div><div class="delta-sub">Indice economico</div></div>
+            <span class="delta-badge" style="background:var(--ss-green-soft); color:var(--ss-green)">+22.4%</span>
+          </div>
+          <div class="delta-values">
+            <span class="delta-from">$714</span>
+            <span class="delta-arrow" style="color:var(--ss-green)">→</span>
+            <span class="delta-to" style="color:var(--ss-green)">$874</span>
+          </div>
+          <div class="delta-spark">
+            <span style="height:35%; background:var(--ss-green); opacity:.3"></span>
+            <span style="height:48%; background:var(--ss-green); opacity:.4"></span>
+            <span style="height:55%; background:var(--ss-green); opacity:.5"></span>
+            <span style="height:68%; background:var(--ss-green); opacity:.6"></span>
+            <span style="height:78%; background:var(--ss-green); opacity:.7"></span>
+            <span style="height:88%; background:var(--ss-green); opacity:.8"></span>
+            <span style="height:100%; background:var(--ss-green); opacity:.9"></span>
+          </div>
+        </div>
+        <!-- Delta Card 2 -->
+        <div class="delta">
+          <div class="delta-top" style="background:var(--ss-green)"></div>
+          <div class="delta-header">
+            <div><div class="delta-label">GTPI</div><div class="delta-sub">Merito genomico</div></div>
+            <span class="delta-badge" style="background:var(--ss-green-soft); color:var(--ss-green)">+15.8%</span>
+          </div>
+          <div class="delta-values">
+            <span class="delta-from">+2.319</span>
+            <span class="delta-arrow" style="color:var(--ss-green)">→</span>
+            <span class="delta-to" style="color:var(--ss-green)">+2.687</span>
+          </div>
+          <div class="delta-spark">
+            <span style="height:40%; background:var(--ss-green); opacity:.3"></span>
+            <span style="height:50%; background:var(--ss-green); opacity:.4"></span>
+            <span style="height:58%; background:var(--ss-green); opacity:.5"></span>
+            <span style="height:65%; background:var(--ss-green); opacity:.6"></span>
+            <span style="height:75%; background:var(--ss-green); opacity:.7"></span>
+            <span style="height:85%; background:var(--ss-green); opacity:.8"></span>
+            <span style="height:100%; background:var(--ss-green); opacity:.9"></span>
+          </div>
+        </div>
+        <!-- Delta Card 3 -->
+        <div class="delta">
+          <div class="delta-top" style="background:var(--ss-green)"></div>
+          <div class="delta-header">
+            <div><div class="delta-label">NM$</div><div class="delta-sub">Merito liquido</div></div>
+            <span class="delta-badge" style="background:var(--ss-green-soft); color:var(--ss-green)">+18.1%</span>
+          </div>
+          <div class="delta-values">
+            <span class="delta-from">$780</span>
+            <span class="delta-arrow" style="color:var(--ss-green)">→</span>
+            <span class="delta-to" style="color:var(--ss-green)">$921</span>
+          </div>
+          <div class="delta-spark">
+            <span style="height:38%; background:var(--ss-green); opacity:.3"></span>
+            <span style="height:46%; background:var(--ss-green); opacity:.4"></span>
+            <span style="height:56%; background:var(--ss-green); opacity:.5"></span>
+            <span style="height:66%; background:var(--ss-green); opacity:.6"></span>
+            <span style="height:74%; background:var(--ss-green); opacity:.7"></span>
+            <span style="height:86%; background:var(--ss-green); opacity:.8"></span>
+            <span style="height:100%; background:var(--ss-green); opacity:.9"></span>
+          </div>
+        </div>
+      </div>
+      <!-- combo chart REMOVED from here -->
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ==================== AUDITORIA ==================== -->
+  <div class="page-label">AUDITORIA GENETICA <small>(com novas etapas 5 e 6)</small></div>
+
+  <div class="info-banner blue">
+    <b>NOVAS ETAPAS:</b>&nbsp; 5 — Evolucao vs Nacional (ComboChart movido do Painel) · 6 — Scatter Plot Individual (movido do Painel)
+  </div>
+
+  <div style="background:var(--ss-wash); border:1px solid var(--ss-border); border-radius:10px; padding:10px 14px; margin-bottom:16px; display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ss-text);">
+    <svg width="15" height="15" fill="none" stroke="var(--ss-green)" stroke-width="2"><polyline points="2 7 6 11 13 4"/></svg>
+    Auditoria genetica preservada com fluxo sequencial e visualizacao por etapas.
+  </div>
+
+  <div class="steps">
+    <button class="step-btn"><span class="n">1</span>Parentesco</button>
+    <button class="step-btn"><span class="n">2</span>Top Pais</button>
+    <button class="step-btn"><span class="n">3</span>Progressao</button>
+    <button class="step-btn"><span class="n">4</span>Distribuicao</button>
+    <button class="step-btn active"><span class="n">5</span>Evolucao vs Nacional</button>
+    <button class="step-btn"><span class="n">6</span>Scatter Plot</button>
+  </div>
+
+  <!-- Step 5 — Evolução vs Nacional (NEW) -->
+  <div class="new-step card" style="margin-bottom:16px; margin-top:20px;">
+    <div class="card-header">
+      <div class="card-title">Evolucao HHP$ — Rebanho vs Nacional vs Top 25%</div>
+      <select class="select-mock"><option>HHP$</option></select>
+    </div>
+    <div class="card-body">
+      <div class="combo-mock">
+        <div class="combo-bar" style="height:45%"><span class="val">$714</span><span class="yr">2019</span></div>
+        <div class="combo-bar" style="height:52%"><span class="val">$742</span><span class="yr">2020</span></div>
+        <div class="combo-bar" style="height:58%"><span class="val">$778</span><span class="yr">2021</span></div>
+        <div class="combo-bar" style="height:65%"><span class="val">$810</span><span class="yr">2022</span></div>
+        <div class="combo-bar" style="height:72%"><span class="val">$839</span><span class="yr">2023</span></div>
+        <div class="combo-bar" style="height:82%"><span class="val" style="color:var(--ss-primary); font-size:12px;">$874</span><span class="yr" style="color:var(--ss-primary); font-weight:800; font-size:12px;">2024</span></div>
+        <!-- National line mock -->
+        <svg style="position:absolute; left:30px; right:30px; top:0; bottom:30px; width:calc(100% - 60px); height:calc(100% - 30px);" viewBox="0 0 600 190" preserveAspectRatio="none">
+          <polyline points="50,140 150,130 250,118 350,108 450,98 550,90" fill="none" stroke="var(--ss-muted-2)" stroke-width="2.5" stroke-dasharray="6 3"/>
+          <polyline points="50,110 150,98 250,85 350,72 450,58 550,45" fill="none" stroke="var(--ss-green)" stroke-width="2.5"/>
+          <circle cx="550" cy="90" r="4.5" fill="var(--ss-muted-2)"/>
+          <circle cx="550" cy="45" r="4.5" fill="var(--ss-green)"/>
+          <text x="530" y="82" font-size="10" font-weight="700" fill="var(--ss-muted)" text-anchor="end">Nacional</text>
+          <text x="530" y="38" font-size="10" font-weight="700" fill="var(--ss-green)" text-anchor="end">Top 25%</text>
+        </svg>
+      </div>
+      <div class="combo-legend">
+        <span><i style="width:12px; height:12px; border-radius:3px; background:var(--ss-primary);"></i> Meu Rebanho</span>
+        <span><i style="width:20px; border-top:2px dashed var(--ss-muted-2);"></i> Media Nacional</span>
+        <span><i style="width:20px; height:2px; border-radius:2px; background:var(--ss-green);"></i> Top 25%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 6 — Scatter Plot (NEW) -->
+  <div class="new-step card" style="margin-top:20px;">
+    <div class="card-header">
+      <div class="card-title">Scatter Plot Individual</div>
+      <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;">
+        <span style="font-size:11.5px; font-weight:600; color:var(--ss-muted)">X</span><select class="select-mock"><option>GTPI</option></select>
+        <span style="font-size:11.5px; font-weight:600; color:var(--ss-muted)">Y</span><select class="select-mock"><option>Leite</option></select>
+        <span style="font-size:11.5px; font-weight:600; color:var(--ss-muted)">Cor</span><select class="select-mock"><option>HHP$</option></select>
+      </div>
+    </div>
+    <div class="card-body" style="padding:0;">
+      <div class="scatter-mock">
+        <!-- Grid lines -->
+        <svg style="position:absolute; inset:0; width:100%; height:100%;" viewBox="0 0 720 300">
+          <line x1="58" x2="690" y1="60" y2="60" stroke="var(--ss-border-2)"/>
+          <line x1="58" x2="690" y1="120" y2="120" stroke="var(--ss-border-2)"/>
+          <line x1="58" x2="690" y1="180" y2="180" stroke="var(--ss-border-2)"/>
+          <line x1="58" x2="690" y1="240" y2="240" stroke="var(--ss-border-2)"/>
+          <line x1="180" y1="30" x2="180" y2="270" stroke="var(--ss-border-2)"/>
+          <line x1="330" y1="30" x2="330" y2="270" stroke="var(--ss-border-2)"/>
+          <line x1="480" y1="30" x2="480" y2="270" stroke="var(--ss-border-2)"/>
+          <!-- Mean lines -->
+          <line x1="380" x2="380" y1="30" y2="270" stroke="var(--ss-primary)" stroke-dasharray="6 4" opacity=".3"/>
+          <line x1="58" x2="690" y1="145" y2="145" stroke="var(--ss-primary)" stroke-dasharray="6 4" opacity=".3"/>
+          <!-- Dots -->
+          <circle cx="520" cy="65" r="8" fill="#1a7a42" stroke="white" stroke-width="2"/>
+          <circle cx="490" cy="80" r="8" fill="#1a7a42" stroke="white" stroke-width="2"/>
+          <circle cx="540" cy="75" r="7" fill="var(--ss-green)" stroke="rgba(255,255,255,.8)" stroke-width="2"/>
+          <circle cx="450" cy="95" r="7" fill="var(--ss-green)" stroke="rgba(255,255,255,.8)" stroke-width="2"/>
+          <circle cx="420" cy="110" r="7" fill="var(--ss-green)" stroke="rgba(255,255,255,.8)" stroke-width="2"/>
+          <circle cx="380" cy="130" r="6" fill="var(--ss-amber)" stroke="rgba(255,255,255,.8)" stroke-width="2"/>
+          <circle cx="350" cy="145" r="6" fill="var(--ss-amber)" stroke="rgba(255,255,255,.8)" stroke-width="2"/>
+          <circle cx="320" cy="155" r="6" fill="var(--ss-amber)" stroke="rgba(255,255,255,.8)" stroke-width="2"/>
+          <circle cx="370" cy="160" r="6" fill="var(--ss-amber)" stroke="rgba(255,255,255,.8)" stroke-width="2"/>
+          <circle cx="280" cy="170" r="5.5" fill="#C0633A" stroke="rgba(255,255,255,.8)" stroke-width="2"/>
+          <circle cx="250" cy="185" r="5.5" fill="#C0633A" stroke="rgba(255,255,255,.8)" stroke-width="2"/>
+          <circle cx="220" cy="195" r="5.5" fill="#C0633A" stroke="rgba(255,255,255,.8)" stroke-width="2"/>
+          <circle cx="200" cy="210" r="5.5" fill="#C0633A" stroke="rgba(255,255,255,.8)" stroke-width="2"/>
+          <circle cx="460" cy="90" r="7" fill="var(--ss-green)" stroke="rgba(255,255,255,.8)" stroke-width="2"/>
+          <circle cx="500" cy="100" r="7" fill="var(--ss-green)" stroke="rgba(255,255,255,.8)" stroke-width="2"/>
+          <circle cx="300" cy="140" r="6" fill="var(--ss-amber)" stroke="rgba(255,255,255,.8)" stroke-width="2"/>
+          <circle cx="160" cy="230" r="5.5" fill="#C0633A" stroke="rgba(255,255,255,.8)" stroke-width="2"/>
+          <text x="374" y="290" text-anchor="middle" font-size="12" font-weight="800" fill="var(--ss-fg)">GTPI</text>
+          <text x="17" y="155" text-anchor="middle" font-size="12" font-weight="800" fill="var(--ss-fg)" transform="rotate(-90 17 155)">Leite</text>
+        </svg>
+      </div>
+      <div class="scatter-legend">
+        <div><span class="dot" style="background:#1a7a42"></span> Elite (2)</div>
+        <div><span class="dot" style="background:var(--ss-green)"></span> Top 25% (6)</div>
+        <div><span class="dot" style="background:var(--ss-amber)"></span> Medio (5)</div>
+        <div><span class="dot" style="background:#C0633A"></span> Abaixo (4)</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

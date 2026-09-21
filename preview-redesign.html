@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSGEN — Redesign Visual</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* NEW PALETTE — tons sérios: vermelho escuro, cinza, preto, branco */
+    --bg: #F3F4F6;
+    --card: #FFFFFF;
+    --sidebar: #111111;
+    --sidebar-hover: #1A1A1A;
+    --sidebar-active: #242424;
+    --sidebar-muted: #6B6B6B;
+    --sidebar-border: #2A2A2A;
+
+    --fg: #0A0A0A;
+    --text: #2E2E2E;
+    --muted: #71717A;
+    --muted-2: #A1A1AA;
+    --border: #E4E4E7;
+    --border-2: #F0F0F2;
+    --wash: #FAFAFA;
+
+    --primary: #9B1B30;
+    --primary-d: #7A1526;
+    --primary-soft: #FDF2F4;
+    --primary-glow: rgba(155, 27, 48, .08);
+
+    --green: #16A34A;
+    --green-soft: #F0FDF4;
+    --amber: #D97706;
+    --amber-soft: #FFFBEB;
+
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Inter', -apple-system, sans-serif;
+
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,.06);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--sans); background: var(--bg); color: var(--fg); font-size: 14px; -webkit-font-smoothing: antialiased; }
+
+  /* ====== LAYOUT ====== */
+  .app { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+
+  /* ====== SIDEBAR — dark mode ====== */
+  .sidebar { background: var(--sidebar); color: white; position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; border-right: 1px solid var(--sidebar-border); }
+  .brand { padding: 22px 24px; border-bottom: 1px solid var(--sidebar-border); display: flex; align-items: center; gap: 13px; }
+  .brand-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: white; letter-spacing: -.5px; position: relative; overflow: hidden; }
+  .brand-icon::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,.2), transparent 60%); }
+  .brand-name { font-size: 16px; font-weight: 700; letter-spacing: -.3px; }
+  .brand-sub { font-size: 9.5px; text-transform: uppercase; letter-spacing: 2px; color: var(--sidebar-muted); margin-top: 2px; }
+
+  .nav { flex: 1; padding: 16px 12px; overflow: auto; }
+  .nav-group { margin-bottom: 4px; }
+  .nav-label { padding: 12px 14px 8px; font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.8px; color: var(--sidebar-muted); }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: #A1A1AA; cursor: pointer; transition: .15s; margin-bottom: 2px; border: 1px solid transparent; }
+  .nav-item:hover { background: var(--sidebar-hover); color: #D4D4D8; }
+  .nav-item.active { background: var(--sidebar-active); color: white; border-color: #333; font-weight: 600; }
+  .nav-item.active .nav-icon { color: var(--primary); filter: brightness(1.3); }
+  .nav-icon { width: 18px; height: 18px; opacity: .5; }
+  .nav-item.active .nav-icon { opacity: 1; }
+  .nav-badge { margin-left: auto; font-size: 9px; font-weight: 700; letter-spacing: .5px; padding: 2px 7px; border-radius: 4px; background: var(--primary); color: white; }
+
+  .sidebar-footer { border-top: 1px solid var(--sidebar-border); padding: 16px 18px; display: flex; align-items: center; gap: 12px; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: #2A2A2A; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #A1A1AA; border: 1px solid #333; }
+  .user-name { font-size: 13px; font-weight: 600; color: #E4E4E7; }
+  .user-role { font-size: 11px; color: var(--sidebar-muted); }
+
+  /* ====== HEADER ====== */
+  .header { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; height: 64px; padding: 0 32px; background: rgba(255,255,255,.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+  .header-title { font-size: 20px; font-weight: 700; letter-spacing: -.3px; color: var(--fg); }
+  .header-sub { font-size: 11.5px; color: var(--muted); font-weight: 400; margin-top: 1px; }
+  .header-actions { display: flex; align-items: center; gap: 10px; }
+  .header-pill { display: flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 12.5px; font-weight: 600; color: var(--fg); background: white; }
+  .header-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); }
+  .search-box { width: 240px; display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: white; color: var(--muted); font-size: 13px; }
+  .search-box input { border: none; background: none; outline: none; width: 100%; font-size: 13px; color: var(--fg); }
+  .btn-logout { font-size: 12px; color: var(--muted); cursor: pointer; background: none; border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-weight: 500; }
+
+  /* ====== MAIN CONTENT ====== */
+  .main { max-width: 1320px; padding: 28px 32px 60px; }
+
+  /* ====== CARDS ====== */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-sm); overflow: hidden; }
+  .card-header { padding: 18px 22px; border-bottom: 1px solid var(--border-2); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .card-title { font-size: 14px; font-weight: 700; color: var(--fg); display: flex; align-items: center; gap: 10px; letter-spacing: -.2px; }
+  .card-title::before { content: ''; width: 3px; height: 16px; background: var(--primary); border-radius: 2px; }
+  .card-body { padding: 22px; }
+
+  /* ====== BUTTON ====== */
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: .15s; border: none; }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-d); }
+  .btn-ghost { background: white; color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--wash); }
+  .btn svg { width: 15px; height: 15px; }
+
+  /* ====== GAUGE ====== */
+  .gauge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 28px; }
+  .gauge-box { text-align: center; padding: 20px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--wash); }
+  .gauge-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1.2px; margin-top: 8px; }
+  .gauge-value { font-family: var(--mono); font-size: 28px; font-weight: 900; letter-spacing: -1px; margin-top: 4px; }
+  .gauge-zone { font-size: 11px; font-weight: 700; margin-top: 3px; }
+
+  /* ====== SPECTRUM ====== */
+  .tabs { display: flex; gap: 2px; background: #E4E4E7; border-radius: 10px; padding: 3px; margin-bottom: 20px; }
+  .tab { padding: 9px 18px; border-radius: 8px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; background: transparent; color: var(--muted); transition: .15s; }
+  .tab.active { background: white; color: var(--fg); box-shadow: var(--shadow-sm); }
+  .spectrum-row { display: grid; grid-template-columns: 110px 1fr 120px; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border-2); }
+  .spectrum-row:last-child { border-bottom: none; }
+  .spectrum-trait { font-size: 14px; font-weight: 700; color: var(--fg); }
+  .spectrum-trait small { display: block; font-size: 10px; color: var(--muted); font-weight: 500; }
+  .spectrum-bar { position: relative; height: 10px; border-radius: 6px; background: linear-gradient(90deg, #FCA5A5, #FCD34D 35%, #86EFAC 65%, #34D399); }
+  .spectrum-marker { position: absolute; top: -4px; }
+  .spectrum-right { text-align: right; }
+  .spectrum-pct { font-family: var(--mono); font-size: 18px; font-weight: 800; letter-spacing: -1px; }
+  .spectrum-badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; margin-top: 2px; }
+
+  /* ====== ATTENTION ====== */
+  .att-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; }
+  .att-row { display: grid; grid-template-columns: 1fr 80px 1fr; align-items: center; gap: 14px; padding: 14px 4px; border-bottom: 1px solid var(--border-2); }
+  .att-name { font-size: 14px; font-weight: 700; color: var(--fg); }
+  .att-sub { font-size: 10.5px; color: var(--muted); font-weight: 500; margin-top: 1px; }
+  .att-bar { height: 6px; border-radius: 4px; background: var(--border-2); overflow: hidden; }
+  .att-bar i { display: block; height: 100%; border-radius: 4px; background: var(--amber); }
+  .att-values { text-align: right; font-family: var(--mono); font-size: 13px; }
+  .att-values b { font-size: 15px; font-weight: 800; color: var(--fg); }
+  .att-ideal { font-size: 11px; color: var(--muted); }
+  .att-hint { font-size: 9px; color: var(--muted-2); margin-top: 2px; }
+
+  /* ====== DELTA CARDS ====== */
+  .delta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+  .delta { position: relative; border-radius: 12px; border: 1px solid var(--border); background: white; padding: 20px 24px; overflow: hidden; }
+  .delta-stripe { height: 3px; position: absolute; left: 0; right: 0; top: 0; }
+  .delta-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .delta-label { font-size: 16px; font-weight: 800; letter-spacing: -.3px; }
+  .delta-sub { font-size: 11px; color: var(--muted); font-weight: 500; margin-top: 2px; }
+  .delta-badge { padding: 5px 12px; border-radius: 8px; font-family: var(--mono); font-size: 14px; font-weight: 800; }
+  .delta-vals { display: flex; align-items: baseline; gap: 12px; }
+  .delta-from { font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--muted-2); text-decoration: line-through; }
+  .delta-to { font-family: var(--mono); font-size: 32px; font-weight: 900; letter-spacing: -1.5px; line-height: 1; }
+  .delta-arrow { font-size: 22px; font-weight: 300; }
+  .delta-spark { display: flex; align-items: flex-end; gap: 3px; height: 36px; margin-top: 16px; }
+  .delta-spark span { flex: 1; border-radius: 3px 3px 0 0; }
+
+  /* ====== DISTRIBUTION CHART ====== */
+  .dist-card .dist-value { font-family: var(--mono); font-size: 22px; font-weight: 800; letter-spacing: -1px; }
+  .dist-label { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .dist-bar-wrap { display: flex; align-items: flex-end; gap: 6px; height: 160px; padding-top: 24px; }
+  .dist-bar { flex: 1; border-radius: 4px 4px 0 0; position: relative; transition: .2s; }
+  .dist-bar:hover { filter: brightness(1.1); }
+  .dist-bar .val { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-family: var(--mono); font-size: 13px; font-weight: 800; white-space: nowrap; }
+  .dist-bar .yr { position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 600; color: var(--muted); }
+
+  /* ====== AUDIT STEPS ====== */
+  .steps { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+  .step { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); font-size: 12.5px; font-weight: 600; color: var(--muted); background: white; cursor: pointer; transition: .15s; }
+  .step:hover { border-color: #999; color: var(--text); }
+  .step.active { border-color: var(--primary); background: var(--primary); color: white; }
+  .step .n { width: 20px; height: 20px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 10px; font-weight: 700; background: var(--wash); color: var(--muted); }
+  .step.active .n { background: rgba(255,255,255,.2); color: white; }
+
+  /* ====== SCATTER ====== */
+  .scatter-legend { display: flex; gap: 16px; padding: 12px 16px; border-top: 1px solid var(--border-2); background: var(--wash); }
+  .scatter-legend div { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .scatter-legend .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* ====== RANKING ====== */
+  .rank-row { display: grid; grid-template-columns: 28px 1fr auto auto; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 8px; cursor: pointer; transition: .12s; border: 1px solid transparent; }
+  .rank-row:hover { background: var(--wash); }
+  .rank-row.selected { background: white; border-color: var(--primary); box-shadow: 0 4px 16px rgba(155,27,48,.12); }
+  .rank-num { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--muted-2); text-align: center; }
+  .rank-name { font-size: 13.5px; font-weight: 600; }
+  .rank-sire { font-family: var(--mono); font-size: 10.5px; color: var(--muted); font-weight: 400; }
+  .rank-val { font-family: var(--mono); font-size: 14px; font-weight: 700; text-align: right; }
+  .rank-trait { font-size: 8.5px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted-2); text-align: right; }
+
+  .mb-4 { margin-bottom: 16px; }
+  .mb-6 { margin-bottom: 24px; }
+  .divider { border: none; border-top: 2px dashed var(--border); margin: 48px 0; }
+  .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ====== SIDEBAR ====== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">SS</div>
+      <div>
+        <div class="brand-name">SSGen</div>
+        <div class="brand-sub">Select Sires</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-group">
+        <div class="nav-label">Visao geral</div>
+        <div class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </div>
+        <div class="nav-item active">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Painel Genomico
+          <span class="nav-badge">NOVO</span>
+        </div>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Rebanho</div>
+        <div class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Provas
+          <span class="nav-badge">NOVO</span>
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Auditoria Genetica
+        </div>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Operacao</div>
+        <div class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+          Botijao Virtual
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="avatar">DG</div>
+      <div>
+        <div class="user-name">Diego Guerra</div>
+        <div class="user-role">Select Sires BR</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ====== MAIN ====== -->
+  <div style="display:flex; flex-direction:column; min-width:0;">
+    <div class="header">
+      <div>
+        <div class="header-title">Painel Genomico</div>
+        <div class="header-sub">Visao analitica do lote genotipado</div>
+      </div>
+      <div class="header-actions">
+        <div class="header-pill"><span class="dot"></span> Fazenda Sape</div>
+        <div class="search-box">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input placeholder="Buscar animal, brinco, touro...">
+        </div>
+        <button class="btn-logout">Sair</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <!-- Relatorio button -->
+      <div style="display:flex; justify-content:flex-end; margin-bottom:20px;">
+        <button class="btn btn-primary">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Gerar Relatorio
+        </button>
+      </div>
+
+      <!-- ====== REBANHO VS NACIONAL ====== -->
+      <div class="section-label">Rebanho vs Nacional</div>
+      <div class="card mb-4">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Rebanho vs Nacional</div>
+            <div style="font-size:12px; color:var(--muted); margin-top:3px;">Gauges para indices-chave e espectro comparativo por caracteristica.</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- Gauges -->
+          <div class="gauge-grid">
+            <div class="gauge-box">
+              <svg viewBox="0 0 200 110" style="width:180px; height:100px;">
+                <path d="M20 100 A80 80 0 0 1 100 20" fill="none" stroke="#FCA5A5" stroke-width="12" stroke-linecap="round"/>
+                <path d="M100 20 A80 80 0 0 1 140 35" fill="none" stroke="#FCD34D" stroke-width="12" stroke-linecap="round"/>
+                <path d="M140 35 A80 80 0 0 1 165 65" fill="none" stroke="#86EFAC" stroke-width="12" stroke-linecap="round"/>
+                <path d="M165 65 A80 80 0 0 1 180 100" fill="none" stroke="#34D399" stroke-width="12" stroke-linecap="round"/>
+                <line x1="100" y1="100" x2="148" y2="48" stroke="#0A0A0A" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="100" cy="100" r="6" fill="#0A0A0A"/>
+                <circle cx="100" cy="100" r="2.5" fill="white"/>
+              </svg>
+              <div class="gauge-label">HHP$</div>
+              <div class="gauge-value" style="color:var(--green)">$874</div>
+              <div class="gauge-zone" style="color:var(--green)">Top 25%</div>
+            </div>
+            <div class="gauge-box">
+              <svg viewBox="0 0 200 110" style="width:180px; height:100px;">
+                <path d="M20 100 A80 80 0 0 1 100 20" fill="none" stroke="#FCA5A5" stroke-width="12" stroke-linecap="round"/>
+                <path d="M100 20 A80 80 0 0 1 140 35" fill="none" stroke="#FCD34D" stroke-width="12" stroke-linecap="round"/>
+                <path d="M140 35 A80 80 0 0 1 165 65" fill="none" stroke="#86EFAC" stroke-width="12" stroke-linecap="round"/>
+                <path d="M165 65 A80 80 0 0 1 180 100" fill="none" stroke="#34D399" stroke-width="12" stroke-linecap="round"/>
+                <line x1="100" y1="100" x2="155" y2="52" stroke="#0A0A0A" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="100" cy="100" r="6" fill="#0A0A0A"/>
+                <circle cx="100" cy="100" r="2.5" fill="white"/>
+              </svg>
+              <div class="gauge-label">GTPI</div>
+              <div class="gauge-value" style="color:var(--green)">+2.687</div>
+              <div class="gauge-zone" style="color:var(--green)">Top 25%</div>
+            </div>
+            <div class="gauge-box">
+              <svg viewBox="0 0 200 110" style="width:180px; height:100px;">
+                <path d="M20 100 A80 80 0 0 1 100 20" fill="none" stroke="#FCA5A5" stroke-width="12" stroke-linecap="round"/>
+                <path d="M100 20 A80 80 0 0 1 140 35" fill="none" stroke="#FCD34D" stroke-width="12" stroke-linecap="round"/>
+                <path d="M140 35 A80 80 0 0 1 165 65" fill="none" stroke="#86EFAC" stroke-width="12" stroke-linecap="round"/>
+                <path d="M165 65 A80 80 0 0 1 180 100" fill="none" stroke="#34D399" stroke-width="12" stroke-linecap="round"/>
+                <line x1="100" y1="100" x2="152" y2="50" stroke="#0A0A0A" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="100" cy="100" r="6" fill="#0A0A0A"/>
+                <circle cx="100" cy="100" r="2.5" fill="white"/>
+              </svg>
+              <div class="gauge-label">NM$</div>
+              <div class="gauge-value" style="color:var(--green)">$921</div>
+              <div class="gauge-zone" style="color:var(--green)">Top 25%</div>
+            </div>
+          </div>
+
+          <!-- Tabs + Spectrum -->
+          <div class="tabs">
+            <button class="tab active">Todos</button>
+            <button class="tab">Indices</button>
+            <button class="tab">Producao</button>
+            <button class="tab">Funcionais</button>
+            <button class="tab">Tipo</button>
+            <button class="tab">Saude</button>
+          </div>
+
+          <div style="max-height:420px; overflow-y:auto;">
+            <div class="spectrum-row">
+              <div class="spectrum-trait">HHP$<small>Indice economico</small></div>
+              <div class="spectrum-bar">
+                <div class="spectrum-marker" style="left:72%; top:50%; transform:translateY(-50%);">
+                  <div style="width:8px; height:8px; background:var(--primary); transform:rotate(45deg); border-radius:2px; box-shadow:0 2px 6px rgba(155,27,48,.3);"></div>
+                </div>
+                <div style="position:absolute; left:50%; top:-3px; width:0; height:16px; border-left:2px dashed var(--muted-2);"></div>
+                <div style="position:absolute; left:62%; top:-3px; width:3px; height:16px; border-radius:2px; background:#166534;"></div>
+              </div>
+              <div class="spectrum-right">
+                <div class="spectrum-pct" style="color:var(--green)">+28.5%</div>
+                <span class="spectrum-badge" style="background:rgba(22,163,74,.1); color:var(--green);">Top 25%</span>
+              </div>
+            </div>
+            <div class="spectrum-row">
+              <div class="spectrum-trait">GTPI<small>Merito genomico</small></div>
+              <div class="spectrum-bar">
+                <div class="spectrum-marker" style="left:68%; top:50%; transform:translateY(-50%);"><div style="width:8px; height:8px; background:var(--primary); transform:rotate(45deg); border-radius:2px; box-shadow:0 2px 6px rgba(155,27,48,.3);"></div></div>
+                <div style="position:absolute; left:50%; top:-3px; width:0; height:16px; border-left:2px dashed var(--muted-2);"></div>
+                <div style="position:absolute; left:60%; top:-3px; width:3px; height:16px; border-radius:2px; background:#166534;"></div>
+              </div>
+              <div class="spectrum-right">
+                <div class="spectrum-pct" style="color:var(--green)">+9.7%</div>
+                <span class="spectrum-badge" style="background:rgba(22,163,74,.1); color:var(--green);">Top 25%</span>
+              </div>
+            </div>
+            <div class="spectrum-row">
+              <div class="spectrum-trait">Leite<small>Producao (lbs)</small></div>
+              <div class="spectrum-bar">
+                <div class="spectrum-marker" style="left:64%; top:50%; transform:translateY(-50%);"><div style="width:8px; height:8px; background:var(--primary); transform:rotate(45deg); border-radius:2px; box-shadow:0 2px 6px rgba(155,27,48,.3);"></div></div>
+                <div style="position:absolute; left:50%; top:-3px; width:0; height:16px; border-left:2px dashed var(--muted-2);"></div>
+                <div style="position:absolute; left:58%; top:-3px; width:3px; height:16px; border-radius:2px; background:#166534;"></div>
+              </div>
+              <div class="spectrum-right">
+                <div class="spectrum-pct" style="color:var(--green)">+30.0%</div>
+                <span class="spectrum-badge" style="background:rgba(22,163,74,.1); color:var(--green);">Top 25%</span>
+              </div>
+            </div>
+            <div class="spectrum-row">
+              <div class="spectrum-trait">SCS<small>Celulas somaticas</small></div>
+              <div class="spectrum-bar">
+                <div class="spectrum-marker" style="left:45%; top:50%; transform:translateY(-50%);"><div style="width:8px; height:8px; background:var(--primary); transform:rotate(45deg); border-radius:2px; box-shadow:0 2px 6px rgba(155,27,48,.3);"></div></div>
+                <div style="position:absolute; left:50%; top:-3px; width:0; height:16px; border-left:2px dashed var(--muted-2);"></div>
+                <div style="position:absolute; left:62%; top:-3px; width:3px; height:16px; border-radius:2px; background:#166534;"></div>
+              </div>
+              <div class="spectrum-right">
+                <div class="spectrum-pct" style="color:var(--amber)">-3.4%</div>
+                <span class="spectrum-badge" style="background:rgba(217,119,6,.1); color:var(--amber);">Medio</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== ATENCAO ====== -->
+      <div class="section-label">Pontos de Atencao</div>
+      <div class="card mb-4">
+        <div class="card-header"><div class="card-title">Caracteristicas de atencao</div></div>
+        <div class="card-body">
+          <div style="border-bottom:1px solid var(--border-2); padding-bottom:12px; margin-bottom:12px; font-family:var(--mono); font-size:11.5px; color:var(--muted);">
+            Caracteristicas do rebanho que estao <b style="color:var(--primary)">abaixo do ideal</b> e merecem atencao na selecao de touros
+          </div>
+          <div class="att-grid">
+            <div class="att-row">
+              <div><div class="att-name">SCS</div><div class="att-sub">Celulas Somaticas</div></div>
+              <div class="att-bar"><i style="width:65%"></i></div>
+              <div class="att-values"><b>2.82</b> <span class="att-ideal">→ ideal 2.50</span><div class="att-hint">↓ menor e melhor</div></div>
+            </div>
+            <div class="att-row">
+              <div><div class="att-name">FLC</div><div class="att-sub">Escore Pernas/Pes</div></div>
+              <div class="att-bar"><i style="width:82%"></i></div>
+              <div class="att-values"><b>-0.82</b> <span class="att-ideal">→ ideal 0.00</span><div class="att-hint">↑ maior e melhor</div></div>
+            </div>
+            <div class="att-row">
+              <div><div class="att-name">DPR</div><div class="att-sub">Taxa Prenhez Filhas</div></div>
+              <div class="att-bar"><i style="width:40%"></i></div>
+              <div class="att-values"><b>1.20</b> <span class="att-ideal">→ ideal 2.50</span><div class="att-hint">↑ maior e melhor</div></div>
+            </div>
+            <div class="att-row">
+              <div><div class="att-name">RFI</div><div class="att-sub">Feed Intake Residual</div></div>
+              <div class="att-bar"><i style="width:55%"></i></div>
+              <div class="att-values"><b>-42.00</b> <span class="att-ideal">→ ideal -80.00</span><div class="att-hint">↓ menor e melhor</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== COMPARATIVO TEMPORAL ====== -->
+      <div class="section-label">Comparativo Temporal</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Comparativo Temporal</div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:12px; font-weight:600; color:var(--muted);">De</span>
+            <select style="border:1px solid var(--border); border-radius:8px; padding:7px 12px; font-family:var(--mono); font-size:12px; background:white;"><option>2019</option></select>
+            <span style="font-weight:800; color:var(--muted-2); font-size:13px;">VS</span>
+            <select style="border:1px solid var(--border); border-radius:8px; padding:7px 12px; font-family:var(--mono); font-size:12px; background:white;"><option>2024</option></select>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="delta-grid">
+            <div class="delta">
+              <div class="delta-stripe" style="background:var(--green)"></div>
+              <div class="delta-head">
+                <div><div class="delta-label">HHP$</div><div class="delta-sub">Indice economico</div></div>
+                <span class="delta-badge" style="background:var(--green-soft); color:var(--green);">+22.4%</span>
+              </div>
+              <div class="delta-vals">
+                <span class="delta-from">$714</span>
+                <span class="delta-arrow" style="color:var(--green)">→</span>
+                <span class="delta-to" style="color:var(--green)">$874</span>
+              </div>
+              <div class="delta-spark">
+                <span style="height:35%; background:var(--green); opacity:.25"></span>
+                <span style="height:48%; background:var(--green); opacity:.35"></span>
+                <span style="height:58%; background:var(--green); opacity:.45"></span>
+                <span style="height:68%; background:var(--green); opacity:.55"></span>
+                <span style="height:80%; background:var(--green); opacity:.7"></span>
+                <span style="height:92%; background:var(--green); opacity:.85"></span>
+                <span style="height:100%; background:var(--green); opacity:1"></span>
+              </div>
+            </div>
+            <div class="delta">
+              <div class="delta-stripe" style="background:var(--green)"></div>
+              <div class="delta-head">
+                <div><div class="delta-label">GTPI</div><div class="delta-sub">Merito genomico</div></div>
+                <span class="delta-badge" style="background:var(--green-soft); color:var(--green);">+15.8%</span>
+              </div>
+              <div class="delta-vals">
+                <span class="delta-from">+2.319</span>
+                <span class="delta-arrow" style="color:var(--green)">→</span>
+                <span class="delta-to" style="color:var(--green)">+2.687</span>
+              </div>
+              <div class="delta-spark">
+                <span style="height:40%; background:var(--green); opacity:.25"></span>
+                <span style="height:50%; background:var(--green); opacity:.35"></span>
+                <span style="height:60%; background:var(--green); opacity:.45"></span>
+                <span style="height:70%; background:var(--green); opacity:.55"></span>
+                <span style="height:80%; background:var(--green); opacity:.7"></span>
+                <span style="height:90%; background:var(--green); opacity:.85"></span>
+                <span style="height:100%; background:var(--green); opacity:1"></span>
+              </div>
+            </div>
+            <div class="delta">
+              <div class="delta-stripe" style="background:var(--green)"></div>
+              <div class="delta-head">
+                <div><div class="delta-label">NM$</div><div class="delta-sub">Merito liquido</div></div>
+                <span class="delta-badge" style="background:var(--green-soft); color:var(--green);">+18.1%</span>
+              </div>
+              <div class="delta-vals">
+                <span class="delta-from">$780</span>
+                <span class="delta-arrow" style="color:var(--green)">→</span>
+                <span class="delta-to" style="color:var(--green)">$921</span>
+              </div>
+              <div class="delta-spark">
+                <span style="height:38%; background:var(--green); opacity:.25"></span>
+                <span style="height:48%; background:var(--green); opacity:.35"></span>
+                <span style="height:56%; background:var(--green); opacity:.45"></span>
+                <span style="height:66%; background:var(--green); opacity:.55"></span>
+                <span style="height:78%; background:var(--green); opacity:.7"></span>
+                <span style="height:88%; background:var(--green); opacity:.85"></span>
+                <span style="height:100%; background:var(--green); opacity:1"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
