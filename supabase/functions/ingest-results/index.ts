@@ -198,6 +198,22 @@ const ALL_NUMERIC = new Set([
   "rel_milk", "rel_fat", "rel_protein",
 ]);
 
+// Chave de servico: a secret nova do projeto (env) ou o JWT legado service_role deste
+// projeto. O JWT so chega aqui com assinatura valida porque a funcao roda com verify_jwt=true.
+function isServiceToken(token: string): boolean {
+  if (!token) return false;
+  if (token === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) return true;
+  try {
+    const part = token.split(".")[1];
+    if (!part) return false;
+    const claims = JSON.parse(atob(part.replace(/-/g, "+").replace(/_/g, "/")));
+    const ref = new URL(Deno.env.get("SUPABASE_URL")!).hostname.split(".")[0];
+    return claims?.role === "service_role" && claims?.ref === ref;
+  } catch {
+    return false;
+  }
+}
+
 function normalizeHeader(h: string): string {
   return h.toString().trim().toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove accents: ã→a, é→e
@@ -247,6 +263,8 @@ Deno.serve(async (req: Request) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  // Contexto para registrar erro inesperado em result_ingestions
+  const ctx: { file_path?: string; client_id?: string } = {};
   try {
     const authHeader = req.headers.get("Authorization") ?? "";
     const token = authHeader.replace("Bearer ", "");
@@ -256,13 +274,19 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Auth check: admin or service_role
-    const { data: { user } } = await createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-    ).auth.getUser(token);
-
-    if (user) {
+    // Auth check: admin or service_role (antes, chamada sem usuario passava direto)
+    const isService = isServiceToken(token);
+    if (!isService) {
+      const { data: { user } } = await createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+      ).auth.getUser(token);
+      if (!user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const { data: profile } = await clientDb
         .from("profiles")
         .select("role")
@@ -277,18 +301,47 @@ Deno.serve(async (req: Request) => {
     }
 
     const body = await req.json();
-    const { file_path, service_order_id, client_id } = body as {
+    const { file_path, service_order_id, client_id, force } = body as {
       file_path: string;
       service_order_id?: string;
       client_id: string;
+      force?: boolean;
     };
 
+    ctx.file_path = file_path;
+    ctx.client_id = client_id;
+
     if (!file_path || !client_id) {
+      if (file_path) {
+        await clientDb.from("result_ingestions")
+          .update({ status: "erro", finished_at: new Date().toISOString(), result: { error: "client_id ausente" } })
+          .eq("file_path", file_path)
+          .eq("status", "processando");
+      }
       return new Response(JSON.stringify({ error: "file_path and client_id are required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Registro em result_ingestions (trava/controle por arquivo)
+    const finish = async (status: "ok" | "erro", result: Record<string, unknown>) => {
+      await clientDb.from("result_ingestions").upsert({
+        file_path,
+        client_id,
+        service_order_id: service_order_id || null,
+        status,
+        finished_at: new Date().toISOString(),
+        result,
+      }, { onConflict: "file_path" });
+    };
+    const fail = async (status: number, error: string) => {
+      await finish("erro", { error });
+      return new Response(JSON.stringify({ error }), {
+        status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    };
 
     // Download file from Tracker storage (files are uploaded there by Gabriely)
     const trackerStorage = createClient(
@@ -301,10 +354,7 @@ Deno.serve(async (req: Request) => {
       .download(file_path);
 
     if (dlError || !fileData) {
-      return new Response(JSON.stringify({ error: `Download failed: ${dlError?.message ?? "no data"}` }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return await fail(400, `Download failed: ${dlError?.message ?? "no data"}`);
     }
 
     // Parse Excel — prefer "Todos os resultados" / "All Results" sheet, fallback to first
@@ -365,10 +415,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (rawRows.length === 0) {
-      return new Response(JSON.stringify({ error: "Empty spreadsheet", inserted: 0 }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return await fail(400, "Empty spreadsheet");
     }
 
     // Map headers → canonical names
@@ -390,6 +437,13 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("PLATFORM_SERVICE_ROLE_KEY")!,
     );
 
+    // Reprocessamento forcado (arquivo corrigido no mesmo caminho): remove as provas
+    // gravadas antes por este arquivo para nao duplicar
+    if (force) {
+      const { error: delErr } = await platformDb.from("genomic_results").delete().eq("file_path", file_path);
+      if (delErr) return await fail(500, `Falha ao limpar provas anteriores do arquivo: ${delErr.message}`);
+    }
+
     // Parse all rows into canonical format
     const parsedRows: Record<string, unknown>[] = rawRows.map((raw) => {
       const row: Record<string, unknown> = {};
@@ -400,53 +454,38 @@ Deno.serve(async (req: Request) => {
         } else if (ALL_NUMERIC.has(canonCol)) {
           row[canonCol] = parseNum(val);
         } else {
-          row[canonCol] = val !== null && val !== undefined ? String(val).trim() : null;
+          row[canonCol] = val !== null && val !== undefined ? (String(val).trim() || null) : null;
         }
       }
       return row;
     });
 
-    // ========================================
-    // STEP 1: Insert into genomic_results
-    // ========================================
-    const grRows = parsedRows.map((parsed) => {
-      const grRow: Record<string, unknown> = {
-        client_id,
-        service_order_id: service_order_id || null,
-        file_name: fileName,
-        file_path,
-        uploaded_at: new Date().toISOString(),
-        visivel_toolss: true,
-        visivel_ssgen: true,
-      };
-      for (const [canon, val] of Object.entries(parsed)) {
-        if (!GENOMIC_RESULTS_FIELDS.has(canon)) continue;
-        const grCol = GR_COLUMN_RENAME[canon] ?? canon;
-        grRow[grCol] = val;
-      }
-      return grRow;
-    });
-
-    let grInserted = 0;
-    const errors: string[] = [];
-    for (let i = 0; i < grRows.length; i += 500) {
-      const batch = grRows.slice(i, i + 500);
-      const { data: ins, error: insErr } = await platformDb
+    // Idempotencia: arquivo ja gravado por inteiro nao e reprocessado.
+    // Gravacao parcial (leitura anterior morreu no meio) e refeita do zero.
+    if (!force) {
+      const { count: already } = await platformDb
         .from("genomic_results")
-        .insert(batch)
-        .select("id, animal_id, registro");
-
-      if (insErr) {
-        errors.push(`genomic_results batch ${Math.floor(i / 500) + 1}: ${insErr.message}`);
-      } else {
-        grInserted += ins?.length ?? 0;
+        .select("id", { count: "exact", head: true })
+        .eq("file_path", file_path);
+      if ((already ?? 0) >= parsedRows.length && parsedRows.length > 0) {
+        await finish("ok", { skipped: true, reason: "arquivo ja ingerido", genomic_results: already });
+        return new Response(JSON.stringify({ success: true, skipped: true, genomic_results_existing: already }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if ((already ?? 0) > 0) {
+        const { error: delErr } = await platformDb.from("genomic_results").delete().eq("file_path", file_path);
+        if (delErr) return await fail(500, `Falha ao limpar gravacao parcial do arquivo: ${delErr.message}`);
       }
     }
 
     // ========================================
-    // STEP 2: Update females proof columns
+    // STEP 1: Update/create females (animais novos entram na conta do cliente)
     // ========================================
+    const errors: string[] = [];
     let femalesUpdated = 0;
+    let femalesAttemptedCreate = 0;
+    let femalesCreated = 0;
     let femalesNotFound = 0;
 
     for (const parsed of parsedRows) {
@@ -514,8 +553,85 @@ Deno.serve(async (req: Request) => {
         }
       }
 
+      // Fallback: identificador da fazenda (ToolSS grava o brinco/ID fazenda em identifier)
+      if (!matched && earTag) {
+        const { data: updated } = await platformDb
+          .from("females")
+          .update(update)
+          .eq("identifier", earTag)
+          .eq("client_id", client_id)
+          .is("deleted_at", null)
+          .select("id");
+        if (updated && updated.length > 0) {
+          matched = true;
+          femalesUpdated += updated.length;
+        }
+      }
+
+      // Animal novo (ex.: genotipagem nova de cliente que ja tem rebanho):
+      // entra na conta atual do cliente, junto com os demais animais.
       if (!matched) {
-        femalesNotFound++;
+        const identifier = String(earTag ?? cdcbId ?? parsed.name ?? "").trim().substring(0, 100);
+        if (!identifier) {
+          femalesNotFound++;
+          continue;
+        }
+        const newFemale: Record<string, unknown> = {
+          ...update,
+          client_id,
+          identifier,
+          ear_tag: earTag ?? null,
+          cdcb_id: cdcbId ?? null,
+          name: (parsed.name as string | null) ?? null,
+          registration: (parsed.registration as string | null) ?? null,
+          birth_date: (parsed.birth_date as string | null) ?? null,
+          breed: update.breed ?? ((parsed.breed as string | null) || null),
+        };
+        femalesAttemptedCreate++;
+        const { error: insErr } = await platformDb.from("females").insert(newFemale);
+        if (insErr) {
+          femalesNotFound++;
+          errors.push(`females insert ${identifier}: ${insErr.message}`);
+        } else {
+          femalesCreated++;
+        }
+      }
+    }
+
+    // ========================================
+    // STEP 2: Insert into genomic_results (depois dos animais: o trigger
+    // sync_genomic_to_female da Platform ja encontra as femeas novas e grava o vinculo)
+    // ========================================
+    const grRows = parsedRows.map((parsed) => {
+      const grRow: Record<string, unknown> = {
+        client_id,
+        service_order_id: service_order_id || null,
+        file_name: fileName,
+        file_path,
+        uploaded_at: new Date().toISOString(),
+        visivel_toolss: true,
+        visivel_ssgen: true,
+      };
+      for (const [canon, val] of Object.entries(parsed)) {
+        if (!GENOMIC_RESULTS_FIELDS.has(canon)) continue;
+        const grCol = GR_COLUMN_RENAME[canon] ?? canon;
+        grRow[grCol] = val;
+      }
+      return grRow;
+    });
+
+    let grInserted = 0;
+    for (let i = 0; i < grRows.length; i += 500) {
+      const batch = grRows.slice(i, i + 500);
+      const { data: ins, error: insErr } = await platformDb
+        .from("genomic_results")
+        .insert(batch)
+        .select("id, animal_id, registro");
+
+      if (insErr) {
+        errors.push(`genomic_results batch ${Math.floor(i / 500) + 1}: ${insErr.message}`);
+      } else {
+        grInserted += ins?.length ?? 0;
       }
     }
 
@@ -557,19 +673,33 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    return new Response(JSON.stringify({
+    const summary = {
       success: true,
       genomic_results_inserted: grInserted,
       females_proofs_updated: femalesUpdated,
+      females_created: femalesCreated,
       females_not_found: femalesNotFound,
       total_rows: parsedRows.length,
       mapped_columns: [...new Set(Object.values(headerMapping))],
       unmapped_columns: unmapped.length > 0 ? unmapped : undefined,
-      errors: errors.length > 0 ? errors : undefined,
-    }), {
+      errors: errors.length > 0 ? errors.slice(0, 50) : undefined,
+    };
+    let problem: string | null = null;
+    if (grInserted === 0) problem = "Nenhuma linha gravada em genomic_results";
+    else if (femalesAttemptedCreate > 0 && femalesCreated === 0) problem = `Nenhum dos ${femalesAttemptedCreate} animais novos foi criado`;
+    await finish(problem ? "erro" : "ok", problem ? { ...summary, error: problem } : summary);
+    return new Response(JSON.stringify(problem ? { ...summary, success: false, error: problem } : summary), {
+      status: problem ? 422 : 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
+    try {
+      if (ctx.file_path) {
+        await createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!)
+          .from("result_ingestions")
+          .upsert({ file_path: ctx.file_path, client_id: ctx.client_id ?? null, status: "erro", finished_at: new Date().toISOString(), result: { error: (err as Error).message } }, { onConflict: "file_path" });
+      }
+    } catch { /* registro de erro e melhor-esforco */ }
     return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
