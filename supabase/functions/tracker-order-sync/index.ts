@@ -30,6 +30,55 @@ const errText = (raw: string): string => {
 };
 const resultMsg = (detail: string) => `Resultado nao processado: ${detail}`;
 
+// Nome normalizado para detectar o mesmo cliente escrito diferente
+// (acento, caixa, "E OUTROS", LTDA, espacos).
+const normName = (s: unknown): string =>
+  String(s ?? "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/\b(E OUTROS|E OUTRAS|E OUTRO|LTDA|EIRELI|ME)\b/g, " ")
+    .replace(/[^A-Z0-9]+/g, " ")
+    .trim();
+
+// Similaridade de Dice por bigramas (0..1)
+function similarity(a: string, b: string): number {
+  if (a === b && a) return 1;
+  if (!a || !b || a.length < 2 || b.length < 2) return 0;
+  const grams = (s: string) => {
+    const m = new Map<string, number>();
+    for (let i = 0; i < s.length - 1; i++) {
+      const g = s.slice(i, i + 2);
+      m.set(g, (m.get(g) ?? 0) + 1);
+    }
+    return m;
+  };
+  const ga = grams(a), gb = grams(b);
+  let inter = 0;
+  for (const [g, n] of ga) inter += Math.min(n, gb.get(g) ?? 0);
+  return (2 * inter) / (a.length - 1 + b.length - 1);
+}
+const onlyDigits = (v: unknown): string | null => {
+  const d = String(v ?? "").replace(/\D/g, "");
+  if (!d) return null;
+  return d.length <= 11 ? d.padStart(11, "0") : d.padStart(14, "0");
+};
+const SAME_NAME_THRESHOLD = 0.85;
+const NAME_STOPWORDS = new Set(["DE", "DA", "DO", "DOS", "DAS", "E"]);
+const nameTokens = (s: unknown) => normName(s).split(" ").filter((t) => t && !NAME_STOPWORDS.has(t));
+
+// Mesmo cliente escrito diferente: nome muito parecido, mesmas palavras em outra
+// ordem ("Henrique Diogo" x "Diogo Henrique") ou nome encurtado contido no
+// completo ("Emerson Catto" dentro de "Emerson Baltasar Catto").
+function looksLikeSameClient(a: unknown, b: unknown): number {
+  const sim = similarity(normName(a), normName(b));
+  if (sim >= SAME_NAME_THRESHOLD) return sim;
+  const ta = nameTokens(a), tb = nameTokens(b);
+  if (ta.length && [...ta].sort().join(" ") === [...tb].sort().join(" ")) return 1;
+  const [small, big] = ta.length <= tb.length ? [ta, new Set(tb)] : [tb, new Set(ta)];
+  if (small.length >= 2 && small.every((t) => big.has(t))) return 0.9;
+  return sim;
+}
+
 // Chave de servico: a secret nova do projeto (env) ou o JWT legado service_role deste
 // projeto. O JWT so chega aqui com assinatura valida porque a funcao roda com verify_jwt=true.
 function isServiceToken(token: string): boolean {
@@ -105,11 +154,117 @@ Deno.serve(async (req: Request) => {
       .is("deleted_at", null)
       .maybeSingle();
 
+    let clientCreated = false;
     if (!client) {
-      const msg = `Cliente ${clientId} nao existe na Platform. Cadastre o cliente na Platform com o mesmo id do Tracker.`;
-      await setTrackerStatus("erro", msg);
-      console.log(`[tracker-order-sync] OS ${osNum} ERRO: ${msg}`);
-      return json({ error: msg });
+      // Cliente novo do Tracker: cria na Platform com o MESMO id, salvo se ja existir
+      // alguem com nome parecido ou mesmo CPF (ai e duplicata e vai para revisao).
+      const { data: tc } = await tracker
+        .from("clients")
+        .select("id, nome, cpf_cnpj, ie_rg, cep, endereco, numero, bairro, cidade, estado, email, deleted_at")
+        .eq("id", clientId)
+        .maybeSingle();
+      if (!tc || tc.deleted_at || !String(tc.nome ?? "").trim()) {
+        const msg = `Cliente ${clientId} nao existe na Platform e o cadastro no Tracker esta incompleto.`;
+        await setTrackerStatus("erro", msg);
+        return json({ error: msg });
+      }
+      // Cadastro apagado (soft delete) com o mesmo id: nao recria, pede reativacao
+      const { data: deletedSame } = await platform
+        .from("clients")
+        .select("id, nome")
+        .eq("id", clientId)
+        .not("deleted_at", "is", null)
+        .maybeSingle();
+      if (deletedSame) {
+        const msg = `Cliente ${deletedSame.nome} (${clientId}) esta APAGADO na Platform. Reativar o cadastro em vez de criar outro.`;
+        await setTrackerStatus("erro", msg);
+        return json({ error: msg });
+      }
+
+      // Todos os clientes (paginado: o PostgREST devolve no maximo 1000 por chamada).
+      // Inclui apagados para o codigo SSGEN nunca repetir; o matcher usa so os ativos.
+      const pcs: { id: string; nome: string; cpf_cnpj: string | null; cod_ssgen: string | null; deleted_at: string | null }[] = [];
+      for (let from = 0; ; from += 1000) {
+        const { data: page, error: pcErr } = await platform
+          .from("clients")
+          .select("id, nome, cpf_cnpj, cod_ssgen, deleted_at")
+          .order("id")
+          .range(from, from + 999);
+        if (pcErr) throw new Error(`lista de clientes da Platform: ${pcErr.message}`);
+        pcs.push(...(page ?? []));
+        if (!page || page.length < 1000) break;
+      }
+
+      const tCpf = onlyDigits(tc.cpf_cnpj);
+      let best: { id: string; nome: string; score: number } | null = null;
+      for (const p of pcs) {
+        if (p.deleted_at) continue;
+        if (tCpf && onlyDigits(p.cpf_cnpj) === tCpf) {
+          best = { id: p.id, nome: p.nome, score: 1 };
+          break;
+        }
+        const sc = looksLikeSameClient(tc.nome, p.nome);
+        if (!best || sc > best.score) best = { id: p.id, nome: p.nome, score: sc };
+      }
+      if (best && best.score >= SAME_NAME_THRESHOLD) {
+        const msg = `Cliente ${tc.nome} (${clientId}) nao existe na Platform, mas parece ser "${best.nome}" (${best.id}). Revisar: alinhar ao cadastro existente em vez de criar.`;
+        await setTrackerStatus("erro", msg);
+        console.log(`[tracker-order-sync] OS ${osNum} ERRO: ${msg}`);
+        return json({ error: msg });
+      }
+
+      const maxCod = pcs.reduce(
+        (m, p) => (/^\d+$/.test(String(p.cod_ssgen ?? "")) ? Math.max(m, Number(p.cod_ssgen)) : m),
+        9999,
+      );
+      const clean = (v: unknown) =>
+        v === null || v === undefined || String(v).trim() === "" ? null : String(v).trim();
+      const { error: insErr } = await platform.from("clients").insert({
+        id: clientId,
+        nome: String(tc.nome).trim(),
+        cpf_cnpj: tCpf,
+        ie_rg: clean(tc.ie_rg),
+        cep: clean(tc.cep),
+        endereco: clean(tc.endereco),
+        numero: clean(tc.numero),
+        bairro: clean(tc.bairro),
+        cidade: clean(tc.cidade),
+        estado: clean(tc.estado),
+        email: clean(tc.email)?.toLowerCase() ?? null,
+        cod_ssgen: String(maxCod + 1),
+        status: "ativo",
+        plataformas: ["ssgen", "tracker"],
+      });
+      if (insErr && insErr.code === "23505") {
+        // Outro evento da mesma OS/cliente criou o cadastro ao mesmo tempo: confirma e segue
+        const { data: nowExists } = await platform.from("clients").select("id").eq("id", clientId).is("deleted_at", null).maybeSingle();
+        if (!nowExists) {
+          const msg = `Falha ao criar o cliente ${tc.nome} na Platform (registro duplicado): ${insErr.message}`;
+          await setTrackerStatus("erro", msg);
+          return json({ error: msg });
+        }
+        console.log(`[tracker-order-sync] cliente ${clientId} ja criado por evento concorrente`);
+      } else if (insErr) {
+        const msg = `Falha ao criar o cliente ${tc.nome} na Platform: ${insErr.message}`;
+        await setTrackerStatus("erro", msg);
+        throw new Error(msg);
+      } else {
+        clientCreated = true;
+        // Dois clientes novos criados ao mesmo tempo podem pegar o mesmo codigo:
+        // quem nao for o menor id renumera para o proximo livre.
+        let cod = maxCod + 1;
+        for (let tries = 0; tries < 5; tries++) {
+          const { data: same } = await platform
+            .from("clients")
+            .select("id")
+            .eq("cod_ssgen", String(cod))
+            .order("id");
+          if (!same || same.length <= 1 || same[0].id === clientId) break;
+          cod += 1 + Math.floor(Math.random() * 3);
+          await platform.from("clients").update({ cod_ssgen: String(cod) }).eq("id", clientId);
+        }
+      }
+      console.log(`[tracker-order-sync] cliente criado na Platform: ${tc.nome} (${clientId}) cod_ssgen ${maxCod + 1}`);
     }
 
     const orNull = (v: unknown) => (v === undefined || v === "" ? null : v);
@@ -137,14 +292,48 @@ Deno.serve(async (req: Request) => {
       .eq("ordem_servico_ssgen", osNum);
     if (exErr) throw new Error(`busca OS na Platform: ${exErr.message}`);
 
-    // Mesmo numero de OS em outro cliente: nao move a OS, sinaliza erro
-    const other = (existing ?? []).find((o) => o.client_id !== clientId);
-    const mine = (existing ?? []).find((o) => o.client_id === clientId);
-    if (other && !mine) {
-      const msg = `OS ${osNum} ja existe na Platform em outro cliente (${other.client_id}). Verificar antes de sincronizar.`;
-      await setTrackerStatus("erro", msg);
-      console.log(`[tracker-order-sync] OS ${osNum} ERRO: ${msg}`);
-      return json({ error: msg });
+    // Mesmo numero de OS em outro cliente. A numeracao oficial e a do Tracker:
+    // se a OS da Platform estiver vazia (sem arquivo e sem provas), ela e um registro
+    // fantasma da sincronizacao antiga e passa para o cliente certo. Senao, revisao.
+    const others = (existing ?? []).filter((o) => o.client_id !== clientId);
+    let mine = (existing ?? []).find((o) => o.client_id === clientId);
+    let osMoved = false;
+    if (others.length > 0 && !mine) {
+      let movable = others.length === 1;
+      if (movable) {
+        const { data: full } = await platform
+          .from("service_orders")
+          .select("id, result_file_path")
+          .eq("id", others[0].id)
+          .maybeSingle();
+        const { count: provas } = await platform
+          .from("genomic_results")
+          .select("id", { count: "exact", head: true })
+          .eq("service_order_id", others[0].id);
+        movable = !!full && !full.result_file_path && (provas ?? 0) === 0;
+      }
+      if (!movable) {
+        const msg = `OS ${osNum} ja existe na Platform em outro cliente (${others.map((o) => o.client_id).join(", ")}) com dados. Verificar antes de sincronizar.`;
+        await setTrackerStatus("erro", msg);
+        console.log(`[tracker-order-sync] OS ${osNum} ERRO: ${msg}`);
+        return json({ error: msg });
+      }
+      const { data: moved, error: mvErr } = await platform
+        .from("service_orders")
+        .update({ client_id: clientId, updated_at: new Date().toISOString() })
+        .eq("id", others[0].id)
+        .eq("client_id", others[0].client_id)
+        .is("result_file_path", null)
+        .select("id");
+      if (mvErr) throw new Error(`mover OS fantasma: ${mvErr.message}`);
+      if (!moved || moved.length === 0) {
+        const msg = `OS ${osNum} da Platform mudou enquanto era movida. Verificar antes de sincronizar.`;
+        await setTrackerStatus("erro", msg);
+        return json({ error: msg });
+      }
+      console.log(`[tracker-order-sync] OS ${osNum} fantasma movida de ${others[0].client_id} para ${clientId}`);
+      mine = { id: others[0].id, client_id: clientId };
+      osMoved = true;
     }
 
     let platformOsId: string | null = null;
@@ -262,7 +451,7 @@ Deno.serve(async (req: Request) => {
 
     if (finalStatus) await setTrackerStatus(finalStatus, finalError);
     console.log(`[tracker-order-sync] OS ${osNum} ${action} => ${platformOsId} | resultado: ${ingest}`);
-    return json({ action, id: platformOsId, ingest });
+    return json({ action, id: platformOsId, ingest, client_created: clientCreated, os_moved: osMoved });
   } catch (err) {
     console.error("[tracker-order-sync] erro:", err);
     return json({ error: String(err) }, 500);
