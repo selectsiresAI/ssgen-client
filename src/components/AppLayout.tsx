@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { NotificationsDropdown } from '@/components/NotificationsDropdown'
+import { AccountNoticeDialog } from '@/components/AccountNoticeDialog'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { BreedProvider } from '@/lib/breed'
 
@@ -171,6 +172,7 @@ export function AppLayout() {
         <main className="w-full max-w-[1320px] px-4 py-[26px] pb-[50px] md:px-[30px]">
           <Outlet />
         </main>
+        <AccountNoticeDialog />
       </div>
     </div>
     </BreedProvider>
