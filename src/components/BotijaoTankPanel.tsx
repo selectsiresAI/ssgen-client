@@ -1,3 +1,5 @@
+import { useI18n } from '@/i18n'
+
 export interface TankItem {
   id: string
   touro: { code: string; name: string | null; breed?: string | null }
@@ -16,6 +18,7 @@ export function BotijaoTankPanel({
   totalDoses,
   totalCanecas = 6,
 }: BotijaoTankPanelProps) {
+  const { t } = useI18n()
   const total = totalDoses ?? items.reduce((s, i) => s + i.doses, 0)
   const bullCount = items.length
   const maxDoses = Math.max(1, ...items.map((i) => i.doses))
@@ -36,8 +39,8 @@ export function BotijaoTankPanel({
     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 340px) 1fr', gap: 14, marginBottom: 14 }}>
       <div className="ss-card">
         <div className="ss-card-header">
-          <h3 className="ss-card-title">Botijão · vista superior</h3>
-          <span className="ss-mono text-[11px] text-[var(--ss-muted)]">{occupied}/{totalCanecas} canecas</span>
+          <h3 className="ss-card-title">{t('botijao.inventoryTop')}</h3>
+          <span className="ss-mono text-[11px] text-[var(--ss-muted)]">{t('botijao.cupsOccupied', { cups: occupied, total: totalCanecas })}</span>
         </div>
         <div className="ss-card-body">
           <svg width="100%" viewBox={`0 0 ${SZ} ${SZ}`} style={{ maxWidth: 200, margin: '0 auto', display: 'block' }}>
@@ -58,7 +61,7 @@ export function BotijaoTankPanel({
               </g>
             ))}
             <circle cx={cx} cy={cy} r={26} fill="var(--ss-card)" stroke="var(--ss-border)" />
-            <text x={cx} y={cy - 4} textAnchor="middle" fontSize="7.5" fontWeight="700" letterSpacing="1.3" fill="var(--ss-muted-2)">DOSES</text>
+            <text x={cx} y={cy - 4} textAnchor="middle" fontSize="7.5" fontWeight="700" letterSpacing="1.3" fill="var(--ss-muted-2)">{t('botijao.doses').toUpperCase()}</text>
             <text x={cx} y={cy + 12} textAnchor="middle" fontSize="14" fontWeight="800" fontFamily="var(--ss-mono)" fill="var(--ss-fg)">{total}</text>
           </svg>
         </div>
@@ -66,29 +69,24 @@ export function BotijaoTankPanel({
 
       <div className="ss-card">
         <div className="ss-card-header">
-          <h3 className="ss-card-title">Inventário de doses</h3>
-          <span className="ss-mono text-[11px] text-[var(--ss-muted)]">{bullCount} touros · {total} doses</span>
+          <h3 className="ss-card-title">{t('botijao.doseInventory')}</h3>
+          <span className="ss-mono text-[11px] text-[var(--ss-muted)]">{t('botijao.inventorySummary', { bulls: bullCount, doses: total })}</span>
         </div>
         <div style={{ padding: '4px 8px 10px', overflowX: 'auto' }}>
           <table className="ss-table">
             <thead>
               <tr>
-                <th>Touro</th>
-                <th>Raça</th>
-                <th>Caneca</th>
-                <th>Estoque</th>
-                <th style={{ textAlign: 'right' }}>Doses</th>
-                <th>Tipo</th>
+                <th>{t('botijao.bull')}</th><th>{t('botijao.breed')}</th><th>{t('botijao.cup')}</th><th>{t('botijao.stock')}</th><th style={{ textAlign: 'right' }}>{t('botijao.doses')}</th><th>{t('botijao.type')}</th>
               </tr>
             </thead>
             <tbody>
               {items.length === 0 ? (
-                <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--ss-muted)', padding: '24px 0' }}>Sem touros no botijão. Adicione doses para ver o inventário.</td></tr>
+                <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--ss-muted)', padding: '24px 0' }}>{t('botijao.noBullsInTank')}</td></tr>
               ) : items.map((i, idx) => (
                 <tr key={i.id}>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-                      <span style={{ width: 10, height: 24, borderRadius: 3, flex: '0 0 auto', background: colorFor(i.touro.code), boxShadow: 'inset 0 0 0 1px rgba(0,0,0,.12)' }} title="Cor da palheta" />
+                      <span style={{ width: 10, height: 24, borderRadius: 3, flex: '0 0 auto', background: colorFor(i.touro.code), boxShadow: 'inset 0 0 0 1px rgba(0,0,0,.12)' }} title={t('botijao.colorOfStraw')} />
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 600, fontSize: 12.5, whiteSpace: 'nowrap', color: 'var(--ss-fg)' }}>{i.touro.name ?? '—'}</div>
                         <div className="ss-mono" style={{ fontSize: 10, color: 'var(--ss-muted-2)' }}>{i.touro.code}</div>
@@ -103,7 +101,7 @@ export function BotijaoTankPanel({
                     </div>
                   </td>
                   <td className="ss-mono" style={{ textAlign: 'right', fontWeight: 700, color: 'var(--ss-fg)' }}>{i.doses}</td>
-                  <td><span className={i.tipo === 'Sexado' ? 'ss-badge-sex' : 'ss-badge-conv'}>{i.tipo}</span></td>
+                  <td><span className={i.tipo === 'Sexado' ? 'ss-badge-sex' : 'ss-badge-conv'}>{i.tipo === 'Sexado' ? t('botijao.sexed') : t('botijao.conventional')}</span></td>
                 </tr>
               ))}
             </tbody>

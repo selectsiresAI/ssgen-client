@@ -7,41 +7,9 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { NotificationsDropdown } from '@/components/NotificationsDropdown'
 import { AccountNoticeDialog } from '@/components/AccountNoticeDialog'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { LanguageSelector } from '@/components/LanguageSelector'
 import { BreedProvider } from '@/lib/breed'
-
-const navGroups = [
-  {
-    title: 'Visão geral',
-    items: [
-      { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-      { to: '/painel', label: 'Painel Genômico', icon: Activity, badge: 'NOVO' },
-    ],
-  },
-  {
-    title: 'Rebanho',
-    items: [
-      { to: '/provas', label: 'Provas', icon: FileText, badge: 'NOVO' },
-      { to: '/auditoria', label: 'Auditoria Genética', icon: BarChart3 },
-      { to: '/lista-rebanho', label: 'Lista do Rebanho', icon: List },
-    ],
-  },
-  {
-    title: 'Operação',
-    items: [
-      { to: '/semen', label: 'Botijão Virtual', icon: Container },
-    ],
-  },
-]
-
-const titles: Record<string, [string, string]> = {
-  '/': ['Dashboard', 'Ordens de serviço e downloads'],
-  '/painel': ['Painel Genômico', 'Visão analítica do lote genotipado'],
-  '/provas': ['Prova Individual', 'Formato oficial Select Sires'],
-  '/semen': ['Botijão Virtual', 'Estoque, doses e nitrogênio'],
-  '/auditoria': ['Auditoria Genética', 'Fluxo sequencial 1→7 · Rebanho'],
-  '/lista-rebanho': ['Lista do Rebanho', 'Todas as fêmeas genotipadas'],
-  '/admin': ['Administração', 'Usuários, fazendas e permissões'],
-}
+import { useI18n } from '@/i18n'
 
 function userInitials(name?: string | null, email?: string | null) {
   const source = name || email || '?'
@@ -64,7 +32,13 @@ function Brand() {
 
 function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
   const { profile } = useAuth()
+  const { t } = useI18n()
   const initials = userInitials(profile?.full_name, profile?.email)
+  const navGroups = [
+    { title: t('layout.overview'), items: [{ to: '/', label: t('layout.dashboard'), icon: LayoutDashboard }, { to: '/painel', label: t('layout.genomicPanel'), icon: Activity, badge: t('layout.new') }] },
+    { title: t('layout.herd'), items: [{ to: '/provas', label: t('layout.proofs'), icon: FileText, badge: t('layout.new') }, { to: '/auditoria', label: t('layout.geneticAudit'), icon: BarChart3 }, { to: '/lista-rebanho', label: t('layout.herdList'), icon: List }] },
+    { title: t('layout.operation'), items: [{ to: '/semen', label: t('layout.virtualTank'), icon: Container }] },
+  ]
 
   return (
     <div className="flex h-full flex-col bg-[var(--ss-sidebar-bg)]">
@@ -115,7 +89,7 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
         </div>
         <div className="min-w-0">
           <b className="block truncate text-[13px] font-semibold leading-tight text-[#E4E4E7]">{profile?.full_name ?? profile?.email ?? ''}</b>
-          <small className="text-[10px] text-[var(--ss-sidebar-muted)]">Select Sires BR</small>
+          <small className="text-[10px] text-[var(--ss-sidebar-muted)]">{t('layout.selectSiresBr')}</small>
         </div>
       </div>
     </div>
@@ -124,8 +98,12 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
 
 export function AppLayout() {
   const { signOut } = useAuth()
+  const { t } = useI18n()
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
+  const titles: Record<string, [string, string]> = {
+    '/': [t('layout.dashboard'), t('layout.dashboardSubtitle')], '/painel': [t('layout.genomicPanel'), t('layout.panelSubtitle')], '/provas': [t('layout.proofTitle'), t('layout.proofSubtitle')], '/semen': [t('layout.virtualTank'), t('layout.tankSubtitle')], '/auditoria': [t('layout.geneticAudit'), t('layout.auditSubtitle')], '/lista-rebanho': [t('layout.herdList'), t('layout.herdSubtitle')], '/admin': [t('layout.adminTitle'), t('layout.adminSubtitle')],
+  }
   const [title, subtitle] = titles[location.pathname] ?? titles['/']
 
   return (
@@ -155,16 +133,17 @@ export function AppLayout() {
           <div className="flex items-center gap-2">
             <div className="hidden items-center gap-[7px] rounded-[8px] border border-[var(--ss-border)] bg-white px-3.5 py-[7px] text-[12px] font-semibold text-[var(--ss-text)] sm:flex">
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--ss-primary-bright)] shadow-[0_0_8px_rgba(220,38,38,.4)] animate-[ss-pulse_2s_infinite]" />
-              Lista de Rebanho
+              {t('layout.herdListStatus')}
             </div>
             <div className="hidden w-[220px] items-center gap-2 rounded-[8px] border border-[var(--ss-border)] bg-white px-3.5 py-[7px] text-[var(--ss-muted)] lg:flex">
               <Search className="h-[14px] w-[14px]" strokeWidth={1.8} />
-              <input className="w-full border-0 bg-transparent text-[12px] text-[var(--ss-fg)] outline-none placeholder:text-[var(--ss-muted-2)]" placeholder="Buscar animal, brinco..." />
+              <input className="w-full border-0 bg-transparent text-[12px] text-[var(--ss-fg)] outline-none placeholder:text-[var(--ss-muted-2)]" placeholder={t('layout.searchPlaceholder')} />
             </div>
             <ThemeToggle />
+            <LanguageSelector />
             <NotificationsDropdown />
             <Button variant="ghost" className="h-8 px-2 text-xs text-[var(--ss-muted)]" onClick={() => void signOut()}>
-              Sair
+              {t('common.signOut')}
             </Button>
           </div>
         </header>

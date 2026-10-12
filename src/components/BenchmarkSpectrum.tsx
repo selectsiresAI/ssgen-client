@@ -1,5 +1,6 @@
 import { fmt, traitLabel } from '@/lib/traits'
 import { useBreed } from '@/lib/breed'
+import { translate, useI18n } from '@/i18n'
 
 interface BenchmarkSpectrumProps {
   benchmarks: [string, string, number, number, number][]
@@ -21,13 +22,14 @@ function zoneFor(trait: string, val: number, natAvg: number, _top25: number, top
   const range = inv ? natAvg - top10 : top10 - natAvg
   const raw = range === 0 ? 0 : inv ? (natAvg - val) / range : (val - natAvg) / range
   const pct = Math.max(2, Math.min(98, 50 + raw * 50))
-  if (pct >= 82) return { pct, zone: 'Elite', color: '#1a7a42' }
-  if (pct >= 62) return { pct, zone: 'Top 25%', color: 'var(--ss-green)' }
-  if (pct >= 42) return { pct, zone: 'Médio', color: 'var(--ss-amber)' }
-  return { pct, zone: 'Abaixo', color: '#C0633A' }
+  if (pct >= 82) return { pct, zone: 'elite', color: '#1a7a42' }
+  if (pct >= 62) return { pct, zone: 'top25', color: 'var(--ss-green)' }
+  if (pct >= 42) return { pct, zone: 'medium', color: 'var(--ss-amber)' }
+  return { pct, zone: 'below', color: '#C0633A' }
 }
 
 export function BenchmarkSpectrum({ benchmarks, herdAvg, category }: BenchmarkSpectrumProps) {
+  const { t, formatNumber, locale } = useI18n()
   const { indexKey, udderKey, traitLabels } = useBreed()
   const categoryKeys = categories[category]?.map((key) => {
     if (key === 'gtpi') return indexKey
@@ -46,7 +48,7 @@ export function BenchmarkSpectrum({ benchmarks, herdAvg, category }: BenchmarkSp
         return (
           <div key={key} className="grid grid-cols-[110px_1fr_120px] items-center gap-[18px] border-b border-[var(--ss-border-2)] py-[14px] last:border-0 max-[720px]:grid-cols-1">
             <div>
-              <div className="text-[14px] font-bold text-[var(--ss-fg)]">{label}</div>
+              <div className="text-[14px] font-bold text-[var(--ss-fg)]">{locale === 'pt-BR' || translate(`traits.${key}`, undefined, locale) === `traits.${key}` ? label : translate(`traits.${key}`, undefined, locale)}</div>
               <div className="font-mono text-[10px] text-[var(--ss-muted)]">{traitLabels[key] ?? traitLabel[key] ?? key.toUpperCase()}</div>
             </div>
             <div className="relative h-2 rounded-[5px] bg-[linear-gradient(90deg,#DC2626,#F59E0B_30%,#65A30D_60%,#22C55E_85%,#16A34A)] shadow-[inset_0_1px_2px_rgba(0,0,0,.06)]">
@@ -57,9 +59,9 @@ export function BenchmarkSpectrum({ benchmarks, herdAvg, category }: BenchmarkSp
               </div>
             </div>
             <div className="text-right max-[720px]:text-left">
-              <div className="font-mono text-[18px] font-black tracking-[-1px]" style={{ color: mine.color }} title={`O rebanho está dentro dos Top ${(100 - mine.pct).toFixed(1)}% da referência Nacional (SSGEN)`}>Top {(100 - mine.pct).toFixed(1)}%</div>
-              <div className="font-mono text-[9px] text-[var(--ss-muted)]">Nacional (SSGEN)</div>
-              <span className="mt-1 inline-flex rounded-[6px] px-2.5 py-1 text-[10px] font-bold" style={{ background: `${mine.color}20`, color: mine.color }}>{mine.zone} · {diff > 0 ? '+' : ''}{diff.toFixed(1)}% vs média</span>
+              <div className="font-mono text-[18px] font-black tracking-[-1px]" style={{ color: mine.color }} title={t('painel.spectrum.title', { value: formatNumber(100 - mine.pct, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) })}>Top {formatNumber(100 - mine.pct, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%</div>
+              <div className="font-mono text-[9px] text-[var(--ss-muted)]">{t('painel.spectrum.national')}</div>
+              <span className="mt-1 inline-flex rounded-[6px] px-2.5 py-1 text-[10px] font-bold" style={{ background: `${mine.color}20`, color: mine.color }}>{t(`painel.${mine.zone}`)} · {diff > 0 ? '+' : ''}{formatNumber(diff, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}% {t('painel.spectrum.average')}</span>
             </div>
           </div>
         )

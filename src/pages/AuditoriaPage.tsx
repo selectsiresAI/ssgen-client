@@ -1,5 +1,6 @@
 import { Check, Download, Info, Loader2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { useI18n } from '@/i18n'
 import { ComboChart } from '@/components/charts/ComboChart'
 import { EvoChart } from '@/components/charts/EvoChart'
 import { DistChart } from '@/components/charts/DistChart'
@@ -7,7 +8,7 @@ import { RadarChart } from '@/components/charts/RadarChart'
 import { ParentescoGauge } from '@/components/charts/ParentescoGauge'
 import { SegmentedControl } from '@/components/SegmentedControl'
 import { TraitSelect } from '@/components/TraitSelect'
-import { agSteps, fmt, radarGroups, traitLabel } from '@/lib/traits'
+import { getAgSteps, fmt, radarGroups, traitLabel } from '@/lib/traits'
 import { useBreed } from '@/lib/breed'
 import { useFemalesFull, useAuditoria } from '@/hooks/useApi'
 import type { FemaleFull, TopParentRow } from '@/lib/api'
@@ -34,16 +35,18 @@ function birthDateCoverage(females: FemaleFull[]): { withDate: number; total: nu
 }
 
 function NoTemporalTrend({ females }: { females: FemaleFull[] }) {
+  const { t, formatNumber } = useI18n()
   const { withDate, total } = birthDateCoverage(females)
   return (
     <div className="rounded-[10px] border border-[var(--ss-border)] bg-[var(--ss-wash)] p-5 text-center">
-      <div className="text-[14px] font-bold text-[var(--ss-fg)]">Sem data de nascimento suficiente para tendência temporal</div>
-      <div className="mt-1 text-[12px] text-[var(--ss-muted)]">{withDate} de {total} animais têm data de nascimento informada.</div>
+      <div className="text-[14px] font-bold text-[var(--ss-fg)]">{t('auditoria.noBirthDateTrend')}</div>
+      <div className="mt-1 text-[12px] text-[var(--ss-muted)]">{t('auditoria.birthDateCoverage', { withDate: formatNumber(withDate), total: formatNumber(total) })}</div>
     </div>
   )
 }
 
 function ProgressaoStep({ females }: { females: FemaleFull[] }) {
+  const { t, formatNumber } = useI18n()
   const { indexKey, udderKey, traitLabels } = useBreed()
   const [count, setCount] = useState(3)
   const [charts, setCharts] = useState<string[]>(() => breedTraits(defaultTraits, indexKey, udderKey))
@@ -78,7 +81,7 @@ function ProgressaoStep({ females }: { females: FemaleFull[] }) {
   return (
     <div className="flex flex-col gap-3.5">
       <div className="flex items-center gap-3">
-        <label className="text-[12px] font-medium text-[var(--ss-fg)]">Gráficos visíveis:</label>
+        <label className="text-[12px] font-medium text-[var(--ss-fg)]">{t('auditoria.visibleCharts')}</label>
         <select value={count} onChange={(e) => handleCount(Number(e.target.value))} className="rounded-[7px] border border-[var(--ss-border)] bg-white px-2.5 py-1.5 font-mono text-[11.5px] text-[var(--ss-fg)] outline-none">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <option key={n} value={n}>{n}</option>)}
         </select>
@@ -91,12 +94,12 @@ function ProgressaoStep({ females }: { females: FemaleFull[] }) {
         return (
           <div key={`${trait}-${idx}`} className="ss-card">
             <div className="ss-card-header">
-              <h3 className="ss-card-title">Progressão · {traitLabels[trait] ?? traitLabel[trait] ?? trait.toUpperCase()}</h3>
+              <h3 className="ss-card-title">{t('auditoria.progression')} · {traitLabels[trait] ?? traitLabel[trait] ?? trait.toUpperCase()}</h3>
               <TraitSelect value={trait} onChange={(v) => changeChart(idx, v)} />
             </div>
             <div className="ss-card-body">
               <div className="mb-2 font-mono text-[11px] text-[var(--ss-green)]">
-                Tendência · {Number(fmtGain) >= 0 ? '+' : ''}{fmtGain}/ano · Último: {fmt(trait, data[data.length - 1])}
+                {t('auditoria.trend')} · {Number(fmtGain) >= 0 ? '+' : ''}{formatNumber(Number(fmtGain), { maximumFractionDigits: 2 })}/{t('auditoria.year')} · {t('auditoria.last')}: {fmt(trait, data[data.length - 1])}
               </div>
               <EvoChart trait={trait} years={trendResult.years} data={data} height={160} />
             </div>
@@ -108,6 +111,7 @@ function ProgressaoStep({ females }: { females: FemaleFull[] }) {
 }
 
 function DistribuicaoStep({ females }: { females: FemaleFull[] }) {
+  const { t } = useI18n()
   const { indexKey, udderKey, traitLabels } = useBreed()
   const [count, setCount] = useState(3)
   const [charts, setCharts] = useState<string[]>(() => breedTraits(defaultTraits, indexKey, udderKey))
@@ -133,7 +137,7 @@ function DistribuicaoStep({ females }: { females: FemaleFull[] }) {
   return (
     <div className="flex flex-col gap-3.5">
       <div className="flex items-center gap-3">
-        <label className="text-[12px] font-medium text-[var(--ss-fg)]">Gráficos visíveis:</label>
+        <label className="text-[12px] font-medium text-[var(--ss-fg)]">{t('auditoria.visibleCharts')}</label>
         <select value={count} onChange={(e) => handleCount(Number(e.target.value))} className="rounded-[7px] border border-[var(--ss-border)] bg-white px-2.5 py-1.5 font-mono text-[11.5px] text-[var(--ss-fg)] outline-none">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <option key={n} value={n}>{n}</option>)}
         </select>
@@ -144,7 +148,7 @@ function DistribuicaoStep({ females }: { females: FemaleFull[] }) {
         return (
           <div key={`${trait}-${idx}`} className="ss-card">
             <div className="ss-card-header">
-              <h3 className="ss-card-title">Distribuição · {traitLabels[trait] ?? traitLabel[trait] ?? trait.toUpperCase()}</h3>
+              <h3 className="ss-card-title">{t('auditoria.distribution')} · {traitLabels[trait] ?? traitLabel[trait] ?? trait.toUpperCase()}</h3>
               <TraitSelect value={trait} onChange={(v) => changeChart(idx, v)} />
             </div>
             <div className="ss-card-body">
@@ -158,6 +162,7 @@ function DistribuicaoStep({ females }: { females: FemaleFull[] }) {
 }
 
 function EvolucaoStep({ females }: { females: FemaleFull[] }) {
+  const { t } = useI18n()
   const { benchmarks, breedLabel, indexKey, udderKey, traitLabels } = useBreed()
   const allTraits = Object.keys(traitLabels)
   const trendResult = useMemo(() => computeTrendByYear(females, allTraits), [females])
@@ -192,12 +197,12 @@ function EvolucaoStep({ females }: { females: FemaleFull[] }) {
     <div className="flex flex-col gap-3.5">
       {benchmarks == null && (
         <div className="rounded-[10px] border border-[var(--ss-border)] bg-[var(--ss-wash)] p-5 text-center">
-          <div className="text-[14px] font-bold text-[var(--ss-fg)]">Referência nacional {breedLabel} ainda não disponível</div>
-          <div className="mt-1 text-[12px] text-[var(--ss-muted)]">A série nacional foi omitida; a evolução do rebanho permanece disponível nas outras etapas.</div>
+          <div className="text-[14px] font-bold text-[var(--ss-fg)]">{t('auditoria.nationalReferenceUnavailable', { breed: breedLabel })}</div>
+          <div className="mt-1 text-[12px] text-[var(--ss-muted)]">{t('auditoria.nationalReferenceOmitted')}</div>
         </div>
       )}
       <div className="flex items-center gap-3">
-        <label className="text-[12px] font-medium text-[var(--ss-fg)]">Gráficos visíveis:</label>
+        <label className="text-[12px] font-medium text-[var(--ss-fg)]">{t('auditoria.visibleCharts')}</label>
         <select value={count} onChange={(e) => handleCount(Number(e.target.value))} className="rounded-[7px] border border-[var(--ss-border)] bg-white px-2.5 py-1.5 font-mono text-[11.5px] text-[var(--ss-fg)] outline-none">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => <option key={n} value={n}>{n}</option>)}
         </select>
@@ -214,7 +219,7 @@ function EvolucaoStep({ females }: { females: FemaleFull[] }) {
         return (
           <div key={`${trait}-${idx}`} className="ss-card">
             <div className="ss-card-header">
-              <h3 className="ss-card-title">Evolução {traitLabels[trait] ?? traitLabel[trait] ?? trait.toUpperCase()} — Rebanho vs Referência Nacional vs Top 25%</h3>
+              <h3 className="ss-card-title">{t('auditoria.evolution')} {traitLabels[trait] ?? traitLabel[trait] ?? trait.toUpperCase()} — {t('auditoria.myHerd')} vs {t('auditoria.nationalReference')} vs {t('auditoria.top25')}</h3>
               <TraitSelect value={trait} onChange={(v) => changeChart(idx, v)} />
             </div>
             <div className="ss-card-body">
@@ -229,13 +234,11 @@ function EvolucaoStep({ females }: { females: FemaleFull[] }) {
 
 // Etapa 6 (índice 5) — Matriz de Performance — 4 quadrantes fixos
 const Q_COLORS = [
-  { label: 'Elite', color: '#166534' },
-  { label: (y: string, labels: Record<string, string>) => `Alto ${labels[y] ?? traitLabel[y] ?? y.toUpperCase()}`, color: '#16A34A' },
-  { label: (x: string, labels: Record<string, string>) => `Alto ${labels[x] ?? traitLabel[x] ?? x.toUpperCase()}`, color: '#D97706' },
-  { label: 'Abaixo da média', color: '#C0633A' },
+  { color: '#166534' }, { color: '#16A34A' }, { color: '#D97706' }, { color: '#C0633A' },
 ] as const
 
 function ScatterStep({ females }: { females: FemaleFull[] }) {
+  const { t, formatNumber } = useI18n()
   const { indexKey, traitLabels } = useBreed()
   const [xTrait, setXTrait] = useState(indexKey)
   const [yTrait, setYTrait] = useState('hhp')
@@ -259,7 +262,7 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
     return (
       <div className="ss-card">
         <div className="ss-card-header">
-          <h3 className="ss-card-title">Matriz de Performance · {xLabel} × {yLabel}</h3>
+          <h3 className="ss-card-title">{t('auditoria.performanceMatrix')} · {xLabel} × {yLabel}</h3>
           <div className="flex flex-wrap items-center gap-2">
             <label className="text-[11.5px] font-semibold text-[var(--ss-muted)]">X</label><TraitSelect value={xTrait} onChange={setXTrait} />
             <label className="text-[11.5px] font-semibold text-[var(--ss-muted)]">Y</label><TraitSelect value={yTrait} onChange={setYTrait} />
@@ -267,7 +270,7 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
         </div>
         <div className="ss-card-body">
           <div className="rounded-[10px] border border-[var(--ss-border)] bg-[var(--ss-wash)] p-5 text-center">
-            <div className="text-[14px] font-bold text-[var(--ss-fg)]">Sem dados para os índices selecionados</div>
+            <div className="text-[14px] font-bold text-[var(--ss-fg)]">{t('auditoria.noDataSelectedIndexes')}</div>
           </div>
         </div>
       </div>
@@ -292,7 +295,7 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
     const yv = getTraitValue(a, yTrait) ?? 0
     if (xv >= xThr && yv >= yThr) return 0
     if (xv < xThr && yv >= yThr) return 1
-    if (xv >= xThr && yv < yThr) return 2
+    if (xv >= xThr && yv < yThr) return 2 // i18n-ignore
     return 3
   }
   const counts = [0, 0, 0, 0]
@@ -300,10 +303,10 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
 
   const xTickCount = 5, yTickCount = 5
   const topA = sampled.reduce((a, b) => ((getTraitValue(a, xTrait) ?? 0) + (getTraitValue(a, yTrait) ?? 0) > (getTraitValue(b, xTrait) ?? 0) + (getTraitValue(b, yTrait) ?? 0) ? a : b))
-  const qLabels = ['ELITE', `ALTO ${yLabel.toUpperCase()}`, `ALTO ${xLabel.toUpperCase()}`, 'ABAIXO']
+  const qLabels = [t('auditoria.elite').toUpperCase(), t('auditoria.high', { trait: yLabel }).toUpperCase(), t('auditoria.high', { trait: xLabel }).toUpperCase(), t('auditoria.below').toUpperCase()]
 
   // Tabela/export: rebanho COMPLETO (não a amostra de 500 do gráfico), classificado pelos mesmos limiares
-  const QUAD_LABELS = ['Elite', `Alto ${yLabel}`, `Alto ${xLabel}`, 'Abaixo da média']
+  const QUAD_LABELS = [t('auditoria.elite'), t('auditoria.high', { trait: yLabel }), t('auditoria.high', { trait: xLabel }), t('auditoria.belowAverage')]
   const fullRows = females
     .filter((a) => getTraitValue(a, xTrait) != null && getTraitValue(a, yTrait) != null)
     .map((a) => ({ a, q: quadrant(a), xv: getTraitValue(a, xTrait) as number, yv: getTraitValue(a, yTrait) as number, hhp: getTraitValue(a, 'hhp') }))
@@ -313,12 +316,12 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
     .filter((r) => quadFilter === 'all' || r.q === Number(quadFilter))
     .sort((a, b) => (b.xv + b.yv) - (a.xv + a.yv))
   const quadOptions = [
-    { value: 'all', label: `Todos (${fullRows.length})` },
+    { value: 'all', label: t('auditoria.allWithCount', { count: formatNumber(fullRows.length) }) },
     ...QUAD_LABELS.map((lbl, i) => ({ value: String(i), label: `${lbl} (${fullCounts[i]})` })),
   ]
 
   const exportCsv = () => {
-    const header = ['Brinco', 'Pai (NAAB)', xLabel, yLabel, 'HHP$', 'Quadrante']
+    const header = [t('auditoria.earTag'), t('auditoria.sireNaab'), xLabel, yLabel, t('auditoria.hhp'), t('auditoria.quadrant')]
     const cells = tableRows.map((r) => [
       r.a.ear_tag || r.a.cdcb_id || r.a.id.slice(0, 8),
       r.a.sire_naab ?? '',
@@ -347,7 +350,7 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
     <div className="flex flex-col gap-3.5">
     <div className="ss-card">
       <div className="ss-card-header">
-        <h3 className="ss-card-title">Matriz de Performance · {xLabel} × {yLabel}</h3>
+        <h3 className="ss-card-title">{t('auditoria.performanceMatrix')} · {xLabel} × {yLabel}</h3>
         <div className="flex flex-wrap items-center gap-2">
           <label className="text-[11.5px] font-semibold text-[var(--ss-muted)]">X</label><TraitSelect value={xTrait} onChange={setXTrait} />
           <label className="text-[11.5px] font-semibold text-[var(--ss-muted)]">Y</label><TraitSelect value={yTrait} onChange={setYTrait} />
@@ -415,7 +418,7 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
           </svg>
           <div className="flex flex-wrap gap-4 border-t border-[var(--ss-border-2)] bg-white px-4 py-3">
             {Q_COLORS.map((item, i) => {
-              const lbl = typeof item.label === 'function' ? item.label(i === 1 ? yTrait : xTrait, traitLabels) : item.label
+              const lbl = QUAD_LABELS[i]
               return (
                 <div key={i} className="flex items-center gap-1.5 text-[11.5px] font-semibold text-[var(--ss-muted)]">
                   <span className="h-2.5 w-2.5 rounded-full" style={{ background: item.color }} />{lbl} ({counts[i]})
@@ -429,42 +432,42 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
 
     <div className="ss-card">
       <div className="ss-card-header">
-        <h3 className="ss-card-title">Animais por quadrante</h3>
+        <h3 className="ss-card-title">{t('auditoria.animalsByQuadrant')}</h3>
         <div className="flex flex-wrap items-center gap-2">
           <SegmentedControl options={quadOptions} value={quadFilter} onChange={setQuadFilter} wrap size="sm" />
           <button type="button" className="ss-button ss-button-ghost ss-button-sm" onClick={exportCsv} disabled={tableRows.length === 0}>
-            <Download className="h-3.5 w-3.5" />Exportar CSV
+            <Download className="h-3.5 w-3.5" />{t('auditoria.exportCsv')}
           </button>
         </div>
       </div>
       <div className="ss-card-body">
         {sampled.length < females.length && (
-          <div className="mb-2.5 text-[11px] text-[var(--ss-muted)]">Gráfico exibe uma amostra de {sampled.length}; a tabela e o export usam o rebanho completo ({fullRows.length}).</div>
+          <div className="mb-2.5 text-[11px] text-[var(--ss-muted)]">{t('auditoria.sampleNote', { sampled: formatNumber(sampled.length), fullRows: formatNumber(fullRows.length) })}</div>
         )}
         <div style={{ overflowX: 'auto', maxHeight: 460, overflowY: 'auto' }}>
           <table className="ss-table">
             <thead>
               <tr>
                 <th style={{ width: 40, textAlign: 'right' }}>#</th>
-                <th>Brinco</th>
-                <th>Pai</th>
+                <th>{t('auditoria.earTag')}</th>
+                <th>{t('auditoria.sire')}</th>
                 <th style={{ textAlign: 'right' }}>{xLabel}</th>
                 <th style={{ textAlign: 'right' }}>{yLabel}</th>
-                <th style={{ textAlign: 'right' }}>HHP$</th>
-                <th>Quadrante</th>
+                <th style={{ textAlign: 'right' }}>{t('auditoria.hhp')}</th>
+                <th>{t('auditoria.quadrant')}</th>
               </tr>
             </thead>
             <tbody>
               {tableRows.length === 0 ? (
-                <tr><td colSpan={7} style={{ textAlign: 'center', color: 'var(--ss-muted)', padding: '24px 0' }}>Sem animais neste quadrante.</td></tr>
+                <tr><td colSpan={7} style={{ textAlign: 'center', color: 'var(--ss-muted)', padding: '24px 0' }}>{t('auditoria.noAnimalsQuadrant')}</td></tr>
               ) : tableRows.map((r, i) => (
                 <tr key={r.a.id}>
                   <td className="ss-mono" style={{ textAlign: 'right', color: 'var(--ss-muted)' }}>{i + 1}</td>
                   <td style={{ fontWeight: 600, color: 'var(--ss-fg)' }}>{r.a.ear_tag || r.a.cdcb_id || r.a.id.slice(0, 8)}</td>
                   <td className="ss-mono" style={{ color: 'var(--ss-muted)' }}>{r.a.sire_naab ?? '—'}</td>
-                  <td className="ss-mono" style={{ textAlign: 'right', color: 'var(--ss-fg)' }}>{Math.round(r.xv)}</td>
-                  <td className="ss-mono" style={{ textAlign: 'right', color: 'var(--ss-fg)' }}>{Math.round(r.yv)}</td>
-                  <td className="ss-mono" style={{ textAlign: 'right', color: 'var(--ss-fg)' }}>{r.hhp != null ? `$${Math.round(r.hhp)}` : '—'}</td>
+                  <td className="ss-mono" style={{ textAlign: 'right', color: 'var(--ss-fg)' }}>{formatNumber(Math.round(r.xv))}</td>
+                  <td className="ss-mono" style={{ textAlign: 'right', color: 'var(--ss-fg)' }}>{formatNumber(Math.round(r.yv))}</td>
+                  <td className="ss-mono" style={{ textAlign: 'right', color: 'var(--ss-fg)' }}>{r.hhp != null ? `$${formatNumber(Math.round(r.hhp))}` : '—'}</td>
                   <td>
                     <span className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold" style={{ color: Q_COLORS[r.q].color }}>
                       <span className="h-2 w-2 rounded-full" style={{ background: Q_COLORS[r.q].color }} />{QUAD_LABELS[r.q]}
@@ -485,6 +488,7 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
 const rankTraits = ['hhp', 'gtpi', 'nm', 'milk', 'fat', 'prot', 'pl', 'dpr', 'scs', 'ptat', 'udc', 'flc']
 
 function ForcasStep({ females }: { females: FemaleFull[] }) {
+  const { t, formatNumber } = useI18n()
   const { indexKey, udderKey, traitLabels } = useBreed()
   const [trait, setTrait] = useState('hhp')
   const [selectedIdx, setSelectedIdx] = useState(0)
@@ -506,7 +510,7 @@ function ForcasStep({ females }: { females: FemaleFull[] }) {
   const grp = radarGroups[radar]
   const groupTraits = breedTraits(grp.traits, indexKey, udderKey)
   const displayGroup = { ...grp, traits: groupTraits, names: groupTraits.map((t, i) => traitLabels[t] ?? grp.names[i]) }
-  const animalData = groupTraits.reduce((o, t) => { o[t] = getTraitValue(animal, t) ?? 0; return o }, {} as Record<string, number>)
+  const animalData = groupTraits.reduce((o, t) => { o[t] = getTraitValue(animal, t) ?? 0; return o }, {} as Record<string, number>) // i18n-ignore (codigo, sem texto)
 
   // Escala dinâmica: domínio p5–p95 do rebanho por eixo — evita o colapso do radar quando um trait tem valor baixo
   const radarDomain = groupTraits.map((t) => {
@@ -520,7 +524,7 @@ function ForcasStep({ females }: { females: FemaleFull[] }) {
     <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1.55fr_1fr]">
       <div className="ss-card">
         <div className="ss-card-header">
-          <h3 className="ss-card-title">Ranking do Rebanho · {traitLabels[trait] ?? traitLabel[trait] ?? trait}</h3>
+          <h3 className="ss-card-title">{t('auditoria.herdRanking')} · {traitLabels[trait] ?? traitLabel[trait] ?? trait}</h3>
           <div className="flex items-center gap-2">
             <select className="rounded-[7px] border border-[var(--ss-border)] bg-white px-2 py-1.5 text-[12px]" value={trait} onChange={(e) => setTrait(e.target.value)}>
               {breedTraits(rankTraits, indexKey, udderKey).map((key) => <option key={key} value={key}>{traitLabels[key] ?? traitLabel[key]}</option>)}
@@ -536,28 +540,28 @@ function ForcasStep({ females }: { females: FemaleFull[] }) {
                 <div className="text-center font-mono text-xs text-[var(--ss-muted)]">{i + 1}</div>
                 <div><div className="text-[13px] font-medium text-[var(--ss-fg)]">{label}</div><div className="font-mono text-[11px] text-[var(--ss-muted)]">{row.sire_naab ?? '—'} · {row.ear_tag ?? '—'}</div></div>
                 <div className="text-right"><b className="block font-mono text-[13px] font-medium text-[var(--ss-fg)]">{fmt(trait, getTraitValue(row, trait) ?? 0)}</b><small className="text-[8.5px] uppercase tracking-[.6px] text-[var(--ss-muted-2)]">{traitLabels[trait] ?? traitLabel[trait]}</small></div>
-                <div className="text-right"><b className="block font-mono text-[13px] font-medium text-[var(--ss-fg)]">{hhpVal != null ? `$${Math.round(hhpVal)}` : '—'}</b><small className="text-[8.5px] uppercase tracking-[.6px] text-[var(--ss-muted-2)]">HHP$</small></div>
+                <div className="text-right"><b className="block font-mono text-[13px] font-medium text-[var(--ss-fg)]">{hhpVal != null ? `$${formatNumber(Math.round(hhpVal))}` : '—'}</b><small className="text-[8.5px] uppercase tracking-[.6px] text-[var(--ss-muted-2)]">{t('auditoria.hhp')}</small></div>
               </button>
             )
           })}
         </div>
       </div>
       <div className="ss-card">
-        <div className="ss-card-header"><h3 className="ss-card-title">Perfil · {animal.ear_tag || animal.cdcb_id || animal.id.slice(0, 8)}</h3></div>
+        <div className="ss-card-header"><h3 className="ss-card-title">{t('auditoria.profile')} · {animal.ear_tag || animal.cdcb_id || animal.id.slice(0, 8)}</h3></div>
         <div className="ss-card-body">
           <SegmentedControl options={Object.entries(radarGroups).map(([value, g]) => ({ value, label: g.label }))} value={radar} onChange={setRadar} wrap size="sm" />
           <div className="mx-auto max-w-[320px]"><RadarChart animal={animalData} avg={herdAvg} group={displayGroup} domain={radarDomain} /></div>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            {groupTraits.map((t, i) => {
-              const av = getTraitValue(animal, t) ?? 0
-              const hv = herdAvg[t] ?? 0
-              const inv = ['scs', 'flc', 'da', 'ket', 'rfi', 'ssb', 'dsb', 'gl'].includes(t)
+            {groupTraits.map((traitKey, i) => {
+              const av = getTraitValue(animal, traitKey) ?? 0
+              const hv = herdAvg[traitKey] ?? 0
+              const inv = ['scs', 'flc', 'da', 'ket', 'rfi', 'ssb', 'dsb', 'gl'].includes(traitKey)
               const better = inv ? av < hv : av > hv
               return (
-                <div key={t} className="rounded-[9px] border border-[var(--ss-border)] bg-[var(--ss-wash)] px-[11px] py-[9px]">
+                <div key={traitKey} className="rounded-[9px] border border-[var(--ss-border)] bg-[var(--ss-wash)] px-[11px] py-[9px]">
                   <small className="block text-[8.5px] uppercase tracking-[.6px] text-[var(--ss-muted)]">{displayGroup.names[i]}</small>
-                  <b className="font-mono text-sm font-medium text-[var(--ss-fg)]">{fmt(t, av)}</b>
-                  <span className={`ml-1 font-mono text-[9px] ${better ? 'text-[var(--ss-green)]' : 'text-[#C0633A]'}`}>méd {fmt(t, hv)} {av === hv ? '' : better ? '▲' : '▼'}</span>
+                  <b className="font-mono text-sm font-medium text-[var(--ss-fg)]">{fmt(traitKey, av)}</b>
+                  <span className={`ml-1 font-mono text-[9px] ${better ? 'text-[var(--ss-green)]' : 'text-[#C0633A]'}`}>{t('auditoria.average')} {fmt(traitKey, hv)} {av === hv ? '' : better ? '▲' : '▼'}</span>
                 </div>
               )
             })}
@@ -569,6 +573,7 @@ function ForcasStep({ females }: { females: FemaleFull[] }) {
 }
 
 export function AuditoriaPage() {
+  const { t, formatNumber } = useI18n()
   const [step, setStep] = useState(0)
   const { data: femalesData, isLoading } = useFemalesFull({ page: 1, perPage: 5000 })
   const females = femalesData?.data ?? []
@@ -585,7 +590,7 @@ export function AuditoriaPage() {
       return (
         <div className="ss-card">
           <div className="ss-card-header"><h3 className="ss-card-title">{title}</h3></div>
-          <div className="ss-card-body text-center text-[12px] text-[var(--ss-muted)]">Carregando...</div>
+          <div className="ss-card-body text-center text-[12px] text-[var(--ss-muted)]">{t('common.loading')}...</div>
         </div>
       )
     }
@@ -593,7 +598,7 @@ export function AuditoriaPage() {
       return (
         <div className="ss-card">
           <div className="ss-card-header"><h3 className="ss-card-title">{title}</h3></div>
-          <div className="ss-card-body text-center text-[12px] text-[var(--ss-muted)]">Sem dados de parentesco disponíveis.</div>
+          <div className="ss-card-body text-center text-[12px] text-[var(--ss-muted)]">{t('auditoria.noKinshipData')}</div>
         </div>
       )
     }
@@ -610,14 +615,14 @@ export function AuditoriaPage() {
               <div key={r.parent_label} className="grid grid-cols-[170px_1fr_44px_44px] items-center gap-2 py-[3px] text-xs">
                 <div
                   className="overflow-hidden text-ellipsis text-right font-mono text-[var(--ss-fg)]"
-                  title={isUnresolvedIntl ? 'Código internacional não resolvido para NAAB' : undefined}
+                  title={isUnresolvedIntl ? t('auditoria.unresolvedNaab') : undefined}
                 >
                   {displayCode}
                   {r.parent_name && <span className="ml-1 font-sans text-[10px] font-normal text-[var(--ss-muted)]">{r.parent_name}</span>}
-                  {isUnresolvedIntl && <sup className="ml-1 text-[8px] font-semibold text-[var(--ss-amber)]">intl</sup>}
+                  {isUnresolvedIntl && <sup className="ml-1 text-[8px] font-semibold text-[var(--ss-amber)]">{t('auditoria.international')}</sup>}
                 </div>
                 <div className="h-[18px] rounded-sm bg-[var(--ss-primary-soft)]" style={{ width: `${(r.daughters_count / max) * 100}%` }} />
-                <div className="text-right font-mono font-semibold">{r.daughters_count}</div>
+                <div className="text-right font-mono font-semibold">{formatNumber(r.daughters_count)}</div>
                 <div className="text-right font-mono text-[10px] text-[var(--ss-muted)]">{((r.daughters_count / total) * 100).toFixed(1)}%</div>
               </div>
             )
@@ -631,19 +636,19 @@ export function AuditoriaPage() {
     return (
       <div className="flex items-center justify-center gap-3 py-20 text-[var(--ss-muted)]">
         <Loader2 className="h-5 w-5 animate-spin" />
-        <span className="text-sm">Carregando dados do rebanho...</span>
+        <span className="text-sm">{t('auditoria.loadingHerdData')}</span>
       </div>
     )
   }
 
   return (
     <div>
-      <div className="ss-preserved"><Check className="h-[15px] w-[15px]" />Auditoria genética preservada com fluxo sequencial e visualização por etapas.</div>
+      <div className="ss-preserved"><Check className="h-[15px] w-[15px]" />{t('auditoria.preserved')}</div>
       <div className="mb-4 flex flex-wrap gap-[7px]">
-        {agSteps.map((s, i) => <button key={s.n} onClick={() => setStep(i)} className={`inline-flex items-center gap-[7px] rounded-full border px-[13px] py-[7px] text-[12.5px] font-medium transition ${i === step ? 'border-[var(--ss-primary)] bg-[var(--ss-primary)] text-white' : 'border-[var(--ss-border)] bg-white text-[var(--ss-text)] hover:bg-[var(--ss-wash)]'}`}><span className={`flex h-[18px] w-[18px] items-center justify-center rounded-full font-mono text-[10px] font-semibold ${i === step ? 'bg-white/25 text-white' : 'bg-[var(--ss-wash)] text-[var(--ss-muted)]'}`}>{i + 1}</span>{s.t}</button>)}
+        {getAgSteps().map((s, i) => <button key={s.n} onClick={() => setStep(i)} className={`inline-flex items-center gap-[7px] rounded-full border px-[13px] py-[7px] text-[12.5px] font-medium transition ${i === step ? 'border-[var(--ss-primary)] bg-[var(--ss-primary)] text-white' : 'border-[var(--ss-border)] bg-white text-[var(--ss-text)] hover:bg-[var(--ss-wash)]'}`}><span className={`flex h-[18px] w-[18px] items-center justify-center rounded-full font-mono text-[10px] font-semibold ${i === step ? 'bg-white/25 text-white' : 'bg-[var(--ss-wash)] text-[var(--ss-muted)]'}`}>{i + 1}</span>{s.t}</button>)}
       </div>
       {step === 0 && <>
-        <div className="mb-4 flex gap-3 rounded-[10px] border border-[var(--ss-border)] bg-[var(--ss-wash)] px-4 py-3.5 text-[12.5px] leading-6"><Info className="mt-0.5 h-[17px] w-[17px] shrink-0 text-[var(--ss-primary)]" /><div><b>Como interpretar.</b> <span className="text-[var(--ss-primary)]">Não informado</span>: parentesco ausente no registro. <span className="text-[var(--ss-green)]">Informado</span>: pai/avô materno preenchidos.</div></div>
+        <div className="mb-4 flex gap-3 rounded-[10px] border border-[var(--ss-border)] bg-[var(--ss-wash)] px-4 py-3.5 text-[12.5px] leading-6"><Info className="mt-0.5 h-[17px] w-[17px] shrink-0 text-[var(--ss-primary)]" /><div><b>{t('auditoria.howToInterpret')}</b> <span className="text-[var(--ss-primary)]">{t('auditoria.notInformed')}</span>: {t('auditoria.kinshipMissing')}. <span className="text-[var(--ss-green)]">{t('auditoria.informed')}</span>: {t('auditoria.kinshipInformed')}.</div></div>
         <div className="ss-grid-3">
           {parentesco.map(({ label, filled, missing }) => (
             <div key={label} className="ss-card">
@@ -652,12 +657,12 @@ export function AuditoriaPage() {
                 <ParentescoGauge pct={filled} />
                 <div className="mt-3 flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 text-[13px] font-medium text-[var(--ss-green)]"><span className="h-2 w-2 rounded-full bg-[var(--ss-green)]" />Informado</span>
-                    <span className="ss-mono text-[13px] font-semibold text-[var(--ss-fg)]">{filled}% <span className="text-[11px] font-normal text-[var(--ss-muted)]">· {Math.round(totalFemales * filled / 100)}</span></span>
+                    <span className="flex items-center gap-2 text-[13px] font-medium text-[var(--ss-green)]"><span className="h-2 w-2 rounded-full bg-[var(--ss-green)]" />{t('auditoria.informed')}</span>
+                    <span className="ss-mono text-[13px] font-semibold text-[var(--ss-fg)]">{formatNumber(filled)}% <span className="text-[11px] font-normal text-[var(--ss-muted)]">· {formatNumber(Math.round(totalFemales * filled / 100))}</span></span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 text-[13px] font-medium text-[var(--ss-amber)]"><span className="h-2 w-2 rounded-full bg-[var(--ss-amber)]" />Não informado</span>
-                    <span className="ss-mono text-[13px] font-semibold text-[var(--ss-amber)]">{missing}% <span className="text-[11px] font-normal text-[var(--ss-muted)]">· {Math.round(totalFemales * missing / 100)}</span></span>
+                    <span className="flex items-center gap-2 text-[13px] font-medium text-[var(--ss-amber)]"><span className="h-2 w-2 rounded-full bg-[var(--ss-amber)]" />{t('auditoria.notInformed')}</span>
+                    <span className="ss-mono text-[13px] font-semibold text-[var(--ss-amber)]">{formatNumber(missing)}% <span className="text-[11px] font-normal text-[var(--ss-muted)]">· {formatNumber(Math.round(totalFemales * missing / 100))}</span></span>
                   </div>
                 </div>
               </div>
@@ -667,13 +672,13 @@ export function AuditoriaPage() {
       </>}
       {step === 1 && <>
         <div className="mb-3.5 flex flex-wrap gap-2">
-          <SegmentedControl options={['Todas', 'Novilha', 'Primípara', 'Multípara'].map((x) => ({ value: x, label: x }))} value="Todas" onChange={() => undefined} />
-          <SegmentedControl options={['Superior', 'Intermediário', 'Inferior'].map((x) => ({ value: x, label: x }))} value="Superior" onChange={() => undefined} />
+          <SegmentedControl options={['all', 'heifer', 'primiparous', 'multiparous'].map((x) => ({ value: x, label: t(`auditoria.${x}`) }))} value="all" onChange={() => undefined} />
+          <SegmentedControl options={['superior', 'intermediate', 'inferior'].map((x) => ({ value: x, label: t(`auditoria.${x}`) }))} value="superior" onChange={() => undefined} />
           <SegmentedControl options={['Top 20', '30', '50'].map((x) => ({ value: x, label: x }))} value="Top 20" onChange={() => undefined} />
         </div>
         <div className="ss-grid-2b">
-          {block('Top Sires', topSires, sireParentsLoading)}
-          {block('Top Maternal Grandsires', topMgs, mgsParentsLoading)}
+          {block(t('auditoria.topSires'), topSires, sireParentsLoading)}
+          {block(t('auditoria.topMaternalGrandsires'), topMgs, mgsParentsLoading)}
         </div>
       </>}
       {step === 2 && <ProgressaoStep females={females} />}

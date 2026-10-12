@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:i18n": "node scripts/check-i18n.mjs",
+    "check:pt": "node scripts/find-hardcoded-pt.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

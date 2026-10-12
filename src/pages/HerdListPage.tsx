@@ -4,22 +4,24 @@ import { useFemalesFull } from '@/hooks/useApi'
 import { api, type FemaleFull } from '@/lib/api'
 import { useBreed } from '@/lib/breed'
 import { fmt } from '@/lib/traits'
+import { useI18n } from '@/i18n'
+import { categoryDisplay } from '@/utils/femaleCategories'
 
 const CATEGORIES = [
-  { key: 'Bezerra', label: 'Bezerras', color: '#f59e0b' },
-  { key: 'Novilha', label: 'Novilhas', color: '#10b981' },
-  { key: 'Primípara', label: 'Primíparas', color: '#3b82f6' },
-  { key: 'Secundípara', label: 'Secundíparas', color: '#8b5cf6' },
-  { key: 'Multípara', label: 'Multíparas', color: '#ef4444' },
+  { key: 'Bezerra', labelKey: 'categories.Bezerras', color: '#f59e0b' },
+  { key: 'Novilha', labelKey: 'categories.Novilhas', color: '#10b981' },
+  { key: 'Primipara', labelKey: 'categories.Primiparas', color: '#3b82f6' },
+  { key: 'Secundipara', labelKey: 'categories.Secundiparas', color: '#8b5cf6' },
+  { key: 'Multipara', labelKey: 'categories.Multiparas', color: '#ef4444' },
 ] as const
 
 const herdCols: { key: string; label: string; mono?: boolean; role?: 'index' | 'udder' }[] = [
-  { key: 'ear_tag', label: 'Brinco', mono: true },
-  { key: 'name', label: 'Nome' },
+  { key: 'ear_tag', label: 'herd.earTag', mono: true },
+  { key: 'name', label: 'herd.name' },
   { key: 'cdcb_id', label: 'CDCB', mono: true },
-  { key: 'category', label: 'Categoria' },
-  { key: 'birth_date', label: 'Nascimento', mono: true },
-  { key: 'sire_naab', label: 'Pai', mono: true },
+  { key: 'category', label: 'herd.category' },
+  { key: 'birth_date', label: 'herd.birthDate', mono: true },
+  { key: 'sire_naab', label: 'herd.sire', mono: true },
   { key: 'mgs_naab', label: 'MGS', mono: true },
   { key: 'mmgs_naab', label: 'MMGS', mono: true },
   { key: 'hhp_dollar', label: 'HHP$', mono: true },
@@ -28,13 +30,13 @@ const herdCols: { key: string; label: string; mono?: boolean; role?: 'index' | '
   { key: 'cm_dollar', label: 'CM$', mono: true },
   { key: 'fm_dollar', label: 'FM$', mono: true },
   { key: 'gm_dollar', label: 'GM$', mono: true },
-  { key: 'ptam', label: 'Leite', mono: true },
-  { key: 'ptaf', label: 'Gordura', mono: true },
-  { key: 'ptaf_pct', label: 'Gord%', mono: true },
-  { key: 'ptap', label: 'Proteína', mono: true },
-  { key: 'ptap_pct', label: 'Prot%', mono: true },
+  { key: 'ptam', label: 'herd.milk', mono: true },
+  { key: 'ptaf', label: 'herd.fat', mono: true },
+  { key: 'ptaf_pct', label: 'herd.fatPct', mono: true },
+  { key: 'ptap', label: 'herd.protein', mono: true },
+  { key: 'ptap_pct', label: 'herd.proteinPct', mono: true },
   { key: 'cfp', label: 'CFP', mono: true },
-  { key: 'f_sav', label: 'F.Sav', mono: true },
+  { key: 'f_sav', label: 'herd.fsav', mono: true },
   { key: 'rfi', label: 'RFI', mono: true },
   { key: 'pl', label: 'PL', mono: true },
   { key: 'scs', label: 'SCS', mono: true },
@@ -50,7 +52,7 @@ const herdCols: { key: string; label: string; mono?: boolean; role?: 'index' | '
   { key: 'dce', label: 'DCE', mono: true },
   { key: 'ssb', label: 'SSB', mono: true },
   { key: 'dsb', label: 'DSB', mono: true },
-  { key: 'ptat', label: 'Tipo', mono: true },
+  { key: 'ptat', label: 'herd.type', mono: true },
   { key: 'udc', label: 'UDC', mono: true, role: 'udder' },
   { key: 'flc', label: 'FLC', mono: true },
   { key: 'sta', label: 'STA', mono: true },
@@ -80,9 +82,10 @@ const herdCols: { key: string; label: string; mono?: boolean; role?: 'index' | '
   { key: 'gfi', label: 'GFI', mono: true },
 ]
 
-function fmtCell(key: string, val: unknown): string {
+function fmtCell(key: string, val: unknown, formatDate: (value: Date | string | number, opts?: Intl.DateTimeFormatOptions) => string, categoryText: (value: string) => string): string {
   if (val == null) return '—'
-  if (key === 'birth_date') return new Date(String(val)).toLocaleDateString('pt-BR')
+  if (key === 'category') return categoryText(String(val))
+  if (key === 'birth_date') return formatDate(String(val))
   if (typeof val === 'number') return fmt(traitKeyForColumn(key), val)
   return String(val)
 }
@@ -121,6 +124,7 @@ function traitKeyForColumn(key: string): string {
 type SortDir = 'asc' | 'desc' | null
 
 export function HerdListPage() {
+  const { t, formatDate, locale } = useI18n()
   const [herdPage, setHerdPage] = useState(1)
   const [herdSearch, setHerdSearch] = useState('')
   const [sortCol, setSortCol] = useState<string | null>(null)
@@ -180,11 +184,11 @@ export function HerdListPage() {
   const exportFemales = async () => {
     const result = await api.getFemalesFull({ per_page: '9999' })
     const { utils, writeFile } = await import('xlsx')
-    const headers = columns.map((c) => traitLabels[traitKeyForColumn(String(c.key))] ?? c.label)
+    const headers = columns.map((c) => traitLabels[traitKeyForColumn(String(c.key))] ?? t(c.label))
     const rows = (result.data ?? []).map((f) => columns.map((c) => f[c.key] ?? ''))
     const ws = utils.aoa_to_sheet([headers, ...rows])
     const wb = utils.book_new()
-    utils.book_append_sheet(wb, ws, 'Rebanho')
+    utils.book_append_sheet(wb, ws, t('herd.sheetName'))
     writeFile(wb, `rebanho-${new Date().toISOString().split('T')[0]}.xlsx`)
   }
 
@@ -204,7 +208,7 @@ export function HerdListPage() {
               className={`ss-card cursor-pointer transition-all ${active ? 'ring-2 ring-[var(--ss-primary)]' : 'hover:shadow-md'}`}
             >
               <div className="px-3 py-2.5 text-center">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--ss-muted)]">{cat.label}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--ss-muted)]">{t(cat.labelKey)}</p>
                 <p className="text-[18px] font-bold leading-tight text-[var(--ss-fg)]">{n}</p>
                 <p className="text-[10px] text-[var(--ss-muted)]">{pct}%</p>
               </div>
@@ -216,14 +220,16 @@ export function HerdListPage() {
       <div className="ss-card">
         <div className="ss-card-header">
           <h3 className="ss-card-title">
-            {selectedCategory ? `${CATEGORIES.find((c) => c.key === selectedCategory)?.label} · ${totalFiltered} fêmeas` : `Rebanho completo · ${totalFemales || '—'} fêmeas`}
+            {selectedCategory
+              ? t('herd.selectedSummary', { category: t(CATEGORIES.find((c) => c.key === selectedCategory)?.labelKey ?? ''), count: totalFiltered })
+              : t('herd.completeSummary', { count: totalFemales || '—' })}
           </h3>
           <div className="flex items-center gap-2">
             <div className="flex w-[230px] items-center gap-2 rounded-[8px] border border-[var(--ss-border)] bg-white px-3 py-1.5">
               <Search className="h-3.5 w-3.5 text-[var(--ss-muted)]" />
-              <input value={herdSearch} onChange={(e) => { setHerdSearch(e.target.value); setHerdPage(1) }} placeholder="Buscar fêmea..." className="w-full border-0 bg-transparent text-[12px] outline-none" />
+              <input value={herdSearch} onChange={(e) => { setHerdSearch(e.target.value); setHerdPage(1) }} placeholder={t('herd.searchPlaceholder')} className="w-full border-0 bg-transparent text-[12px] outline-none" />
             </div>
-            <button className="ss-button ss-button-ghost ss-button-sm" type="button" onClick={() => void exportFemales()}><Download />Exportar XLSX</button>
+            <button className="ss-button ss-button-ghost ss-button-sm" type="button" onClick={() => void exportFemales()}><Download />{t('herd.exportXlsx')}</button>
           </div>
         </div>
         <div className="ss-herd-scroll overflow-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
@@ -233,7 +239,7 @@ export function HerdListPage() {
                 {columns.map((c) => (
                   <th key={c.key} onClick={() => toggleSort(String(c.key))} className="cursor-pointer select-none">
                     <span className="inline-flex items-center gap-1">
-                      {traitLabels[traitKeyForColumn(String(c.key))] ?? c.label}
+                      {traitLabels[traitKeyForColumn(String(c.key))] ?? t(c.label)}
                       {sortCol === String(c.key) ? (sortDir === 'desc' ? <ArrowDown className="h-3 w-3" /> : <ArrowUp className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-30" />}
                     </span>
                   </th>
@@ -244,11 +250,11 @@ export function HerdListPage() {
               {females.length > 0 ? females.map((f) => (
                 <tr key={f.id}>
                   {columns.map((c) => (
-                    <td key={c.key} className={c.mono ? 'ss-mono' : ''}>{fmtCell(String(c.key), cellValue(f, String(c.key)))}</td>
+                    <td key={c.key} className={c.mono ? 'ss-mono' : ''}>{fmtCell(String(c.key), cellValue(f, String(c.key)), formatDate, (value) => categoryDisplay(value, locale, t))}</td>
                   ))}
                 </tr>
               )) : (
-                <tr><td colSpan={columns.length} className="text-center text-[var(--ss-muted)]">Nenhuma fêmea encontrada</td></tr>
+                <tr><td colSpan={columns.length} className="text-center text-[var(--ss-muted)]">{t('herd.noFemalesFound')}</td></tr>
               )}
             </tbody>
           </table>

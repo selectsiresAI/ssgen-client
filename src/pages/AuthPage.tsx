@@ -7,10 +7,13 @@ import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
+import { LanguageSelector } from '@/components/LanguageSelector'
+import { useI18n } from '@/i18n'
 
 export function AuthPage() {
   const navigate = useNavigate()
   const { session, signIn, signUp, sendMagicLink } = useAuth()
+  const { t } = useI18n()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -61,7 +64,7 @@ export function AuthPage() {
       if (ok) {
         navigate('/', { replace: true })
       } else {
-        setError('Email ou senha inválidos')
+        setError(t('auth.invalidCredentials'))
       }
     } finally {
       setLoading(false)
@@ -74,9 +77,9 @@ export function AuthPage() {
     setLoading(true)
     try {
       await signUp(email, password, fullName, breed)
-      setMessage('Conta criada! Verifique seu email para confirmar.')
+      setMessage(t('auth.accountCreated'))
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erro ao criar conta'
+      const msg = err instanceof Error ? err.message : t('auth.createAccountError')
       setError(msg)
     } finally {
       setLoading(false)
@@ -85,16 +88,16 @@ export function AuthPage() {
 
   const handleMagicLink = async () => {
     if (!email) {
-      setError('Digite seu email primeiro')
+      setError(t('auth.enterEmailFirst'))
       return
     }
     setError(null)
     setLoading(true)
     try {
       await sendMagicLink(email)
-      setMessage('Link mágico enviado! Verifique seu email.')
+      setMessage(t('auth.magicLinkSent'))
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erro ao enviar link'
+      const msg = err instanceof Error ? err.message : t('auth.sendLinkError')
       setError(msg)
     } finally {
       setLoading(false)
@@ -102,7 +105,8 @@ export function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="relative min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="absolute right-4 top-4"><LanguageSelector /></div>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-3 mb-2">
@@ -112,7 +116,7 @@ export function AuthPage() {
             <CardTitle className="text-2xl">SSGEN</CardTitle>
           </div>
           <CardDescription>
-            Portal de resultados genômicos Select Sires
+            {t('auth.portalDescription')}
           </CardDescription>
         </CardHeader>
 
@@ -131,25 +135,25 @@ export function AuthPage() {
 
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Entrar</TabsTrigger>
-              <TabsTrigger value="register">Criar conta</TabsTrigger>
+              <TabsTrigger value="login">{t('auth.signIn')}</TabsTrigger>
+              <TabsTrigger value="register">{t('auth.createAccount')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
               <form onSubmit={(e) => { void handleSignIn(e) }} className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
+                  <Label htmlFor="login-email">{t('auth.email')}</Label>
                   <Input
                     id="login-email"
                     type="email"
-                    placeholder="seu@email.com"
+                    placeholder={t('auth.emailPlaceholder')}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="login-password">Senha</Label>
+                  <Label htmlFor="login-password">{t('auth.password')}</Label>
                   <Input
                     id="login-password"
                     type="password"
@@ -160,7 +164,7 @@ export function AuthPage() {
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Entrando...' : 'Entrar'}
+                  {loading ? t('auth.signingIn') : t('auth.signIn')}
                 </Button>
 
                 <div className="relative my-4">
@@ -168,7 +172,7 @@ export function AuthPage() {
                     <span className="w-full border-t" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">ou</span>
+                    <span className="bg-card px-2 text-muted-foreground">{t('auth.or')}</span>
                   </div>
                 </div>
 
@@ -179,7 +183,7 @@ export function AuthPage() {
                   disabled={loading}
                   onClick={() => { void handleMagicLink() }}
                 >
-                  Entrar com link mágico
+                  {t('auth.signInMagicLink')}
                 </Button>
               </form>
             </TabsContent>
@@ -187,33 +191,33 @@ export function AuthPage() {
             <TabsContent value="register">
               <form onSubmit={(e) => { void handleSignUp(e) }} className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="reg-name">Nome completo</Label>
+                  <Label htmlFor="reg-name">{t('auth.fullName')}</Label>
                   <Input
                     id="reg-name"
                     type="text"
-                    placeholder="João da Silva"
+                    placeholder={t('auth.fullNamePlaceholder')}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="reg-email">Email</Label>
+                  <Label htmlFor="reg-email">{t('auth.email')}</Label>
                   <Input
                     id="reg-email"
                     type="email"
-                    placeholder="seu@email.com"
+                    placeholder={t('auth.emailPlaceholder')}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="reg-password">Senha</Label>
+                  <Label htmlFor="reg-password">{t('auth.password')}</Label>
                   <Input
                     id="reg-password"
                     type="password"
-                    placeholder="Mínimo 6 caracteres"
+                    placeholder={t('auth.passwordPlaceholder')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -221,10 +225,10 @@ export function AuthPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Raça</Label>
+                  <Label>{t('auth.breed')}</Label>
                   <div className="grid grid-cols-2 gap-2">
                     {([
-                      ['HO', 'Holandês'],
+                      ['HO', t('auth.holstein')],
                       ['JE', 'Jersey'],
                     ] as const).map(([value, label]) => (
                       <button
@@ -243,7 +247,7 @@ export function AuthPage() {
                   </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Criando...' : 'Criar conta'}
+                  {loading ? t('auth.creating') : t('auth.createAccount')}
                 </Button>
               </form>
             </TabsContent>

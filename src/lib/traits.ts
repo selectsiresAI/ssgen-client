@@ -8,13 +8,17 @@ export interface RadarGroup {
 }
 
 // Holstein fallback; runtime usa useBreed().
-export const radarGroups: Record<string, RadarGroup> = {
-  indices: { label: 'Índices', traits: ['hhp', 'gtpi', 'nm', 'cm', 'fm', 'gm'], names: ['HHP$', 'GTPI', 'NM$', 'CM$', 'FM$', 'GM$'], max: [1100, 3200, 1100, 1050, 1050, 900] },
-  prod: { label: 'Produção', traits: ['milk', 'fat', 'prot', 'fat_pct', 'prot_pct'], names: ['Leite', 'Gord', 'Prot', 'G%', 'P%'], max: [2800, 120, 80, 0.35, 0.15] },
-  func: { label: 'Funcionais', traits: ['pl', 'dpr', 'scs', 'hcr', 'ccr', 'liv'], names: ['PL', 'DPR', 'SCS', 'HCR', 'CCR', 'LIV'], max: [9, 4, 1, 3, 3, 4], inv: [0, 0, 1, 0, 0, 0] },
-  tipo: { label: 'Tipo', traits: ['ptat', 'udc', 'flc', 'sta', 'dfm', 'fua'], names: ['PTAT', 'UDC', 'FLC', 'STA', 'DFM', 'FUA'], max: [1, 0.8, 0, 1, 0.4, 1.2], offset: [0, 0, 1.2, 0, 0, 0] },
-  saude: { label: 'Saúde', traits: ['mast', 'met', 'rp', 'da', 'ket', 'hliv'], names: ['MAST', 'MET', 'RP', 'DA', 'KET', 'H.LIV'], max: [7, 3, 1.2, 0.5, 0.5, 3.5] },
+const radarGroupData: Record<string, Omit<RadarGroup, 'label' | 'names'> & { labelKey: string; traits: string[] }> = {
+  indices: { labelKey: 'traits.group.indices', traits: ['hhp', 'gtpi', 'nm', 'cm', 'fm', 'gm'], max: [1100, 3200, 1100, 1050, 1050, 900] },
+  prod: { labelKey: 'traits.group.production', traits: ['milk', 'fat', 'prot', 'fat_pct', 'prot_pct'], max: [2800, 120, 80, 0.35, 0.15] },
+  func: { labelKey: 'traits.group.functional', traits: ['pl', 'dpr', 'scs', 'hcr', 'ccr', 'liv'], max: [9, 4, 1, 3, 3, 4], inv: [0, 0, 1, 0, 0, 0] },
+  tipo: { labelKey: 'traits.group.type', traits: ['ptat', 'udc', 'flc', 'sta', 'dfm', 'fua'], max: [1, 0.8, 0, 1, 0.4, 1.2], offset: [0, 0, 1.2, 0, 0, 0] },
+  saude: { labelKey: 'traits.group.health', traits: ['mast', 'met', 'rp', 'da', 'ket', 'hliv'], max: [7, 3, 1.2, 0.5, 0.5, 3.5] },
 }
+export function getRadarGroups(): Record<string, RadarGroup> {
+  return Object.fromEntries(Object.entries(radarGroupData).map(([key, group]) => [key, { ...group, label: translate(group.labelKey), names: group.traits.map((trait) => traitLabel[trait] ?? trait.toUpperCase()) }]))
+}
+export const radarGroups: Record<string, RadarGroup> = new Proxy({} as Record<string, RadarGroup>, { get: (_, key: string) => getRadarGroups()[key], ownKeys: () => Reflect.ownKeys(radarGroupData), getOwnPropertyDescriptor: () => ({ enumerable: true, configurable: true }) }) // i18n-ignore (codigo, sem texto)
 
 // REFERÊNCIA NACIONAL DA RAÇA (Holstein US) — não é dado do cliente. Fonte: médias oficiais.
 export const trend = {
@@ -75,9 +79,9 @@ export const trend = {
   ftl: [-0.33, -0.34, -0.35, -0.36, -0.37],
 }
 
-export const traitLabel: Record<string, string> = {
+const traitLabelKeys: Record<string, string> = {
   hhp: 'HHP$', gtpi: 'GTPI', nm: 'NM$', cm: 'CM$', fm: 'FM$', gm: 'GM$', milk: 'Leite',
-  fat: 'Gordura', fat_pct: 'Gord%', prot: 'Proteína', prot_pct: 'Prot%', pl: 'PL', dpr: 'DPR',
+  fat: 'Gordura', fat_pct: 'Gord%', prot: 'Proteína', prot_pct: 'Prot%', pl: 'PL', dpr: 'DPR', // i18n-ignore (reserva pt-BR; a traducao vem de translate)
   scs: 'SCS', hcr: 'HCR', ccr: 'CCR', liv: 'LIV', sce: 'SCE', ptat: 'Tipo', udc: 'UDC',
   flc: 'FLC', fsav: 'F.Sav', rfi: 'RFI', cfp: 'CFP', efc: 'EFC', da: 'DA', ket: 'KET',
   mast: 'MAST', met: 'MET', rp: 'RP', ssb: 'SSB', dsb: 'DSB', hliv: 'H.LIV', fi: 'FI',
@@ -85,8 +89,13 @@ export const traitLabel: Record<string, string> = {
   fta: 'FTA', fls: 'FLS', fua: 'FUA', ruh: 'RUH', ruw: 'RUW', ucl: 'UCL', udp: 'UDP',
   ftp: 'FTP', rtp: 'RTP', ftl: 'FTL', mf: 'MF', gfi: 'GFI',
 }
+export function getTraitLabel(trait: string): string {
+  return translate(`traits.${trait}`) === `traits.${trait}` ? traitLabelKeys[trait] ?? trait.toUpperCase() : translate(`traits.${trait}`)
+}
+export const traitLabel: Record<string, string> = new Proxy({} as Record<string, string>, { get: (_, key: string) => getTraitLabel(key), ownKeys: () => Reflect.ownKeys(traitLabelKeys), getOwnPropertyDescriptor: () => ({ enumerable: true, configurable: true }) }) // i18n-ignore (codigo, sem texto)
 
-export const agSteps = [{ n: 0, t: 'Parentesco' }, { n: 1, t: 'Top Pais' }, { n: 3, t: 'Progressão' }, { n: 6, t: 'Distribuição' }, { n: 7, t: 'Evolução vs Nacional' }, { n: 8, t: 'Matriz de Performance' }, { n: 9, t: 'Análise de Forças' }]
+const agStepKeys = [{ n: 0, key: 'steps.kinship' }, { n: 1, key: 'steps.topParents' }, { n: 3, key: 'steps.progress' }, { n: 6, key: 'steps.distribution' }, { n: 7, key: 'steps.evolution' }, { n: 8, key: 'steps.matrix' }, { n: 9, key: 'steps.strengths' }]
+export function getAgSteps() { return agStepKeys.map((step) => ({ n: step.n, t: translate(step.key) })) }
 
 // REFERÊNCIA NACIONAL DA RAÇA (Holstein US) — não é dado do cliente. Fonte: médias oficiais.
 export const benchmarks: [string, string, number, number, number][] = [
@@ -99,7 +108,7 @@ export const benchmarks: [string, string, number, number, number][] = [
   ['milk', 'Leite', 1500, 1900, 2200],
   ['fat', 'Gordura', 55, 70, 85],
   ['fat_pct', 'Gord%', 0.08, 0.14, 0.20],
-  ['prot', 'Proteína', 40, 52, 62],
+  ['prot', 'Proteína', 40, 52, 62], // i18n-ignore (reserva pt-BR; a traducao vem de translate)
   ['prot_pct', 'Prot%', 0.04, 0.07, 0.10],
   ['cfp', 'CFP', 80, 115, 155],
   ['fsav', 'F.Sav', 10, 18, 25],
@@ -145,7 +154,7 @@ export const DEMO_TO_FEMALE: Record<string, string> = {
   fi: 'fi', gl: 'gl', mf: 'mf', gfi: 'gfi', sta: 'sta', str: 'str', dfm: 'dfm',
   rua: 'rua', rw: 'rw', rls: 'rls', rlr: 'rlr', fta: 'fta', fls: 'fls', fua: 'fua', ruh: 'ruh', ruw: 'ruw',
   ucl: 'ucl', udp: 'udp', ftp: 'ftp', rtp: 'rtp', ftl: 'ftl',
-  sire: 'sire_naab', mgs: 'mgs_naab', mmgs: 'mmgs_naab', mggs: 'mmgs_naab', name: 'name', id: 'ear_tag',
+  sire: 'sire_naab', mgs: 'mgs_naab', mmgs: 'mmgs_naab', mggs: 'mmgs_naab', name: 'name', id: 'ear_tag', // i18n-ignore (reserva pt-BR; a traducao vem de translate)
 }
 
 export function femaleTrait(f: Record<string, unknown>, demoKey: string): number | null {
@@ -179,3 +188,4 @@ export function initials(name: string): string {
   return `${parts[1]?.[0] ?? parts[0]?.[0] ?? '?'}${digit}`.toUpperCase()
 }
 
+import { translate } from '@/i18n'

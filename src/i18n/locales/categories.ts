@@ -1,0 +1,43 @@
+import type { NamespaceDict } from '../types'
+
+export default {
+  'pt-BR': {
+    'categories.Bezerra': 'Bezerra',
+    'categories.Novilha': 'Novilha',
+    'categories.Primipara': 'Primípara',
+    'categories.Secundipara': 'Secundípara',
+    'categories.Multipara': 'Multípara',
+    'categories.Indefinida': 'Indefinida',
+    'categories.Bezerras': 'Bezerras',
+    'categories.Novilhas': 'Novilhas',
+    'categories.Primiparas': 'Primíparas',
+    'categories.Secundiparas': 'Secundíparas',
+    'categories.Multiparas': 'Multíparas',
+  },
+  'en-US': {
+    'categories.Bezerra': 'Calf',
+    'categories.Novilha': 'Heifer',
+    'categories.Primipara': 'Primiparous',
+    'categories.Secundipara': 'Secondiparous',
+    'categories.Multipara': 'Multiparous',
+    'categories.Indefinida': 'Undefined',
+    'categories.Bezerras': 'Calves',
+    'categories.Novilhas': 'Heifers',
+    'categories.Primiparas': 'Primiparous',
+    'categories.Secundiparas': 'Secondiparous',
+    'categories.Multiparas': 'Multiparous',
+  },
+  es: {
+    'categories.Bezerra': 'Becerra',
+    'categories.Novilha': 'Novilla',
+    'categories.Primipara': 'Primípara',
+    'categories.Secundipara': 'Secundípara',
+    'categories.Multipara': 'Multípara',
+    'categories.Indefinida': 'Indefinida',
+    'categories.Bezerras': 'Becerras',
+    'categories.Novilhas': 'Novillas',
+    'categories.Primiparas': 'Primíparas',
+    'categories.Secundiparas': 'Secundíparas',
+    'categories.Multiparas': 'Multíparas',
+  },
+} satisfies NamespaceDict

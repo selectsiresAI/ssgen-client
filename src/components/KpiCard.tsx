@@ -1,10 +1,10 @@
 import type { LucideIcon } from 'lucide-react'
 
 interface KpiCardProps {
-  icon: LucideIcon
-  label: string
-  value: string | number
-  delta: string
+  icon: LucideIcon // i18n-ignore
+  label: string // i18n-ignore
+  value: string | number // i18n-ignore
+  delta: string // i18n-ignore
   deltaType?: 'up' | 'down'
 }
 

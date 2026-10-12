@@ -5,13 +5,16 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { useI18n } from '@/i18n'
+import type { Locale } from '@/i18n/types'
 
 interface AccountNotice {
-  id: string
-  kind: string
-  title: string
-  body: string
-  created_at: string
+  id: string // i18n-ignore
+  kind: string // i18n-ignore
+  title: string // i18n-ignore
+  body: string // i18n-ignore
+  created_at: string // i18n-ignore
+  translations: Partial<Record<Locale, { title: string; body: string }>> | null
 }
 
 /**
@@ -20,6 +23,7 @@ interface AccountNotice {
  */
 export function AccountNoticeDialog() {
   const { session } = useAuth()
+  const { locale, t } = useI18n()
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
 
@@ -28,7 +32,7 @@ export function AccountNoticeDialog() {
     queryFn: async () => {
       const { data } = await supabase
         .from('account_notices')
-        .select('id, kind, title, body, created_at')
+        .select('id, kind, title, body, created_at, translations')
         .eq('user_id', session!.user.id)
         .is('dismissed_at', null)
         .order('created_at', { ascending: true })
@@ -60,6 +64,7 @@ export function AccountNoticeDialog() {
   })
 
   if (!current) return null
+  const translation = current.translations?.[locale]
 
   return (
     <Dialog open={open} onOpenChange={(next) => { if (!next) dismiss.mutate(current.id) }}>
@@ -68,9 +73,9 @@ export function AccountNoticeDialog() {
           <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(220,38,38,.1)]">
             <ShieldCheck className="h-5 w-5 text-[#DC2626]" strokeWidth={1.8} />
           </div>
-          <DialogTitle className="text-[16px] font-extrabold tracking-[-.2px]">{current.title}</DialogTitle>
+          <DialogTitle className="text-[16px] font-extrabold tracking-[-.2px]">{translation?.title ?? current.title}</DialogTitle>
           <DialogDescription className="whitespace-pre-line text-[13px] leading-relaxed text-[var(--ss-muted)]">
-            {current.body}
+            {translation?.body ?? current.body}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -79,7 +84,7 @@ export function AccountNoticeDialog() {
             disabled={dismiss.isPending}
             onClick={() => dismiss.mutate(current.id)}
           >
-            Entendi
+            {t('layout.understood')}
           </Button>
         </DialogFooter>
       </DialogContent>

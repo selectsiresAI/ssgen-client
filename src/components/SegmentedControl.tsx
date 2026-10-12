@@ -1,8 +1,8 @@
 interface SegmentedControlProps {
   options: { value: string; label: string }[]
-  value: string
+  value: string // i18n-ignore
   onChange: (v: string) => void
-  wrap?: boolean
+  wrap?: boolean // i18n-ignore
   size?: 'sm' | 'md'
 }
 

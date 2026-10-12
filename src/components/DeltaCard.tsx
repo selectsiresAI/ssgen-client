@@ -1,7 +1,7 @@
 interface DeltaCardProps {
-  trait: string
-  label: string
-  subtitle: string
+  trait: string // i18n-ignore
+  label: string // i18n-ignore
+  subtitle: string // i18n-ignore
   fromValue: number
   toValue: number
   sparkData: number[]
@@ -14,7 +14,7 @@ export function DeltaCard({ trait, label, subtitle, fromValue, toValue, sparkDat
   const inv = inverted.includes(trait)
   const raw = fromValue === 0 ? 0 : ((toValue - fromValue) / Math.abs(fromValue)) * 100
   const quality = inv ? -raw : raw
-  const isNeg = Math.abs(raw) >= 2 && quality < 0
+  const isNeg = Math.abs(raw) >= 2 && quality < 0 // i18n-ignore
   const max = Math.max(...sparkData)
   const min = Math.min(...sparkData)
   const barColor = isNeg ? '#C0633A' : 'var(--ss-primary)'

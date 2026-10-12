@@ -1,0 +1,13 @@
+import type { NamespaceDict } from '../types'
+
+const pt = { indices: 'Índices', production: 'Produção', functional: 'Funcionais', calving: 'Parto', type: 'Tipo', health: 'Saúde', milk: 'Leite', fat: 'Gordura', fat_pct: 'Gord%', prot: 'Proteína', prot_pct: 'Prot%', ptat: 'Tipo', fsav: 'F.Sav', hLiv: 'H.LIV' }
+const en = { indices: 'Indices', production: 'Production', functional: 'Functional', calving: 'Calving', type: 'Type', health: 'Health', milk: 'Milk', fat: 'Fat', fat_pct: 'Fat%', prot: 'Protein', prot_pct: 'Prot%', ptat: 'Type', fsav: 'F.Sav', hLiv: 'H.LIV' }
+const es = { indices: 'Índices', production: 'Producción', functional: 'Funcionales', calving: 'Parto', type: 'Tipo', health: 'Salud', milk: 'Leche', fat: 'Grasa', fat_pct: 'Grasa%', prot: 'Proteína', prot_pct: 'Prot%', ptat: 'Tipo', fsav: 'F.Sav', hLiv: 'H.LIV' }
+const keys = ['hhp','gtpi','nm','cm','fm','gm','pl','dpr','scs','hcr','ccr','liv','sce','udc','flc','rfi','cfp','efc','da','ket','mast','met','rp','ssb','dsb','fi','gl','sta','str','dfm','rua','rw','rls','rlr','fta','fls','fua','ruh','ruw','ucl','udp','ftp','rtp','ftl','mf','gfi']
+const acronyms = Object.fromEntries(keys.map((key) => [`traits.${key}`, key === 'hhp' ? 'HHP$' : key === 'gtpi' ? 'GTPI' : key === 'nm' ? 'NM$' : key === 'cm' ? 'CM$' : key === 'fm' ? 'FM$' : key === 'gm' ? 'GM$' : key.toUpperCase()]))
+
+export default {
+  'pt-BR': { ...acronyms, 'traits.group.indices': pt.indices, 'traits.group.production': pt.production, 'traits.group.functional': pt.functional, 'traits.group.calving': pt.calving, 'traits.group.type': pt.type, 'traits.group.health': pt.health, 'traits.milk': pt.milk, 'traits.fat': pt.fat, 'traits.fat_pct': pt.fat_pct, 'traits.prot': pt.prot, 'traits.prot_pct': pt.prot_pct, 'traits.ptat': pt.ptat, 'traits.fsav': pt.fsav, 'traits.hliv': pt.hLiv },
+  'en-US': { ...acronyms, 'traits.group.indices': en.indices, 'traits.group.production': en.production, 'traits.group.functional': en.functional, 'traits.group.calving': en.calving, 'traits.group.type': en.type, 'traits.group.health': en.health, 'traits.milk': en.milk, 'traits.fat': en.fat, 'traits.fat_pct': en.fat_pct, 'traits.prot': en.prot, 'traits.prot_pct': en.prot_pct, 'traits.ptat': en.ptat, 'traits.fsav': en.fsav, 'traits.hliv': en.hLiv },
+  es: { ...acronyms, 'traits.group.indices': es.indices, 'traits.group.production': es.production, 'traits.group.functional': es.functional, 'traits.group.calving': es.calving, 'traits.group.type': es.type, 'traits.group.health': es.health, 'traits.milk': es.milk, 'traits.fat': es.fat, 'traits.fat_pct': es.fat_pct, 'traits.prot': es.prot, 'traits.prot_pct': es.prot_pct, 'traits.ptat': es.ptat, 'traits.fsav': es.fsav, 'traits.hliv': es.hLiv },
+} satisfies NamespaceDict

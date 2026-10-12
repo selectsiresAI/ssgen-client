@@ -1,5 +1,32 @@
 export type FemaleCategory = 'Bezerra' | 'Novilha' | 'Primipara' | 'Secundipara' | 'Multipara' | 'Indefinida'
 
+// O banco guarda a categoria com varias grafias (com/sem acento, "Secondipara") e ate estados em ingles.
+const CATEGORY_ALIASES: Record<string, FemaleCategory> = {
+  bezerra: 'Bezerra',
+  novilha: 'Novilha',
+  primipara: 'Primipara',
+  secundipara: 'Secundipara',
+  secondipara: 'Secundipara',
+  multipara: 'Multipara',
+  indefinida: 'Indefinida',
+}
+
+export function categoryLabel(category: FemaleCategory | string | null | undefined, t: (key: string) => string): string {
+  const key = category && ['Bezerra', 'Novilha', 'Primipara', 'Secundipara', 'Multipara', 'Indefinida'].includes(category)
+    ? category
+    : 'Indefinida'
+  return t(`categories.${key}`)
+}
+
+// Texto exibido na tabela. Em pt-BR devolve o valor gravado, sem alteracao; nos outros idiomas traduz as
+// categorias reconhecidas e deixa como esta qualquer valor desconhecido (ex.: estados em ingles).
+export function categoryDisplay(value: string, locale: string, t: (key: string) => string): string {
+  if (locale === 'pt-BR') return value
+  const normalized = value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
+  const key = CATEGORY_ALIASES[normalized]
+  return key ? t(`categories.${key}`) : value
+}
+
 export function calculateDeliveries(birthDate?: string | null): number | null {
   if (!birthDate) return null
   const birth = new Date(birthDate)

@@ -20,27 +20,29 @@ import {
 } from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { Paginated } from '@/lib/api'
+import { useI18n } from '@/i18n'
 
 interface PlatformClient {
-  id: string
-  cod_ssgen: string | null
-  nome: string
-  cidade: string | null
-  estado: string | null
-  status: string | null
+  id: string // i18n-ignore
+  cod_ssgen: string | null // i18n-ignore
+  nome: string // i18n-ignore
+  cidade: string | null // i18n-ignore
+  estado: string | null // i18n-ignore
+  status: string | null // i18n-ignore
 }
 
 interface ClientLink {
-  id: string
-  user_id: string
-  platform_client_id: string
-  client_name: string | null
-  created_at: string
+  id: string // i18n-ignore
+  user_id: string // i18n-ignore
+  platform_client_id: string // i18n-ignore
+  client_name: string | null // i18n-ignore
+  created_at: string // i18n-ignore
 }
 
 // ── Link Management ──
 
 function LinkManagement() {
+  const { t, formatDate } = useI18n()
   const queryClient = useQueryClient()
   const [userEmail, setUserEmail] = useState('')
   const [clientSearch, setClientSearch] = useState('')
@@ -86,7 +88,7 @@ function LinkManagement() {
   // Create link
   const createLink = useMutation({
     mutationFn: async () => {
-      if (!selectedClient || !userEmail) throw new Error('Preencha todos os campos')
+      if (!selectedClient || !userEmail) throw new Error(t('admin.fillAllFields'))
 
       // Find user by email in profiles
       const { data: profile, error } = await supabase
@@ -95,7 +97,7 @@ function LinkManagement() {
         .eq('email', userEmail.trim().toLowerCase())
         .single()
 
-      if (error || !profile) throw new Error('Usuario nao encontrado com este email')
+      if (error || !profile) throw new Error(t('admin.userNotFound'))
 
       const { error: linkError } = await supabase.from('client_links').insert({
         user_id: profile.id,
@@ -105,7 +107,7 @@ function LinkManagement() {
       })
 
       if (linkError) {
-        if (linkError.code === '23505') throw new Error('Vinculo ja existe')
+        if (linkError.code === '23505') throw new Error(t('admin.linkAlreadyExists'))
         throw new Error(linkError.message)
       }
 
@@ -113,8 +115,8 @@ function LinkManagement() {
       await supabase.from('notifications').insert({
         user_id: profile.id,
         type: 'welcome',
-        title: 'Cliente vinculado',
-        body: `O cliente "${selectedClient.nome}" foi vinculado a sua conta.`,
+        title: t('admin.clientLinked'),
+        body: t('admin.clientLinkedBody', { name: selectedClient.nome }),
         metadata: { client_id: selectedClient.id },
       })
 
@@ -133,7 +135,7 @@ function LinkManagement() {
       }
     },
     onSuccess: () => {
-      setMessage({ type: 'ok', text: 'Vinculo criado com sucesso!' })
+      setMessage({ type: 'ok', text: t('admin.linkCreated') })
       setUserEmail('')
       setSelectedClient(null)
       void queryClient.invalidateQueries({ queryKey: ['admin-links'] })
@@ -159,7 +161,7 @@ function LinkManagement() {
       {/* Create Link Form */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Vincular usuario a cliente</CardTitle>
+          <CardTitle className="text-base">{t('admin.linkUserClient')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {message && (
@@ -169,19 +171,19 @@ function LinkManagement() {
           )}
 
           <div className="space-y-2">
-            <Label>Email do usuario</Label>
+            <Label>{t('admin.userEmail')}</Label>
             <Input
               type="email"
-              placeholder="usuario@email.com"
+              placeholder="usuario@email.com" // i18n-ignore
               value={userEmail}
               onChange={(e) => setUserEmail(e.target.value)}
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Buscar cliente na Platform</Label>
+            <Label>{t('admin.searchClient')}</Label>
             <Input
-              placeholder="Digite nome ou codigo SSGEN..."
+              placeholder={t('admin.searchClientPlaceholder')}
               value={clientSearch}
               onChange={(e) => {
                 setClientSearch(e.target.value)
@@ -210,7 +212,7 @@ function LinkManagement() {
                       {c.cod_ssgen ? ` (${c.cod_ssgen})` : ''}
                     </p>
                   </div>
-                  {selectedClient?.id === c.id && <Badge>Selecionado</Badge>}
+                  {selectedClient?.id === c.id && <Badge>{t('admin.selected')}</Badge>}
                 </button>
               ))}
             </div>
@@ -218,12 +220,12 @@ function LinkManagement() {
 
           {selectedClient && (
             <p className="text-sm">
-              Selecionado: <strong>{selectedClient.nome}</strong>
+              {t('admin.selectedClient', { name: selectedClient.nome })}
             </p>
           )}
 
           <div className="space-y-2">
-            <Label>Raça do rebanho</Label>
+            <Label>{t('admin.herdBreed')}</Label>
             <div className="flex gap-2">
               {(['HO', 'JE'] as const).map((b) => (
                 <button
@@ -234,7 +236,7 @@ function LinkManagement() {
                     breedSel === b ? 'bg-primary/10 border-primary text-primary' : 'border-border text-foreground'
                   }`}
                 >
-                  {b === 'HO' ? 'Holandês' : 'Jersey'}
+                  {b === 'HO' ? t('admin.holstein') : 'Jersey'}
                 </button>
               ))}
             </div>
@@ -244,7 +246,7 @@ function LinkManagement() {
             onClick={() => createLink.mutate()}
             disabled={!userEmail || !selectedClient || createLink.isPending}
           >
-            {createLink.isPending ? 'Vinculando...' : 'Vincular'}
+            {createLink.isPending ? t('admin.linking') : t('admin.link')}
           </Button>
         </CardContent>
       </Card>
@@ -252,15 +254,15 @@ function LinkManagement() {
       {/* Existing Links */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Vinculos existentes</CardTitle>
+          <CardTitle className="text-base">{t('admin.existingLinks')}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Cliente</TableHead>
-                <TableHead>User ID</TableHead>
-                <TableHead>Data</TableHead>
+                <TableHead>{t('admin.client')}</TableHead>
+                <TableHead>User ID</TableHead> // i18n-ignore
+                <TableHead>{t('admin.date')}</TableHead>
                 <TableHead className="w-20" />
               </TableRow>
             </TableHeader>
@@ -276,7 +278,7 @@ function LinkManagement() {
               ) : !links?.length ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
-                    Nenhum vinculo criado
+                    {t('admin.noLinks')}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -284,17 +286,17 @@ function LinkManagement() {
                   <TableRow key={l.id}>
                     <TableCell className="text-sm font-medium">{l.client_name ?? l.platform_client_id}</TableCell>
                     <TableCell className="text-xs text-muted-foreground font-mono">{l.user_id.slice(0, 8)}...</TableCell>
-                    <TableCell className="text-sm">{new Date(l.created_at).toLocaleDateString('pt-BR')}</TableCell>
+                    <TableCell className="text-sm">{formatDate(l.created_at)}</TableCell>
                     <TableCell>
                       <Button
                         variant="ghost"
                         size="sm"
                         className="text-destructive text-xs"
                         onClick={() => {
-                          if (confirm('Remover vinculo?')) deleteLink.mutate(l.id)
+                          if (confirm(t('admin.removeLink'))) deleteLink.mutate(l.id)
                         }}
                       >
-                        Remover
+                        {t('admin.remove')}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -311,6 +313,7 @@ function LinkManagement() {
 // ── Ingest Results ──
 
 function IngestResults() {
+  const { t } = useI18n()
   const [filePath, setFilePath] = useState('')
   const [clientId, setClientId] = useState('')
   const [serviceOrderId, setServiceOrderId] = useState('')
@@ -329,10 +332,10 @@ function IngestResults() {
       })
       setResult({
         type: 'ok',
-        text: `Sucesso! ${res.inserted}/${res.total_rows} resultados inseridos. Colunas mapeadas: ${res.mapped_columns.join(', ')}${res.errors ? '. Erros: ' + res.errors.join('; ') : ''}`,
+        text: t('admin.ingestSuccess', { inserted: res.inserted, total: res.total_rows, columns: res.mapped_columns.join(', '), errors: res.errors ? `. Erros: ${res.errors.join('; ')}` : '' }),
       })
     } catch (err: unknown) {
-      setResult({ type: 'err', text: err instanceof Error ? err.message : 'Erro desconhecido' })
+      setResult({ type: 'err', text: err instanceof Error ? err.message : t('admin.unknownError') })
     } finally {
       setLoading(false)
     }
@@ -341,7 +344,7 @@ function IngestResults() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Ingerir resultados do Tracker</CardTitle>
+        <CardTitle className="text-base">{t('admin.ingestTrackerResults')}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={(e) => { void handleIngest(e) }} className="space-y-4">
@@ -352,22 +355,22 @@ function IngestResults() {
           )}
 
           <div className="space-y-2">
-            <Label>Caminho do arquivo no Tracker Storage</Label>
+            <Label>{t('admin.filePath')}</Label>
             <Input
-              placeholder="ex: os-123/resultados.xlsx"
+              placeholder="ex: os-123/resultados.xlsx" // i18n-ignore
               value={filePath}
               onChange={(e) => setFilePath(e.target.value)}
               required
             />
             <p className="text-xs text-muted-foreground">
-              Caminho relativo dentro do bucket &quot;order-results&quot;
+              {t('admin.filePathHint')}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label>Client ID (Platform)</Label>
+            <Label>{t('admin.clientId')}</Label>
             <Input
-              placeholder="UUID do cliente na Platform"
+              placeholder={t('admin.clientIdPlaceholder')}
               value={clientId}
               onChange={(e) => setClientId(e.target.value)}
               required
@@ -375,9 +378,9 @@ function IngestResults() {
           </div>
 
           <div className="space-y-2">
-            <Label>Service Order ID (opcional)</Label>
+            <Label>{t('admin.serviceOrderId')}</Label>
             <Input
-              placeholder="UUID da OS na Platform"
+              placeholder={t('admin.serviceOrderPlaceholder')}
               value={serviceOrderId}
               onChange={(e) => setServiceOrderId(e.target.value)}
             />
@@ -386,7 +389,7 @@ function IngestResults() {
           <Separator />
 
           <Button type="submit" disabled={loading || !filePath || !clientId}>
-            {loading ? 'Processando...' : 'Iniciar ingestao'}
+            {loading ? t('admin.processing') : t('admin.startIngestion')}
           </Button>
         </form>
       </CardContent>
@@ -398,11 +401,12 @@ function IngestResults() {
 
 export function AdminPage() {
   const { profile } = useAuth()
+  const { t } = useI18n()
 
   if (profile?.role !== 'admin') {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <p className="text-muted-foreground">Acesso restrito a administradores.</p>
+        <p className="text-muted-foreground">{t('admin.restricted')}</p>
       </div>
     )
   }
@@ -410,16 +414,16 @@ export function AdminPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Administracao</h1>
+        <h1 className="text-2xl font-bold">{t('admin.title')}</h1>
         <p className="text-muted-foreground text-sm">
-          Gerenciar vinculos de usuarios e ingestao de resultados
+          {t('admin.description')}
         </p>
       </div>
 
       <Tabs defaultValue="links">
         <TabsList>
-          <TabsTrigger value="links">Vinculos</TabsTrigger>
-          <TabsTrigger value="ingest">Ingestao</TabsTrigger>
+          <TabsTrigger value="links">{t('admin.links')}</TabsTrigger>
+          <TabsTrigger value="ingest">{t('admin.ingestion')}</TabsTrigger>
         </TabsList>
         <TabsContent value="links" className="mt-4">
           <LinkManagement />

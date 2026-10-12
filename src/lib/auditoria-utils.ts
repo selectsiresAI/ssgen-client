@@ -1,4 +1,5 @@
 import type { FemaleFull } from './api'
+import { translate } from '@/i18n'
 
 export const FEMALE_TRAIT_MAP: Record<string, keyof FemaleFull> = {
   hhp: 'hhp_dollar', gtpi: 'tpi', jpi: 'jpi', nm: 'nm_dollar', cm: 'cm_dollar', fm: 'fm_dollar', gm: 'gm_dollar',
@@ -28,9 +29,9 @@ export function computeParentesco(females: FemaleFull[]): { label: string; fille
   const mmgsCount = females.filter((f) => f.mmgs_naab).length
   const pct = (n: number) => Math.round((n / total) * 100)
   return [
-    { label: 'Pai (Sire)', filled: pct(sireCount), missing: 100 - pct(sireCount) },
-    { label: 'Avô Materno (MGS)', filled: pct(mgsCount), missing: 100 - pct(mgsCount) },
-    { label: 'Bisavô Materno (MMGS)', filled: pct(mmgsCount), missing: 100 - pct(mmgsCount) },
+    { label: translate('auditoria.parent.sire'), filled: pct(sireCount), missing: 100 - pct(sireCount) },
+    { label: translate('auditoria.parent.mgs'), filled: pct(mgsCount), missing: 100 - pct(mgsCount) },
+    { label: translate('auditoria.parent.mmgs'), filled: pct(mmgsCount), missing: 100 - pct(mmgsCount) },
   ]
 }
 
@@ -97,7 +98,7 @@ export function computeDistribution(
   const bins = Array.from({ length: binCount }, (_, i) => {
     const lo = min + i * step
     const hi = i === binCount - 1 ? max + 0.001 : min + (i + 1) * step
-    const count = values.filter((v) => v >= lo && v < hi).length
+    const count = values.filter((v) => v >= lo && v < hi).length // i18n-ignore
     const mid = (lo + hi) / 2
     const isDecimal = ['fat_pct', 'prot_pct', 'dpr', 'pl', 'scs', 'ptat', 'udc', 'flc', 'hcr', 'ccr', 'liv',
       'sce', 'da', 'ket', 'met', 'rp', 'gl', 'sta', 'str', 'dfm', 'rua', 'rw', 'rls', 'rlr',

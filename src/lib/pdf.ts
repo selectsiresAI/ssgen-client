@@ -1,6 +1,8 @@
 import jsPDF from 'jspdf'
 import type { FemaleFull } from '@/lib/api'
 import { buildProofFromFemale, holsteinProofOptions, type BreedProofOptions } from '@/lib/proof'
+import { getLocale, translate } from '@/i18n'
+import type { Locale } from '@/i18n/types'
 
 const PRIMARY = [206, 14, 45] as const
 const FG = [28, 28, 28] as const
@@ -17,7 +19,7 @@ function label(animal: FemaleFull) {
   return animal.name ?? animal.ear_tag ?? animal.id
 }
 
-function drawHeader(doc: jsPDF, animal: FemaleFull, subtitle?: string) {
+function drawHeader(doc: jsPDF, animal: FemaleFull, subtitle: string | undefined, locale: Locale) {
   doc.setFillColor(...PRIMARY)
   doc.rect(0, 0, 210, 20, 'F')
   doc.setTextColor(255, 255, 255)
@@ -26,9 +28,9 @@ function drawHeader(doc: jsPDF, animal: FemaleFull, subtitle?: string) {
   doc.text('Select Sires', 14, 10)
   doc.setFontSize(8)
   doc.setFont('helvetica', 'normal')
-  doc.text(subtitle ?? 'Prova Genômica Individual', 14, 16)
-  doc.text(`Gerado: ${new Date().toLocaleDateString('pt-BR')}`, 196, 10, { align: 'right' })
-  doc.text('Predição Pedigree', 196, 16, { align: 'right' })
+  doc.text(subtitle ?? translate('pdf.individualProof', undefined, locale), 14, 16)
+  doc.text(translate('pdf.generated', { date: new Intl.DateTimeFormat(locale === 'es' ? 'es-ES' : locale).format(new Date()) }, locale), 196, 10, { align: 'right' })
+  doc.text(translate('pdf.pedigreePrediction', undefined, locale), 196, 16, { align: 'right' })
 
   doc.setTextColor(...FG)
   doc.setFontSize(12)
@@ -37,7 +39,7 @@ function drawHeader(doc: jsPDF, animal: FemaleFull, subtitle?: string) {
   doc.setFontSize(8)
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(...MUTED)
-  doc.text(`Brinco ${animal.ear_tag ?? '-'} · ${animal.breed ?? '-'} · Pai: ${animal.sire_name ?? animal.sire_naab ?? '-'}`, 14, 33)
+  doc.text(`${translate('pdf.earTag', { value: animal.ear_tag ?? '-' }, locale)} · ${animal.breed ?? '-'} · ${translate('pdf.sire', undefined, locale)} ${animal.sire_name ?? animal.sire_naab ?? '-'}`, 14, 33)
 }
 
 function femaleNumber(animal: FemaleFull, key: string): number | null {
@@ -72,11 +74,11 @@ function drawIndices(doc: jsPDF, animal: FemaleFull, y: number, breed: BreedProo
   return y + h + 5
 }
 
-function drawPedigree(doc: jsPDF, y: number, ped: string[][]): number {
+function drawPedigree(doc: jsPDF, y: number, ped: string[][], locale: Locale): number {
   doc.setFontSize(8)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(...FG)
-  doc.text('PEDIGREE', 14, y)
+  doc.text(translate('pdf.pedigree', undefined, locale), 14, y)
   doc.setDrawColor(...FG)
   doc.setLineWidth(0.3)
   doc.line(14, y + 1, 100, y + 1)
@@ -98,11 +100,11 @@ function drawPedigree(doc: jsPDF, y: number, ped: string[][]): number {
   return y + 1
 }
 
-function drawLinear(doc: jsPDF, startY: number, lin: [string, number, string][]): number {
+function drawLinear(doc: jsPDF, startY: number, lin: [string, number, string][], locale: Locale): number {
   doc.setFontSize(8)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(...FG)
-  doc.text('LINEAR', 106, startY)
+  doc.text(translate('pdf.linear', undefined, locale), 106, startY)
   doc.setDrawColor(...FG)
   doc.setLineWidth(0.3)
   doc.line(106, startY + 1, 196, startY + 1)
@@ -165,13 +167,13 @@ function drawSections(doc: jsPDF, startY: number, sections: { t: string; meta: s
   return y
 }
 
-function drawOnePage(doc: jsPDF, animal: FemaleFull, subtitle?: string, breed: BreedProofOptions = holsteinProofOptions) {
-  const animalProof = buildProofFromFemale(animal, breed)
-  drawHeader(doc, animal, subtitle)
+function drawOnePage(doc: jsPDF, animal: FemaleFull, subtitle: string | undefined, breed: BreedProofOptions, locale: Locale) {
+  const animalProof = buildProofFromFemale(animal, breed, locale)
+  drawHeader(doc, animal, subtitle, locale)
   let y = drawIndices(doc, animal, 36, breed)
   const pedLinY = y
-  drawPedigree(doc, pedLinY, animalProof.ped)
-  const linEndY = drawLinear(doc, pedLinY, animalProof.lin)
+  drawPedigree(doc, pedLinY, animalProof.ped, locale)
+  const linEndY = drawLinear(doc, pedLinY, animalProof.lin, locale)
   const pedEndY = pedLinY + animalProof.ped.length * LH_PED + 5
   const contentY = Math.max(pedEndY, linEndY) + 1
   const secEndY = drawSections(doc, contentY, animalProof.sections)
@@ -180,23 +182,23 @@ function drawOnePage(doc: jsPDF, animal: FemaleFull, subtitle?: string, breed: B
   doc.setFontSize(6.5)
   doc.setTextColor(...MUTED)
   doc.text(
-    `Beta caseína: ${animal.beta_casein ?? '-'} · Kappa caseína: ${animal.kappa_casein ?? '-'}`,
+    translate('pdf.betaKappa', { beta: animal.beta_casein ?? '-', kappa: animal.kappa_casein ?? '-' }, locale),
     14,
     Math.min(footerY, 288),
   )
 }
 
-export function generateProofPdf(animal: FemaleFull, breed: BreedProofOptions = holsteinProofOptions) {
+export function generateProofPdf(animal: FemaleFull, breed: BreedProofOptions = holsteinProofOptions, locale: Locale = getLocale()) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-  drawOnePage(doc, animal, undefined, breed)
-  doc.save(`prova-${label(animal).replace(/\s+/g, '-')}.pdf`)
+  drawOnePage(doc, animal, undefined, breed, locale)
+  doc.save(`${translate('pdf.fileProof', undefined, locale)}-${label(animal).replace(/\s+/g, '-')}.pdf`)
 }
 
-export function generateCatalogPdf(animals: FemaleFull[], breed: BreedProofOptions = holsteinProofOptions) {
+export function generateCatalogPdf(animals: FemaleFull[], breed: BreedProofOptions = holsteinProofOptions, locale: Locale = getLocale()) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   animals.forEach((animal, idx) => {
     if (idx > 0) doc.addPage()
-    drawOnePage(doc, animal, `Catálogo Genômico · Fêmea ${idx + 1} de ${animals.length}`, breed)
+    drawOnePage(doc, animal, translate('pdf.catalog', { index: idx + 1, count: animals.length }, locale), breed, locale)
   })
-  doc.save(`catalogo-genomico-${animals.length}-femeas-${new Date().toISOString().split('T')[0]}.pdf`)
+  doc.save(`${translate('pdf.fileCatalog', { count: animals.length }, locale)}-${new Date().toISOString().split('T')[0]}.pdf`)
 }

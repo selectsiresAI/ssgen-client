@@ -1,6 +1,8 @@
 import jsPDF from 'jspdf'
 import type { FemaleFull } from '@/lib/api'
-import { fmt, traitLabel, trend as trendShape } from '@/lib/traits'
+import { fmt, getTraitLabel, trend as trendShape } from '@/lib/traits'
+import { getLocale, translate } from '@/i18n'
+import type { Locale } from '@/i18n/types'
 
 interface ReportSection {
   key: string
@@ -21,7 +23,7 @@ interface ReportBreedOptions {
   indexKey: string
 }
 
-function header(doc: jsPDF, title: string, page: number) {
+function header(doc: jsPDF, title: string, page: number, locale: Locale) {
   doc.setFillColor(...PRIMARY)
   doc.rect(0, 0, 210, 20, 'F')
   doc.setTextColor(255, 255, 255)
@@ -30,8 +32,8 @@ function header(doc: jsPDF, title: string, page: number) {
   doc.text('Select Sires', 14, 10)
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8)
-  doc.text('Relatório Executivo Genômico', 14, 16)
-  doc.text(`Página ${page} · ${title}`, 196, 12, { align: 'right' })
+  doc.text(translate('pdf.report', undefined, locale), 14, 16)
+  doc.text(translate('pdf.page', { page, title }, locale), 196, 12, { align: 'right' })
   doc.setTextColor(...FG)
 }
 
@@ -49,9 +51,9 @@ function enabled(sections: ReportSection[], key: string) {
   return sections.some((s) => s.key === key && s.enabled)
 }
 
-function page(doc: jsPDF, title: string, pageNo: number) {
+function page(doc: jsPDF, title: string, pageNo: number, locale: Locale) {
   if (pageNo > 1) doc.addPage()
-  header(doc, title, pageNo)
+  header(doc, title, pageNo, locale)
   sectionTitle(doc, title, 32)
 }
 
@@ -73,6 +75,14 @@ function interpolation(start: number, end: number, count: number) {
   return Array.from({ length: count }, (_, i) => start + ((end - start) / Math.max(1, count - 1)) * i)
 }
 
+function benchmarkLabel(key: string, label: string, locale: Locale): string {
+  if (locale === 'pt-BR') return label
+  const translationKey = `traits.${key}`
+  const translated = translate(translationKey, undefined, locale)
+  if (translated === translationKey) return label
+  return locale === getLocale() ? getTraitLabel(key) : translated
+}
+
 export function generateReportPdf(options: {
   sections: ReportSection[]
   herdAvg: Record<string, number>
@@ -81,12 +91,13 @@ export function generateReportPdf(options: {
   animals: FemaleFull[]
   attention: readonly (readonly [string, string, number | null, number, string])[]
   breed?: ReportBreedOptions
+  locale?: Locale
 }): void {
-  const { sections, herdAvg, benchmarks, trend, animals, attention, breed = { indexLabel: 'GTPI', indexKey: 'tpi' } } = options
+  const { sections, herdAvg, benchmarks, trend, animals, attention, breed = { indexLabel: 'GTPI', indexKey: 'tpi' }, locale = getLocale() } = options
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
-  page(doc, 'Resumo Executivo', 1)
-  const kpis = [['HHP$', fmt('hhp', herdAvg.hhp)], [breed.indexLabel, herdAvg[breed.indexKey] != null ? fmt(breed.indexKey, herdAvg[breed.indexKey]) : '-'], ['NM$', fmt('nm', herdAvg.nm)], ['Animais', String(animals.length)]]
+  page(doc, translate('pdf.summary', undefined, locale), 1, locale)
+  const kpis = [['HHP$', fmt('hhp', herdAvg.hhp)], [breed.indexLabel, herdAvg[breed.indexKey] != null ? fmt(breed.indexKey, herdAvg[breed.indexKey]) : '-'], ['NM$', fmt('nm', herdAvg.nm)], [translate('pdf.animals', undefined, locale), String(animals.length)]]
   kpis.forEach(([label, value], i) => {
     const x = 14 + i * 46
     doc.setFillColor(i === 0 ? 251 : 245, i === 0 ? 233 : 245, i === 0 ? 236 : 245)
@@ -102,19 +113,19 @@ export function generateReportPdf(options: {
   })
   doc.setFontSize(9)
   doc.setTextColor(...FG)
-  doc.text('O rebanho apresenta vantagem consistente em índices econômicos e produção, com pontos de atenção em características funcionais específicas.', 14, 82, { maxWidth: 182 })
+  doc.text(translate('pdf.summaryText', undefined, locale), 14, 82, { maxWidth: 182 })
 
-  page(doc, 'Perfil Genético', 2)
-  benchmarks.slice(0, 18).forEach(([key, label], i) => drawBar(doc, label, herdAvg[key] ?? 0, Math.max(1, Math.abs(herdAvg[key] ?? 0), 1000), 46 + i * 7, i < 6 ? PRIMARY : GREEN))
+  page(doc, translate('pdf.profile', undefined, locale), 2, locale)
+  benchmarks.slice(0, 18).forEach(([key, label], i) => drawBar(doc, benchmarkLabel(key, label, locale), herdAvg[key] ?? 0, Math.max(1, Math.abs(herdAvg[key] ?? 0), 1000), 46 + i * 7, i < 6 ? PRIMARY : GREEN))
 
-  page(doc, 'Evolução Temporal', 3)
+  page(doc, translate('pdf.evolution', undefined, locale), 3, locale)
   ;['hhp', breed.indexKey, 'nm', 'milk'].forEach((key, block) => {
     const data = trend[key as keyof TrendData] as number[]
     if (!data) return
     const max = Math.max(...data)
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(9)
-    doc.text(key === breed.indexKey ? breed.indexLabel : traitLabel[key], 14, 48 + block * 48)
+    doc.text(key === breed.indexKey ? breed.indexLabel : getTraitLabel(key), 14, 48 + block * 48)
     data.forEach((v, i) => {
       const h = (v / max) * 30
       const x = 44 + i * 18
@@ -127,14 +138,14 @@ export function generateReportPdf(options: {
     })
   })
 
-  page(doc, 'Rebanho vs Nacional', 4)
+  page(doc, translate('pdf.national', undefined, locale), 4, locale)
   benchmarks.slice(0, 12).forEach(([key, label, natAvg], i) => {
     const y = 48 + i * 10
     const val = herdAvg[key] ?? 0
     const max = Math.max(Math.abs(val), Math.abs(natAvg), 1)
     doc.setFontSize(8)
     doc.setTextColor(...FG)
-    doc.text(label, 16, y)
+    doc.text(benchmarkLabel(key, label, locale), 16, y)
     doc.setFillColor(...PRIMARY)
     doc.rect(52, y - 4, (Math.abs(val) / max) * 54, 4, 'F')
     doc.setFillColor(...MUTED)
@@ -142,7 +153,7 @@ export function generateReportPdf(options: {
     doc.text(fmt(key, val), 172, y, { align: 'right' })
   })
 
-  page(doc, 'Top 5 Animais', 5)
+  page(doc, translate('pdf.top5', undefined, locale), 5, locale)
   animals.slice().sort((a, b) => (b.hhp_dollar ?? -Infinity) - (a.hhp_dollar ?? -Infinity)).slice(0, 5).forEach((animal, i) => {
     const y = 50 + i * 24
     doc.setFillColor(i === 0 ? 201 : 245, i === 0 ? 154 : 245, i === 0 ? 75 : 245)
@@ -158,27 +169,27 @@ export function generateReportPdf(options: {
     doc.text(`${animal.sire_name ?? animal.sire_naab ?? '-'} · HHP$ ${animal.hhp_dollar ?? '-'} · ${breed.indexLabel} ${typeof indexValue === 'number' ? indexValue : '-'}`, 34, y + 4)
   })
 
-  page(doc, 'Características de Atenção', 6)
+  page(doc, translate('pdf.attention', undefined, locale), 6, locale)
   attention.filter((item) => item[2] != null).forEach(([code, name, current, target, hint], i) => {
     const y = 48 + i * 19
     doc.setFillColor(...AMBER)
     doc.circle(18, y - 2, 2.5, 'F')
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(...FG)
-    doc.text(`${code} · ${name}`, 25, y - 3)
+    doc.text(`${code} · ${translate(name, undefined, locale)}`, 25, y - 3)
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(...MUTED)
-    doc.text(`Atual ${(current ?? 0).toFixed(2)} · Ideal ${target.toFixed(2)} · ${hint}`, 25, y + 4)
+    doc.text(translate('pdf.currentIdeal', { current: (current ?? 0).toFixed(2), ideal: target.toFixed(2), hint: translate(hint, undefined, locale) }, locale), 25, y + 4)
   })
 
   const activeLabels = sections.filter((s) => s.enabled).map((s) => s.label).join(' · ')
   doc.setFontSize(7)
   doc.setTextColor(...MUTED)
-  doc.text(`Seções selecionadas: ${activeLabels}`, 14, 286, { maxWidth: 182 })
+  doc.text(translate('pdf.selectedSections', { sections: activeLabels }, locale), 14, 286, { maxWidth: 182 })
   if (!enabled(sections, 'temporal')) {
     const bench = benchmarks[0]
     interpolation(bench[2], bench[3], trend.years.length)
   }
 
-  doc.save(`relatorio-genomico-${new Date().toISOString().split('T')[0]}.pdf`)
+  doc.save(`${translate('pdf.fileReport', undefined, locale)}-${new Date().toISOString().split('T')[0]}.pdf`)
 }

@@ -6,6 +6,7 @@ import { useBreed } from '@/lib/breed'
 import { buildProofFromFemale } from '@/lib/proof'
 import { femaleTrait, fmt, traitLabel } from '@/lib/traits'
 import { generateProofPdf, generateCatalogPdf } from '@/lib/pdf'
+import { useI18n } from '@/i18n'
 
 const baseRankTraits = ['hhp', 'gtpi', 'nm', 'milk', 'fat', 'prot', 'pl', 'dpr', 'scs', 'ptat', 'udc', 'flc']
 
@@ -30,6 +31,7 @@ function LinearRows({ data, limit }: { data: [string, number, string][]; limit?:
 }
 
 export function ProvasPage() {
+  const { t, locale } = useI18n()
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [active, setActive] = useState(0)
   const [query, setQuery] = useState('')
@@ -44,7 +46,7 @@ export function ProvasPage() {
   const { data } = useFemalesFull({ page: 1, perPage: 5000 })
   const herd = data?.data ?? []
   const animal = herd[active] ?? herd[0]
-  const animalProof = useMemo(() => animal ? buildProofFromFemale(animal, breedProof) : null, [animal, breedProof])
+  const animalProof = useMemo(() => animal ? buildProofFromFemale(animal, breedProof, locale) : null, [animal, breedProof, locale])
 
   const inverse = ['scs', 'flc']
   const sorted = useMemo(() => {
@@ -67,8 +69,8 @@ export function ProvasPage() {
     return (
       <div className="ss-card">
         <div className="ss-card-body text-center">
-          <div className="text-[14px] font-bold text-[var(--ss-fg)]">Nenhuma fêmea</div>
-          <div className="mt-1 text-[12px] text-[var(--ss-muted)]">Sem resultados genômicos ainda</div>
+          <div className="text-[14px] font-bold text-[var(--ss-fg)]">{t('provas.none')}</div>
+          <div className="mt-1 text-[12px] text-[var(--ss-muted)]">{t('provas.noResults')}</div>
         </div>
       </div>
     )
@@ -77,14 +79,14 @@ export function ProvasPage() {
   return (
     <div>
       <div className="mb-3.5 flex flex-wrap items-center gap-2">
-        <div className="flex w-[280px] items-center gap-2 rounded-[7px] border border-[var(--ss-border)] bg-white px-3 py-2"><Search className="h-4 w-4 text-[var(--ss-muted)]" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar fêmea..." className="w-full border-0 bg-transparent text-[13px] outline-none" /></div>
-        <span className="font-mono text-[11.5px] text-[var(--ss-muted)]">{selected.size} selecionada{selected.size !== 1 ? 's' : ''}</span>
-        <button className="ss-button ss-button-sm disabled:pointer-events-none disabled:opacity-40" disabled={selectedFemales.length === 0} onClick={() => generateCatalogPdf(selectedFemales, breedProof)}><FileText />Gerar Catálogo PDF</button>
+        <div className="flex w-[280px] items-center gap-2 rounded-[7px] border border-[var(--ss-border)] bg-white px-3 py-2"><Search className="h-4 w-4 text-[var(--ss-muted)]" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('provas.search')} className="w-full border-0 bg-transparent text-[13px] outline-none" /></div>
+        <span className="font-mono text-[11.5px] text-[var(--ss-muted)]">{t('provas.selected', { count: selected.size, suffix: selected.size !== 1 ? 's' : '' })}</span>
+        <button className="ss-button ss-button-sm disabled:pointer-events-none disabled:opacity-40" disabled={selectedFemales.length === 0} onClick={() => generateCatalogPdf(selectedFemales, breedProof, locale)}><FileText />{t('provas.catalog')}</button>
       </div>
       <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[340px_1fr] lg:items-stretch" style={{ minHeight: 'calc(100vh - 180px)' }}>
         <div className="ss-card flex flex-col">
           <div className="ss-card-header">
-            <h3 className="ss-card-title">Fêmeas · {herd.length}</h3>
+            <h3 className="ss-card-title">{t('provas.females', { count: herd.length })}</h3>
             <select className="rounded-[7px] border border-[var(--ss-border)] bg-white px-2 py-1.5 text-[11px] font-medium" value={rankTrait} onChange={(e) => setRankTrait(e.target.value)}>
               {rankTraits.map((key) => <option key={key} value={key}>{traitLabels[key] ?? traitLabel[key]}</option>)}
             </select>
@@ -93,7 +95,7 @@ export function ProvasPage() {
             {filtered.map(({ a, i }) => (
               <button key={a.id} onClick={() => setActive(i)} className={`ss-rrow w-full grid-cols-[28px_1fr_auto_auto] px-3.5 py-2.5 text-left ${i === active ? 'is-selected' : ''}`}>
                 <input type="checkbox" checked={selected.has(i)} onClick={(e) => e.stopPropagation()} onChange={() => toggle(i)} className="h-[15px] w-[15px] accent-[var(--ss-primary)]" />
-                <div><div className="text-[13px] font-medium text-[var(--ss-fg)]">{a.name ?? a.ear_tag ?? 'Sem identificação'}</div><div className="font-mono text-[11px] text-[var(--ss-muted)]">{a.sire_name ?? a.sire_naab ?? '—'} · Brinco {a.ear_tag ?? '—'}</div></div>
+                <div><div className="text-[13px] font-medium text-[var(--ss-fg)]">{a.name ?? a.ear_tag ?? t('provas.unknown')}</div><div className="font-mono text-[11px] text-[var(--ss-muted)]">{a.sire_name ?? a.sire_naab ?? '—'} · {t('provas.earTag', { value: a.ear_tag ?? '—' })}</div></div>
                 <div className="text-right"><b className="block font-mono text-xs text-[var(--ss-fg)]">{femaleTrait(a, rankTrait) != null ? fmt(rankTrait, femaleTrait(a, rankTrait) ?? 0) : '—'}</b><small className="text-[8.5px] text-[var(--ss-muted-2)]">{traitLabels[rankTrait] ?? traitLabel[rankTrait]}</small></div>
                 <div className="text-right"><b className="block font-mono text-xs text-[var(--ss-fg)]">{a.hhp_dollar != null ? `$${a.hhp_dollar}` : '—'}</b><small className="text-[8.5px] text-[var(--ss-muted-2)]">HHP$</small></div>
               </button>
@@ -102,14 +104,14 @@ export function ProvasPage() {
         </div>
 
         <div className="ss-card">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--ss-border-2)] px-5 py-[13px]"><span className="rounded-full border border-[var(--ss-border)] bg-[var(--ss-wash)] px-3 py-1.5 font-mono text-[11px]">Prova <b className="text-[var(--ss-primary)]">genômica</b></span><span className="font-mono text-[11px] text-[var(--ss-muted)]">Base <b className="text-[var(--ss-fg)]">Predição Pedigree</b></span><button className="ss-button ss-button-ghost ss-button-sm" onClick={() => animal && generateProofPdf(animal, breedProof)}><Download />PDF</button></div>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--ss-border-2)] px-5 py-[13px]"><span className="rounded-full border border-[var(--ss-border)] bg-[var(--ss-wash)] px-3 py-1.5 font-mono text-[11px]">{t('provas.genomicProof')}</span><span className="font-mono text-[11px] text-[var(--ss-muted)]">{t('provas.base')} <b className="text-[var(--ss-fg)]">{t('provas.pedigreePrediction')}</b></span><button className="ss-button ss-button-ghost ss-button-sm" onClick={() => animal && generateProofPdf(animal, breedProof, locale)}><Download />PDF</button></div>
           <div className="grid grid-cols-1 lg:grid-cols-[.96fr_1.04fr]">
             <div className="border-r border-[var(--ss-border-2)] p-6">
-              <div className="text-lg font-bold leading-tight tracking-[-.3px] text-[var(--ss-fg)]">{animal?.name ?? animal?.ear_tag ?? 'Sem identificação'}</div>
-              <div className="mt-2 font-mono text-[11px] leading-7 text-[var(--ss-text)]"><span className="text-[var(--ss-muted)]">Brinco {animal?.ear_tag ?? '—'}</span> · {animal?.breed ?? '—'} · Predição Pedigree<br /><b className="text-[var(--ss-fg)]">HHP$ {animal?.hhp_dollar ?? '—'}</b> · {indexLabel} {animal && femaleTrait(animal, indexKey) != null ? `+${femaleTrait(animal, indexKey)}` : '—'} · NM$ {animal?.nm_dollar ?? '—'}</div>
-              <div className="my-5 border-b-2 border-[var(--ss-fg)] pb-1 text-[11px] font-semibold uppercase tracking-[.6px] text-[var(--ss-fg)]">Pedigree</div>
+              <div className="text-lg font-bold leading-tight tracking-[-.3px] text-[var(--ss-fg)]">{animal?.name ?? animal?.ear_tag ?? t('provas.unknown')}</div>
+              <div className="mt-2 font-mono text-[11px] leading-7 text-[var(--ss-text)]"><span className="text-[var(--ss-muted)]">{t('provas.earTag', { value: animal?.ear_tag ?? '—' })}</span> · {animal?.breed ?? '—'} · {t('provas.pedigreePrediction')}<br /><b className="text-[var(--ss-fg)]">HHP$ {animal?.hhp_dollar ?? '—'}</b> · {indexLabel} {animal && femaleTrait(animal, indexKey) != null ? `+${femaleTrait(animal, indexKey)}` : '—'} · NM$ {animal?.nm_dollar ?? '—'}</div>
+              <div className="my-5 border-b-2 border-[var(--ss-fg)] pb-1 text-[11px] font-semibold uppercase tracking-[.6px] text-[var(--ss-fg)]">{t('provas.pedigree')}</div>
               <div className="font-mono text-[11px] leading-6 text-[var(--ss-text)]">{animalProof?.ped.map((p, i) => p[0] === 'lact' ? <span key={i} className="block pl-4 text-[10px] text-[var(--ss-muted)]">{p[2]}</span> : <div key={i}><span className="font-medium text-[var(--ss-primary)]">{p[1]}</span> {p[2]}</div>)}</div>
-              <div className="my-5 border-b-2 border-[var(--ss-fg)] pb-1 text-[11px] font-semibold uppercase tracking-[.6px] text-[var(--ss-fg)]">Linear</div>
+              <div className="my-5 border-b-2 border-[var(--ss-fg)] pb-1 text-[11px] font-semibold uppercase tracking-[.6px] text-[var(--ss-fg)]">{t('provas.linear')}</div>
               <LinearRows data={animalProof?.lin ?? []} />
             </div>
             <div className="p-6">

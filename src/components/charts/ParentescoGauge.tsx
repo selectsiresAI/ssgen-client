@@ -1,9 +1,10 @@
 import { useId } from 'react'
+import { useI18n } from '@/i18n'
 
 interface ParentescoGaugeProps {
   /** Percentual "Informado" (0–100) exibido no centro e como preenchimento do arco. */
-  pct: number
-  size?: number
+  pct: number // i18n-ignore
+  size?: number // i18n-ignore
 }
 
 /**
@@ -11,6 +12,7 @@ interface ParentescoGaugeProps {
  * Usa exclusivamente tokens do design system do repo (--ss-*).
  */
 export function ParentescoGauge({ pct, size = 150 }: ParentescoGaugeProps) {
+  const { t, formatNumber } = useI18n()
   const uid = useId()
   const cx = size / 2
   const cy = size / 2
@@ -20,9 +22,9 @@ export function ParentescoGauge({ pct, size = 150 }: ParentescoGaugeProps) {
   const frac = Math.max(0, Math.min(1, pct / 100))
 
   return (
-    <div className="relative mx-auto" style={{ width: size, height: size }} aria-label={`${Math.round(pct)}% informado`}>
+    <div className="relative mx-auto" style={{ width: size, height: size }} aria-label={t('auditoria.informedPercent', { pct: formatNumber(Math.round(pct)) })}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <title id={uid}>{Math.round(pct)}% informado</title>
+        <title id={uid}>{t('auditoria.informedPercent', { pct: formatNumber(Math.round(pct)) })}</title>
         {/* trilho */}
         <circle
           cx={cx} cy={cy} r={r} fill="none"
@@ -40,10 +42,10 @@ export function ParentescoGauge({ pct, size = 150 }: ParentescoGaugeProps) {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="ss-mono text-[28px] font-extrabold leading-none tracking-[-1px] text-[var(--ss-fg)]">
-          {Math.round(pct)}%
+          {formatNumber(Math.round(pct))}%
         </span>
         <span className="mt-1 text-[9.5px] font-semibold uppercase tracking-[1.5px] text-[var(--ss-muted)]">
-          Informado
+          {t('auditoria.informed')}
         </span>
       </div>
     </div>

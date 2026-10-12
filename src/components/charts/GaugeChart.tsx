@@ -1,11 +1,11 @@
 interface GaugeChartProps {
-  label: string
-  value: number
+  label: string // i18n-ignore
+  value: number // i18n-ignore
   formattedValue: string
-  min: number
-  max: number
+  min: number // i18n-ignore
+  max: number // i18n-ignore
   natAvg: number
-  zone: string
+  zone: string // i18n-ignore
   zoneColor: string
 }
 

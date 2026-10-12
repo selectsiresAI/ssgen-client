@@ -1,0 +1,7 @@
+import type { NamespaceDict } from '../types'
+
+export default {
+  'pt-BR': { 'dashboard.openOrders': 'OS abertas', 'dashboard.registeredFemales': 'Fêmeas cadastradas', 'dashboard.availableReports': 'Laudos disponíveis', 'dashboard.awaitingCdcb': 'Aguardando CDCB', 'dashboard.serviceOrders': 'Ordens de serviço', 'dashboard.samples': 'Amostras', 'dashboard.status': 'Status', 'dashboard.report': 'Laudo', 'dashboard.completed': 'Concluída', 'dashboard.downloadPdf': 'Baixar PDF', 'dashboard.noServiceOrders': 'Nenhuma ordem de serviço ainda' },
+  'en-US': { 'dashboard.openOrders': 'Open service orders', 'dashboard.registeredFemales': 'Registered females', 'dashboard.availableReports': 'Available reports', 'dashboard.awaitingCdcb': 'Awaiting CDCB', 'dashboard.serviceOrders': 'Service orders', 'dashboard.samples': 'Samples', 'dashboard.status': 'Status', 'dashboard.report': 'Report', 'dashboard.completed': 'Completed', 'dashboard.downloadPdf': 'Download PDF', 'dashboard.noServiceOrders': 'No service orders yet' },
+  es: { 'dashboard.openOrders': 'Órdenes de servicio abiertas', 'dashboard.registeredFemales': 'Hembras registradas', 'dashboard.availableReports': 'Informes disponibles', 'dashboard.awaitingCdcb': 'Esperando CDCB', 'dashboard.serviceOrders': 'Órdenes de servicio', 'dashboard.samples': 'Muestras', 'dashboard.status': 'Estado', 'dashboard.report': 'Informe', 'dashboard.completed': 'Completada', 'dashboard.downloadPdf': 'Descargar PDF', 'dashboard.noServiceOrders': 'Aún no hay órdenes de servicio' },
+} satisfies NamespaceDict

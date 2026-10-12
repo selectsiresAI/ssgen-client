@@ -1,0 +1,43 @@
+import type { NamespaceDict } from '../types'
+
+export default {
+  'pt-BR': {
+    'auditoria.parent.sire': 'Pai (Sire)', 'auditoria.parent.mgs': 'Avô Materno (MGS)', 'auditoria.parent.mmgs': 'Bisavô Materno (MMGS)',
+    'auditoria.noBirthDateTrend': 'Sem data de nascimento suficiente para tendência temporal', 'auditoria.birthDateCoverage': '{withDate} de {total} animais têm data de nascimento informada.',
+    'auditoria.visibleCharts': 'Gráficos visíveis:', 'auditoria.progression': 'Progressão', 'auditoria.trend': 'Tendência', 'auditoria.year': 'ano', 'auditoria.last': 'Último', 'auditoria.distribution': 'Distribuição',
+    'auditoria.nationalReference': 'Referência Nacional', 'auditoria.myHerd': 'Meu Rebanho', 'auditoria.top25': 'Top 25%', 'auditoria.animals': 'animais',
+    'auditoria.nationalReferenceUnavailable': 'Referência nacional {breed} ainda não disponível', 'auditoria.nationalReferenceOmitted': 'A série nacional foi omitida; a evolução do rebanho permanece disponível nas outras etapas.', 'auditoria.evolution': 'Evolução',
+    'auditoria.performanceMatrix': 'Matriz de Performance', 'auditoria.noDataSelectedIndexes': 'Sem dados para os índices selecionados', 'auditoria.elite': 'Elite', 'auditoria.high': 'Alto {trait}', 'auditoria.below': 'Abaixo', 'auditoria.belowAverage': 'Abaixo da média',
+    'auditoria.allWithCount': 'Todos ({count})', 'auditoria.earTag': 'Brinco', 'auditoria.sireNaab': 'Pai (NAAB)', 'auditoria.hhp': 'HHP$', 'auditoria.quadrant': 'Quadrante', 'auditoria.animalsByQuadrant': 'Animais por quadrante', 'auditoria.exportCsv': 'Exportar CSV',
+    'auditoria.sampleNote': 'Gráfico exibe uma amostra de {sampled}; a tabela e o export usam o rebanho completo ({fullRows}).', 'auditoria.sire': 'Pai', 'auditoria.noAnimalsQuadrant': 'Sem animais neste quadrante.',
+    'auditoria.herdRanking': 'Ranking do Rebanho', 'auditoria.profile': 'Perfil', 'auditoria.average': 'méd', 'auditoria.noKinshipData': 'Sem dados de parentesco disponíveis.', 'auditoria.unresolvedNaab': 'Código internacional não resolvido para NAAB', 'auditoria.international': 'intl',
+    'auditoria.loadingHerdData': 'Carregando dados do rebanho...', 'auditoria.preserved': 'Auditoria genética preservada com fluxo sequencial e visualização por etapas.', 'auditoria.howToInterpret': 'Como interpretar.', 'auditoria.notInformed': 'Não informado', 'auditoria.informed': 'Informado', 'auditoria.informedPercent': '{pct}% informado', 'auditoria.kinshipMissing': 'parentesco ausente no registro', 'auditoria.kinshipInformed': 'pai/avô materno preenchidos',
+    'auditoria.all': 'Todas', 'auditoria.heifer': 'Novilha', 'auditoria.primiparous': 'Primípara', 'auditoria.multiparous': 'Multípara', 'auditoria.superior': 'Superior', 'auditoria.intermediate': 'Intermediário', 'auditoria.inferior': 'Inferior', 'auditoria.topSires': 'Top Sires', 'auditoria.topMaternalGrandsires': 'Top Maternal Grandsires',
+  },
+  'en-US': {
+    'auditoria.parent.sire': 'Sire', 'auditoria.parent.mgs': 'Maternal Grandsire (MGS)', 'auditoria.parent.mmgs': 'Maternal Great-Grandsire (MMGS)',
+    'auditoria.noBirthDateTrend': 'Insufficient birth dates for temporal trend', 'auditoria.birthDateCoverage': '{withDate} of {total} animals have a reported birth date.',
+    'auditoria.visibleCharts': 'Visible charts:', 'auditoria.progression': 'Progression', 'auditoria.trend': 'Trend', 'auditoria.year': 'year', 'auditoria.last': 'Last', 'auditoria.distribution': 'Distribution',
+    'auditoria.nationalReference': 'National Reference', 'auditoria.myHerd': 'My Herd', 'auditoria.top25': 'Top 25%', 'auditoria.animals': 'animals',
+    'auditoria.nationalReferenceUnavailable': 'National {breed} reference not yet available', 'auditoria.nationalReferenceOmitted': 'The national series was omitted; herd evolution remains available in the other steps.', 'auditoria.evolution': 'Evolution',
+    'auditoria.performanceMatrix': 'Performance Matrix', 'auditoria.noDataSelectedIndexes': 'No data for the selected indexes', 'auditoria.elite': 'Elite', 'auditoria.high': 'High {trait}', 'auditoria.below': 'Below', 'auditoria.belowAverage': 'Below average',
+    'auditoria.allWithCount': 'All ({count})', 'auditoria.earTag': 'Ear Tag', 'auditoria.sireNaab': 'Sire (NAAB)', 'auditoria.hhp': 'HHP$', 'auditoria.quadrant': 'Quadrant', 'auditoria.animalsByQuadrant': 'Animals by quadrant', 'auditoria.exportCsv': 'Export CSV',
+    'auditoria.sampleNote': 'The chart shows a sample of {sampled}; the table and export use the full herd ({fullRows}).', 'auditoria.sire': 'Sire', 'auditoria.noAnimalsQuadrant': 'No animals in this quadrant.',
+    'auditoria.herdRanking': 'Herd Ranking', 'auditoria.profile': 'Profile', 'auditoria.average': 'avg', 'auditoria.noKinshipData': 'No kinship data available.', 'auditoria.unresolvedNaab': 'International code not resolved for NAAB', 'auditoria.international': 'intl',
+    'auditoria.loadingHerdData': 'Loading herd data...', 'auditoria.preserved': 'Genetic audit preserved with sequential workflow and step-by-step visualization.', 'auditoria.howToInterpret': 'How to interpret.', 'auditoria.notInformed': 'Not Informed', 'auditoria.informed': 'Informed', 'auditoria.informedPercent': '{pct}% informed', 'auditoria.kinshipMissing': 'kinship missing in the record', 'auditoria.kinshipInformed': 'sire/maternal grandsire completed',
+    'auditoria.all': 'All', 'auditoria.heifer': 'Heifer', 'auditoria.primiparous': 'Primiparous', 'auditoria.multiparous': 'Multiparous', 'auditoria.superior': 'Superior', 'auditoria.intermediate': 'Intermediate', 'auditoria.inferior': 'Inferior', 'auditoria.topSires': 'Top Sires', 'auditoria.topMaternalGrandsires': 'Top Maternal Grandsires',
+  },
+  es: {
+    'auditoria.parent.sire': 'Padre (Sire)', 'auditoria.parent.mgs': 'Abuelo Materno (MGS)', 'auditoria.parent.mmgs': 'Bisabuelo Materno (MMGS)',
+    'auditoria.noBirthDateTrend': 'Sin fecha de nacimiento suficiente para la tendencia temporal', 'auditoria.birthDateCoverage': '{withDate} de {total} animales tienen fecha de nacimiento informada.',
+    'auditoria.visibleCharts': 'Gráficos visibles:', 'auditoria.progression': 'Progresión', 'auditoria.trend': 'Tendencia', 'auditoria.year': 'año', 'auditoria.last': 'Último', 'auditoria.distribution': 'Distribución',
+    'auditoria.nationalReference': 'Referencia Nacional', 'auditoria.myHerd': 'Mi Hato', 'auditoria.top25': 'Top 25%', 'auditoria.animals': 'animales',
+    'auditoria.nationalReferenceUnavailable': 'Referencia nacional de {breed} aún no disponible', 'auditoria.nationalReferenceOmitted': 'La serie nacional fue omitida; la evolución del hato permanece disponible en las otras etapas.', 'auditoria.evolution': 'Evolución',
+    'auditoria.performanceMatrix': 'Matriz de Rendimiento', 'auditoria.noDataSelectedIndexes': 'Sin datos para los índices seleccionados', 'auditoria.elite': 'Élite', 'auditoria.high': 'Alto {trait}', 'auditoria.below': 'Debajo', 'auditoria.belowAverage': 'Por debajo del promedio',
+    'auditoria.allWithCount': 'Todos ({count})', 'auditoria.earTag': 'Arete', 'auditoria.sireNaab': 'Padre (NAAB)', 'auditoria.hhp': 'HHP$', 'auditoria.quadrant': 'Cuadrante', 'auditoria.animalsByQuadrant': 'Animales por cuadrante', 'auditoria.exportCsv': 'Exportar CSV',
+    'auditoria.sampleNote': 'El gráfico muestra una muestra de {sampled}; la tabla y la exportación usan el hato completo ({fullRows}).', 'auditoria.sire': 'Padre', 'auditoria.noAnimalsQuadrant': 'Sin animales en este cuadrante.',
+    'auditoria.herdRanking': 'Ranking del Hato', 'auditoria.profile': 'Perfil', 'auditoria.average': 'prom', 'auditoria.noKinshipData': 'Sin datos de parentesco disponibles.', 'auditoria.unresolvedNaab': 'Código internacional no resuelto para NAAB', 'auditoria.international': 'intl',
+    'auditoria.loadingHerdData': 'Cargando datos del hato...', 'auditoria.preserved': 'Auditoría genética preservada con flujo secuencial y visualización por etapas.', 'auditoria.howToInterpret': 'Cómo interpretar.', 'auditoria.notInformed': 'No informado', 'auditoria.informed': 'Informado', 'auditoria.informedPercent': '{pct}% informado', 'auditoria.kinshipMissing': 'parentesco ausente en el registro', 'auditoria.kinshipInformed': 'padre/abuelo materno completados',
+    'auditoria.all': 'Todas', 'auditoria.heifer': 'Novilla', 'auditoria.primiparous': 'Primípara', 'auditoria.multiparous': 'Multípara', 'auditoria.superior': 'Superior', 'auditoria.intermediate': 'Intermedio', 'auditoria.inferior': 'Inferior', 'auditoria.topSires': 'Top Sires', 'auditoria.topMaternalGrandsires': 'Top Maternal Grandsires',
+  },
+} satisfies NamespaceDict

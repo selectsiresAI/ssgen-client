@@ -3,25 +3,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, useRef, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
+import { useI18n } from '@/i18n'
 
 interface Notification {
-  id: string
+  id: string // i18n-ignore
   type: string
-  title: string
-  body: string | null
-  read: boolean
-  created_at: string
-}
-
-function timeAgo(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'agora'
-  if (mins < 60) return `${mins}min`
-  const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs}h`
-  const days = Math.floor(hrs / 24)
-  return `${days}d`
+  title: string // i18n-ignore
+  body: string | null // i18n-ignore
+  read: boolean // i18n-ignore
+  created_at: string // i18n-ignore
+  metadata: { count?: number } | null
 }
 
 function typeIcon(type: string) {
@@ -32,6 +23,7 @@ function typeIcon(type: string) {
 
 export function NotificationsDropdown() {
   const { session } = useAuth()
+  const { t } = useI18n()
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -49,7 +41,7 @@ export function NotificationsDropdown() {
     queryFn: async () => {
       const { data } = await supabase
         .from('notifications')
-        .select('id, type, title, body, read, created_at')
+        .select('id, type, title, body, read, created_at, metadata')
         .eq('user_id', session!.user.id)
         .order('created_at', { ascending: false })
         .limit(20)
@@ -85,6 +77,24 @@ export function NotificationsDropdown() {
   })
 
   const unreadCount = notifications?.filter((n) => !n.read).length ?? 0
+  const timeAgo = (dateStr: string) => {
+    const diff = Date.now() - new Date(dateStr).getTime()
+    const mins = Math.floor(diff / 60000)
+    if (mins < 1) return t('notifications.now')
+    if (mins < 60) return t('notifications.minutesAgo', { count: mins })
+    const hrs = Math.floor(mins / 60)
+    if (hrs < 24) return t('notifications.hoursAgo', { count: hrs })
+    return t('notifications.daysAgo', { count: Math.floor(hrs / 24) })
+  }
+  const translatedNotification = (notification: Notification) => {
+    if (notification.type !== 'result_released' && notification.type !== 'analysis_started') return notification
+    const prefix = `notifications.type.${notification.type}`
+    return {
+      ...notification,
+      title: t(`${prefix}.title`),
+      body: t(`${prefix}.body`, { count: notification.metadata?.count ?? 0 }),
+    }
+  }
 
   return (
     <div className="relative" ref={ref}>
@@ -104,14 +114,14 @@ export function NotificationsDropdown() {
       {open && (
         <div className="absolute right-0 top-[calc(100%+6px)] z-50 w-[340px] overflow-hidden rounded-[10px] border border-[var(--ss-border)] bg-white shadow-lg">
           <div className="flex items-center justify-between border-b border-[var(--ss-border-2)] px-4 py-3">
-            <h4 className="text-[13px] font-semibold text-[var(--ss-fg)]">Notificações</h4>
+            <h4 className="text-[13px] font-semibold text-[var(--ss-fg)]">{t('notifications.title')}</h4>
             {unreadCount > 0 && (
               <button
                 type="button"
                 onClick={() => markAllRead.mutate()}
                 className="flex items-center gap-1 text-[11px] font-medium text-[var(--ss-primary)] hover:underline"
               >
-                <CheckCheck className="h-3 w-3" />Marcar lidas
+                <CheckCheck className="h-3 w-3" />{t('notifications.markRead')}
               </button>
             )}
           </div>
@@ -119,10 +129,12 @@ export function NotificationsDropdown() {
             {!notifications?.length ? (
               <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
                 <Bell className="h-8 w-8 text-[var(--ss-border)]" />
-                <p className="text-[12px] text-[var(--ss-muted)]">Nenhuma notificação</p>
+                <p className="text-[12px] text-[var(--ss-muted)]">{t('notifications.empty')}</p>
               </div>
             ) : (
-              notifications.map((n) => (
+              notifications.map((original) => {
+                const n = translatedNotification(original)
+                return (
                 <button
                   key={n.id}
                   type="button"
@@ -143,7 +155,8 @@ export function NotificationsDropdown() {
                   </div>
                   {!n.read && <span className="mt-1.5 h-[7px] w-[7px] shrink-0 rounded-full bg-[var(--ss-primary)]" />}
                 </button>
-              ))
+                )
+              })
             )}
           </div>
         </div>

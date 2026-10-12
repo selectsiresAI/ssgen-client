@@ -1,11 +1,12 @@
 import { traitLabel } from '@/lib/traits'
 import { useBreed } from '@/lib/breed'
+import { useI18n } from '@/i18n'
 
 interface DistChartProps {
-  trait: string
+  trait: string // i18n-ignore
   trendData?: number[]
   bins?: { label: string; count: number }[]
-  height?: number
+  height?: number // i18n-ignore
 }
 
 // Professional slate/navy palette
@@ -18,6 +19,7 @@ const BAR_COLORS = [
 ]
 
 export function DistChart({ trait, trendData, bins: propBins, height }: DistChartProps) {
+  const { t, formatNumber } = useI18n()
   const { traitLabels } = useBreed()
   const bins = propBins ?? (() => {
     const data = trendData ?? []
@@ -51,7 +53,7 @@ export function DistChart({ trait, trendData, bins: propBins, height }: DistChar
               }}
             >
               <span className="absolute -top-[22px] left-0 right-0 text-center">
-                <span className="font-mono text-[13px] font-bold text-[var(--ss-fg)]">{bin.count}</span>
+                <span className="font-mono text-[13px] font-bold text-[var(--ss-fg)]">{formatNumber(bin.count)}</span>
                 <span className="ml-0.5 font-mono text-[9px] text-[var(--ss-muted)]">{pct}%</span>
               </span>
               <i className="absolute -bottom-6 left-0 right-0 text-center font-mono text-[11px] font-medium not-italic text-[var(--ss-muted)]">{String(bin.label)}</i>
@@ -60,7 +62,7 @@ export function DistChart({ trait, trendData, bins: propBins, height }: DistChar
         })}
       </div>
       <div className="mt-2 text-center font-mono text-[10px] font-medium text-[var(--ss-muted)]">
-        {traitLabels[trait] ?? traitLabel[trait] ?? trait} · {total} animais
+        {traitLabels[trait] ?? traitLabel[trait] ?? trait} · {formatNumber(total)} {t('auditoria.animals')}
       </div>
     </div>
   )

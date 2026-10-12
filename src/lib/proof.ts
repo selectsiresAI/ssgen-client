@@ -1,4 +1,6 @@
 import type { FemaleFull } from './api'
+import { getLocale, translate } from '@/i18n'
+import type { Locale } from '@/i18n/types'
 
 export interface Proof {
   ped: [string, string, string][]
@@ -37,38 +39,23 @@ const parentLabel = (naab: string | null | undefined, name: string | null | unde
   return name ?? naab ?? '—'
 }
 
-export function buildProofFromFemale(f: FemaleFull, opts: BreedProofOptions = holsteinProofOptions): Proof {
+export function buildProofFromFemale(f: FemaleFull, opts: BreedProofOptions = holsteinProofOptions, locale: Locale = getLocale()): Proof {
+  const t = (key: string, params?: Record<string, string | number>) => translate(key, params, locale)
   return {
     ped: [
-      ['role', 'Pai:', parentLabel(f.sire_naab, f.sire_name)],
-      ['role', 'Avô Mat.:', parentLabel(f.mgs_naab, f.mgs_name)],
-      ['role', 'Bisavô Mat.:', parentLabel(f.mmgs_naab, f.mmgs_name)],
+      ['role', t('pdf.father'), parentLabel(f.sire_naab, f.sire_name)],
+      ['role', t('pdf.maternalGrandsire'), parentLabel(f.mgs_naab, f.mgs_name)],
+      ['role', t('pdf.maternalGreatGrandsire'), parentLabel(f.mmgs_naab, f.mmgs_name)],
     ],
     lin: [
-      ['Estatura', n(f.sta), 'T'],
-      ['Força', n(f.str), 'S'],
-      ['Prof. Corporal', n(f.dfm), 'D'],
-      ['Largura de Garupa', n(f.rw), 'W'],
-      ['Ângulo de Garupa', n(f.rua), 'S'],
-      ['Pernas Tras. V. Lateral', n(f.rls), 'S'],
-      ['Pernas Tras. V. Trás', n(f.rlr), 'H'],
-      ['Ângulo do Casco', n(f.fta), 'L'],
-      ['Escore Pernas e Pés', n(f.fls), 'L'],
-      ['Úbere Anterior', n(f.fua), 'S'],
-      ['Altura Úbere Post.', n(f.ruh), 'H'],
-      ['Largura Úbere Post.', n(f.ruw), 'W'],
-      ['Ligamento Central', n(f.ucl), 'W'],
-      ['Prof. de Úbere', n(f.udp), 'S'],
-      ['Tetos Anteriores', n(f.ftp), 'C'],
-      ['Tetos Posteriores', n(f.rtp), 'C'],
-      ['Compr. de Tetos', n(f.ftl), 'S'],
+      [t('pdf.lin.sta'), n(f.sta), 'T'], [t('pdf.lin.str'), n(f.str), 'S'], [t('pdf.lin.dfm'), n(f.dfm), 'D'], [t('pdf.lin.rw'), n(f.rw), 'W'], [t('pdf.lin.rua'), n(f.rua), 'S'], [t('pdf.lin.rls'), n(f.rls), 'S'], [t('pdf.lin.rlr'), n(f.rlr), 'H'], [t('pdf.lin.fta'), n(f.fta), 'L'], [t('pdf.lin.fls'), n(f.fls), 'L'], [t('pdf.lin.fua'), n(f.fua), 'S'], [t('pdf.lin.ruh'), n(f.ruh), 'H'], [t('pdf.lin.ruw'), n(f.ruw), 'W'], [t('pdf.lin.ucl'), n(f.ucl), 'W'], [t('pdf.lin.udp'), n(f.udp), 'S'], [t('pdf.lin.ftp'), n(f.ftp), 'C'], [t('pdf.lin.rtp'), n(f.rtp), 'C'], [t('pdf.lin.ftl'), n(f.ftl), 'S'],
     ],
     sections: [
-      { t: 'Produção', meta: '(PTA) · Predição Pedigree', rows: [['Leite', plus(n(f.ptam)), ''], ['Proteína', plus(n(f.ptap)), '% Prot ' + f2(n(f.ptap_pct))], ['Gordura', plus(n(f.ptaf)), '% Gord ' + f2(n(f.ptaf_pct))], ['CFP', plus(n(f.cfp)), ''], ['NM$', money(n(f.nm_dollar)), ''], ['GM$', money(n(f.gm_dollar)), ''], ['F.Sav', plus(n(f.f_sav)), ''], ['RFI', String(n(f.rfi)), '']] },
-      { t: 'Tipo', meta: '(PTA) · Predição Pedigree', rows: [[opts.indexLabel, idx(femaleNumber(f, opts.indexKey)), ''], ['PTAT', f2(n(f.ptat)), ''], [opts.udderLabel, opts.udderKey === 'jui' ? idx(femaleNumber(f, opts.udderKey)) : f2(femaleNumber(f, opts.udderKey)), ''], ['FLC', n(f.flc).toFixed(2), '']] },
-      { t: 'Aptidão', meta: '', rows: [['HHP$®', money(n(f.hhp_dollar)), ''], ['SCS', n(f.scs).toFixed(2), ''], ['PL', f1(n(f.pl)), ''], ['LIV', f1(n(f.liv)), ''], ['DPR', f1(n(f.dpr)), ''], ['HCR', f1(n(f.hcr)), ''], ['CCR', f1(n(f.ccr)), ''], ['FI', f1(n(f.fi)), '']] },
-      { t: 'Saúde', meta: '', rows: [['Mastite', f1(n(f.mast)), ''], ['Metrite', f1(n(f.met)), ''], ['Ret. Placenta', f1(n(f.rp)), ''], ['Desp. Abomaso', f1(n(f.da)), ''], ['Cetose', f1(n(f.ket)), ''], ['Febre de Leite', f1(n(f.mf)), '']] },
-      { t: 'Facilidade de Parto', meta: '', rows: [['SCE', n(f.sce).toFixed(1), ''], ['SSB', n(f.ssb).toFixed(1), ''], ['DSB', n(f.dsb).toFixed(1), ''], ['Gestação', f1(n(f.gl)), ''], ['EFC', plus(n(f.efc)), '']] },
+      { t: t('pdf.production'), meta: `(PTA) · ${t('pdf.pedigreePrediction')}`, rows: [[t('traits.milk'), plus(n(f.ptam)), ''], [t('pdf.protein'), plus(n(f.ptap)), '% Prot ' + f2(n(f.ptap_pct))], [t('pdf.fat'), plus(n(f.ptaf)), '% Gord ' + f2(n(f.ptaf_pct))], ['CFP', plus(n(f.cfp)), ''], ['NM$', money(n(f.nm_dollar)), ''], ['GM$', money(n(f.gm_dollar)), ''], ['F.Sav', plus(n(f.f_sav)), ''], ['RFI', String(n(f.rfi)), '']] },
+      { t: t('pdf.type'), meta: `(PTA) · ${t('pdf.pedigreePrediction')}`, rows: [[opts.indexLabel, idx(femaleNumber(f, opts.indexKey)), ''], ['PTAT', f2(n(f.ptat)), ''], [opts.udderLabel, opts.udderKey === 'jui' ? idx(femaleNumber(f, opts.udderKey)) : f2(femaleNumber(f, opts.udderKey)), ''], ['FLC', n(f.flc).toFixed(2), '']] },
+      { t: t('pdf.aptitude'), meta: '', rows: [['HHP$®', money(n(f.hhp_dollar)), ''], ['SCS', n(f.scs).toFixed(2), ''], ['PL', f1(n(f.pl)), ''], ['LIV', f1(n(f.liv)), ''], ['DPR', f1(n(f.dpr)), ''], ['HCR', f1(n(f.hcr)), ''], ['CCR', f1(n(f.ccr)), ''], ['FI', f1(n(f.fi)), '']] },
+      { t: t('pdf.health'), meta: '', rows: [[t('pdf.mastitis'), f1(n(f.mast)), ''], [t('pdf.metritis'), f1(n(f.met)), ''], [t('pdf.retainedPlacenta'), f1(n(f.rp)), ''], [t('pdf.displacedAbomasum'), f1(n(f.da)), ''], [t('pdf.ketosis'), f1(n(f.ket)), ''], [t('pdf.milkFever'), f1(n(f.mf)), '']] },
+      { t: t('pdf.calvingEase'), meta: '', rows: [['SCE', n(f.sce).toFixed(1), ''], ['SSB', n(f.ssb).toFixed(1), ''], ['DSB', n(f.dsb).toFixed(1), ''], [t('pdf.gestation'), f1(n(f.gl)), ''], ['EFC', plus(n(f.efc)), '']] },
     ],
   }
 }

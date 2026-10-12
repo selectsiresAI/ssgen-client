@@ -2,11 +2,11 @@ import { fmt, traitLabel } from '@/lib/traits'
 import { useBreed } from '@/lib/breed'
 
 interface EvoChartProps {
-  data: number[]
-  years: string[]
-  trait: string
-  width?: number
-  height?: number
+  data: number[] // i18n-ignore
+  years: string[] // i18n-ignore
+  trait: string // i18n-ignore
+  width?: number // i18n-ignore
+  height?: number // i18n-ignore
 }
 
 export function EvoChart({ data, years, trait, width = 540, height = 220 }: EvoChartProps) {

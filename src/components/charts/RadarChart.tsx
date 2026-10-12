@@ -3,9 +3,9 @@ import type { RadarGroup } from '@/lib/traits'
 interface RadarChartProps {
   animal: Record<string, number>
   avg: Record<string, number>
-  group: RadarGroup
-  width?: number
-  height?: number
+  group: RadarGroup // i18n-ignore
+  width?: number // i18n-ignore
+  height?: number // i18n-ignore
   /** Domínio dinâmico por eixo (min–max do rebanho), alinhado a group.traits.
    *  Quando presente, a escala de cada eixo se adapta ao rebanho em vez do teto fixo. */
   domain?: { min: number; max: number }[]
