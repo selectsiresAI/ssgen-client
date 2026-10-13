@@ -21,6 +21,8 @@ const herdCols: { key: string; label: string; mono?: boolean; role?: 'index' | '
   { key: 'cdcb_id', label: 'CDCB', mono: true },
   { key: 'category', label: 'herd.category' },
   { key: 'birth_date', label: 'herd.birthDate', mono: true },
+  { key: 'beta_casein', label: 'herd.betaCasein', mono: true },
+  { key: 'kappa_casein', label: 'herd.kappaCasein', mono: true },
   { key: 'sire_naab', label: 'herd.sire', mono: true },
   { key: 'mgs_naab', label: 'MGS', mono: true },
   { key: 'mmgs_naab', label: 'MMGS', mono: true },
