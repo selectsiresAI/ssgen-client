@@ -28,6 +28,19 @@ export function AuthPage() {
   const [recovery, setRecovery] = useState(() => typeof window !== 'undefined' && window.location.hash.includes('type=recovery'))
   const [newPassword, setNewPassword] = useState('')
 
+  // acesso aberto pela equipe (dashboard central): link de uso único com token_hash
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const tokenHash = params.get('token_hash')
+    if (!tokenHash || params.get('type') !== 'magiclink') return
+    window.history.replaceState(null, '', '/auth')
+    void supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'magiclink' }).then(({ error: otpError }) => {
+      if (otpError) setError(t('auth.invalidCode'))
+      else navigate('/', { replace: true })
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => { if (event === 'PASSWORD_RECOVERY') setRecovery(true) })
     return () => data.subscription.unsubscribe()
