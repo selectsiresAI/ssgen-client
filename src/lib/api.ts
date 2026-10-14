@@ -111,6 +111,9 @@ export interface FemaleFull {
   efc: number | null
   bwc: number | null
   fsc: number | null
+  hcc: number | null
+  bsc: number | null
+  bd: number | null
   sta: number | null
   str: number | null
   dfm: number | null

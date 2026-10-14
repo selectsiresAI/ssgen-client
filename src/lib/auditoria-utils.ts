@@ -8,7 +8,7 @@ export const FEMALE_TRAIT_MAP: Record<string, keyof FemaleFull> = {
   pl: 'pl', dpr: 'dpr', scs: 'scs', hcr: 'hcr', ccr: 'ccr', liv: 'liv', sce: 'sce',
   ptat: 'ptat', udc: 'udc', jui: 'jui', flc: 'flc',
   da: 'da', ket: 'ket', mast: 'mast', met: 'met', rp: 'rp',
-  ssb: 'ssb', dsb: 'dsb', hliv: 'h_liv', fi: 'fi', fsc: 'fsc', gl: 'gl',
+  ssb: 'ssb', dsb: 'dsb', hliv: 'h_liv', fi: 'fi', fsc: 'fsc', hcc: 'hcc', bsc: 'bsc', bd: 'bd', gl: 'gl',
   sta: 'sta', str: 'str', dfm: 'dfm', rua: 'rua', rw: 'rw', rls: 'rls', rlr: 'rlr',
   fta: 'fta', fls: 'fls', fua: 'fua', ruh: 'ruh', ruw: 'ruw', ucl: 'ucl', udp: 'udp',
   ftp: 'ftp', rtp: 'rtp', ftl: 'ftl', mf: 'mf', gfi: 'gfi', bwc: 'bwc',
