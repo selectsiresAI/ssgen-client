@@ -100,7 +100,7 @@ const HEADER_MAP: Record<string, string> = {
   "fi": "fi",
   "gl": "gl", "dg": "gl",
   "efc": "efc", "eficiencia alimentar $": "efc",
-  "bwc": "bwc", "bsc": "bwc",
+  "bwc": "bwc",
   "fsc": "fsc", "first conception": "fsc", "primeira concepcao": "fsc", "primeira concepção": "fsc",
   "hipoc": "cfp",
 
