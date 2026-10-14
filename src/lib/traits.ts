@@ -84,7 +84,7 @@ const traitLabelKeys: Record<string, string> = {
   fat: 'Gordura', fat_pct: 'Gord%', prot: 'Proteína', prot_pct: 'Prot%', pl: 'PL', dpr: 'DPR', // i18n-ignore (reserva pt-BR; a traducao vem de translate)
   scs: 'SCS', hcr: 'HCR', ccr: 'CCR', liv: 'LIV', sce: 'SCE', ptat: 'Tipo', udc: 'UDC',
   flc: 'FLC', fsav: 'F.Sav', rfi: 'RFI', cfp: 'CFP', efc: 'EFC', da: 'DA', ket: 'KET',
-  mast: 'MAST', met: 'MET', rp: 'RP', ssb: 'SSB', dsb: 'DSB', hliv: 'H.LIV', fi: 'FI',
+  mast: 'MAST', met: 'MET', rp: 'RP', ssb: 'SSB', dsb: 'DSB', hliv: 'H.LIV', fi: 'FI', fsc: 'FSC',
   gl: 'GL', sta: 'STA', str: 'STR', dfm: 'DFM', rua: 'RUA', rw: 'RW', rls: 'RLS', rlr: 'RLR',
   fta: 'FTA', fls: 'FLS', fua: 'FUA', ruh: 'RUH', ruw: 'RUW', ucl: 'UCL', udp: 'UDP',
   ftp: 'FTP', rtp: 'RTP', ftl: 'FTL', mf: 'MF', gfi: 'GFI',
@@ -151,7 +151,7 @@ export const DEMO_TO_FEMALE: Record<string, string> = {
   dpr: 'dpr', pl: 'pl', scs: 'scs', hcr: 'hcr', ccr: 'ccr', liv: 'liv', sce: 'sce',
   ptat: 'ptat', udc: 'udc', jui: 'jui', flc: 'flc', fsav: 'f_sav', rfi: 'rfi', cfp: 'cfp', efc: 'efc',
   da: 'da', ket: 'ket', mast: 'mast', met: 'met', rp: 'rp', ssb: 'ssb', dsb: 'dsb', hliv: 'h_liv',
-  fi: 'fi', gl: 'gl', mf: 'mf', gfi: 'gfi', sta: 'sta', str: 'str', dfm: 'dfm',
+  fi: 'fi', fsc: 'fsc', gl: 'gl', mf: 'mf', gfi: 'gfi', sta: 'sta', str: 'str', dfm: 'dfm',
   rua: 'rua', rw: 'rw', rls: 'rls', rlr: 'rlr', fta: 'fta', fls: 'fls', fua: 'fua', ruh: 'ruh', ruw: 'ruw',
   ucl: 'ucl', udp: 'udp', ftp: 'ftp', rtp: 'rtp', ftl: 'ftl',
   sire: 'sire_naab', mgs: 'mgs_naab', mmgs: 'mmgs_naab', mggs: 'mmgs_naab', name: 'name', id: 'ear_tag', // i18n-ignore (reserva pt-BR; a traducao vem de translate)
@@ -169,7 +169,7 @@ export function fmt(trait: string, value: number): string {
   // 2 casas decimais (traits de magnitude decimal)
   const dec = ['dpr', 'pl', 'ptat', 'udc', 'flc', 'hcr', 'ccr', 'liv', 'sce', 'dce', 'fat_pct', 'prot_pct',
     'da', 'ket', 'met', 'rp', 'gl', 'sta', 'str', 'dfm', 'rua', 'rw', 'rls', 'rlr', 'fta', 'fls', 'fua',
-    'ruh', 'ruw', 'ucl', 'udp', 'ftp', 'rtp', 'ftl', 'mf', 'gfi', 'mast', 'ssb', 'dsb', 'hliv', 'fi',
+    'ruh', 'ruw', 'ucl', 'udp', 'ftp', 'rtp', 'ftl', 'mf', 'gfi', 'mast', 'ssb', 'dsb', 'hliv', 'fi', 'fsc',
     'rfi', 'efc', 'fsav', 'f_sav', 'bwc', 'bd']
   // índices em $ -> inteiro com prefixo
   if (['nm', 'hhp', 'cm', 'fm', 'gm'].includes(trait)) return `$${Math.round(value)}`

@@ -110,6 +110,7 @@ export interface FemaleFull {
   gl: number | null
   efc: number | null
   bwc: number | null
+  fsc: number | null
   sta: number | null
   str: number | null
   dfm: number | null

@@ -100,7 +100,8 @@ const HEADER_MAP: Record<string, string> = {
   "fi": "fi",
   "gl": "gl", "dg": "gl",
   "efc": "efc", "eficiencia alimentar $": "efc",
-  "bwc": "bwc",
+  "bwc": "bwc", "bsc": "bwc",
+  "fsc": "fsc", "first conception": "fsc", "primeira concepcao": "fsc", "primeira concepção": "fsc",
   "hipoc": "cfp",
 
   // --- Linear type traits ---
@@ -185,7 +186,7 @@ const FEMALES_NUMERIC_FIELDS = new Set([
   "pta_pl", "pta_scs", "pta_dpr", "pta_livability", "pta_ccr", "pta_hcr", "pta_sce",
   "pta_ptat", "pta_udc", "pta_flc",
   "f_sav", "rfi", "cfp", "da", "ket", "mast", "met", "rp", "ssb", "dsb",
-  "h_liv", "fi", "gl", "efc", "bwc",
+  "h_liv", "fi", "gl", "efc", "bwc", "fsc",
   "sta", "str_num", "dfm", "rua", "rls", "rtp", "ftl", "rw", "rlr",
   "fta", "fls", "fua", "ruh", "ruw", "ucl", "udp", "ftp",
   "mf_num", "gfi", "jpi", "jui",

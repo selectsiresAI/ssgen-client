@@ -19,7 +19,7 @@ const COLUMN_TO_LABEL: Record<string, string> = {
   hhp_dollar:'HHP$',tpi:'TPI',jpi:'JPI',nm_dollar:'NM$',cm_dollar:'CM$',fm_dollar:'FM$',gm_dollar:'GM$',
   ptam:'PTAM',ptaf:'PTAF',cfp:'CFP',ptap:'PTAP',ptaf_pct:'PTAF%',ptap_pct:'PTAP%',scs:'SCS',
   pl:'PL',dpr:'DPR',liv:'LIV',h_liv:'H LIV',gl:'GL',mf:'MF',da:'DA',ket:'Ket',mast:'Mast',
-  met:'Met',rp:'RP',ccr:'CCR',hcr:'HCR',fi:'FI',rfi:'RFI',f_sav:'F SAV',ptat:'PTAT',udc:'UDC',jui:'JUI',
+  met:'Met',rp:'RP',ccr:'CCR',hcr:'HCR',fi:'FI',fsc:'FSC',rfi:'RFI',f_sav:'F SAV',ptat:'PTAT',udc:'UDC',jui:'JUI',
   flc:'FLC',bwc:'BWC',sta:'STA',str:'STR',dfm:'DFM',rua:'RUA',rls:'RLS',rlr:'RLR',fua:'FUA',
   fls:'FLS',fta:'FTA',ruh:'RUH',ruw:'RUW',rw:'RW',ucl:'UCL',udp:'UDP',ftp:'FTP',rtp:'RTP',
   ftl:'FTL',sce:'SCE',dce:'DCE',ssb:'SSB',dsb:'DSB',gfi:'GFI',

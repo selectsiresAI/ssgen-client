@@ -48,6 +48,7 @@ const herdCols: { key: string; label: string; mono?: boolean; role?: 'index' | '
   { key: 'liv', label: 'LIV', mono: true },
   { key: 'h_liv', label: 'H.LIV', mono: true },
   { key: 'fi', label: 'FI', mono: true },
+  { key: 'fsc', label: 'FSC', mono: true },
   { key: 'gl', label: 'GL', mono: true },
   { key: 'efc', label: 'EFC', mono: true },
   { key: 'sce', label: 'SCE', mono: true },
