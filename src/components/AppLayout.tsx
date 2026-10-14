@@ -91,6 +91,7 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
         <div className="min-w-0">
           <b className="block truncate text-[13px] font-semibold leading-tight text-[#E4E4E7]">{profile?.full_name ?? profile?.email ?? ''}</b>
           <small className="text-[10px] text-[var(--ss-sidebar-muted)]">{t('layout.selectSiresBr')}</small>
+          <a href="/privacidade" target="_blank" rel="noopener noreferrer" className="block text-[10px] text-[var(--ss-sidebar-muted)] underline underline-offset-2 hover:text-[#D1D5DB]">{t('privacy.link')}</a>
         </div>
       </div>
     </div>

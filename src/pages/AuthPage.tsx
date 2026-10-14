@@ -51,6 +51,7 @@ export function AuthPage() {
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [acceptPolicy, setAcceptPolicy] = useState(false)
   const [codeSent, setCodeSent] = useState(false)
   const [code, setCode] = useState('')
   // link de redefinição de senha: a sessão de recuperação não pode mandar direto para o portal
@@ -98,6 +99,10 @@ export function AuthPage() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    if (!acceptPolicy) {
+      setError(t('privacy.signup.required'))
+      return
+    }
     setLoading(true)
     try {
       await signUp(email, password, fullName, breed)
@@ -326,6 +331,10 @@ export function AuthPage() {
                     ))}
                   </div>
                 </div>
+                <label className="flex cursor-pointer items-start gap-2.5 text-sm">
+                  <input type="checkbox" checked={acceptPolicy} onChange={(e) => setAcceptPolicy(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--ss-primary)]" />
+                  <span>{t('privacy.signup.accept')} <a href="/privacidade" target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline underline-offset-2">{t('privacy.link')}</a>.</span>
+                </label>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? t('auth.creating') : t('auth.createAccount')}
                 </Button>
@@ -336,6 +345,8 @@ export function AuthPage() {
 
           <p className="text-xs text-center text-muted-foreground mt-6">
             Select Sires do Brasil &copy; {new Date().getFullYear()}
+            <br />
+            <a href="/privacidade" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">{t('privacy.link')}</a>
           </p>
         </CardContent>
       </Card>

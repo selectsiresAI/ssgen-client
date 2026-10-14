@@ -12,6 +12,7 @@ const PainelGenomicoPage = lazy(() => import('@/pages/PainelGenomicoPage').then(
 const ProvasPage = lazy(() => import('@/pages/ProvasPage').then((m) => ({ default: m.ProvasPage })))
 const AuditoriaPage = lazy(() => import('@/pages/AuditoriaPage').then((m) => ({ default: m.AuditoriaPage })))
 const BotijaoPage = lazy(() => import('@/pages/BotijaoPage').then((m) => ({ default: m.BotijaoPage })))
+const PrivacyPage = lazy(() => import('@/pages/PrivacyPage').then((m) => ({ default: m.PrivacyPage })))
 const HerdListPage = lazy(() => import('@/pages/HerdListPage').then((m) => ({ default: m.HerdListPage })))
 
 const queryClient = new QueryClient({
@@ -37,6 +38,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/privacidade" element={<Suspense fallback={<PageLoader />}><PrivacyPage /></Suspense>} />
           <Route
             element={
               <ProtectedRoute>
