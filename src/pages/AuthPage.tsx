@@ -52,28 +52,6 @@ export function AuthPage() {
     return null
   }
 
-  async function tryMasterLogin(email: string, password: string): Promise<boolean> {
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/master-login`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({ email, master_password: password }),
-        },
-      )
-      if (!res.ok) return false
-      const { token_hash, type } = await res.json()
-      const { error } = await supabase.auth.verifyOtp({ token_hash, type })
-      return !error
-    } catch {
-      return false
-    }
-  }
-
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -82,13 +60,7 @@ export function AuthPage() {
       await signIn(email, password)
       navigate('/', { replace: true })
     } catch {
-      // Normal login failed — try master password
-      const ok = await tryMasterLogin(email, password)
-      if (ok) {
-        navigate('/', { replace: true })
-      } else {
-        setError(t('auth.invalidCredentials'))
-      }
+      setError(t('auth.invalidCredentials'))
     } finally {
       setLoading(false)
     }
