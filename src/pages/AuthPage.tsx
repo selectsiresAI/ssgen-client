@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,6 +10,34 @@ import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import { useI18n } from '@/i18n'
+
+function PasswordInput({ id, value, onChange, placeholder, minLength }: { id: string; value: string; onChange: (v: string) => void; placeholder: string; minLength?: number }) {
+  const { t } = useI18n()
+  const [visible, setVisible] = useState(false)
+  return (
+    <div className="relative">
+      <Input
+        id={id}
+        type={visible ? 'text' : 'password'}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        required
+        minLength={minLength}
+        className="pr-10"
+      />
+      <button
+        type="button"
+        onClick={() => setVisible((v) => !v)}
+        aria-label={visible ? t('auth.hidePassword') : t('auth.showPassword')}
+        title={visible ? t('auth.hidePassword') : t('auth.showPassword')}
+        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground hover:text-foreground"
+      >
+        {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+      </button>
+    </div>
+  )
+}
 
 export function AuthPage() {
   const navigate = useNavigate()
@@ -180,7 +209,7 @@ export function AuthPage() {
             <form onSubmit={(e) => { void handleNewPassword(e) }} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="new-password">{t('auth.newPassword')}</Label>
-                <Input id="new-password" type="password" placeholder={t('auth.passwordPlaceholder')} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={6} />
+                <PasswordInput id="new-password" value={newPassword} onChange={setNewPassword} placeholder={t('auth.passwordPlaceholder')} minLength={6} />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>{t('auth.saveNewPassword')}</Button>
             </form>
@@ -206,14 +235,7 @@ export function AuthPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="login-password">{t('auth.password')}</Label>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
+                  <PasswordInput id="login-password" value={password} onChange={setPassword} placeholder="••••••••" />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? t('auth.signingIn') : t('auth.signIn')}
@@ -280,15 +302,7 @@ export function AuthPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="reg-password">{t('auth.password')}</Label>
-                  <Input
-                    id="reg-password"
-                    type="password"
-                    placeholder={t('auth.passwordPlaceholder')}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
-                  />
+                  <PasswordInput id="reg-password" value={password} onChange={setPassword} placeholder={t('auth.passwordPlaceholder')} minLength={6} />
                 </div>
                 <div className="space-y-2">
                   <Label>{t('auth.breed')}</Label>

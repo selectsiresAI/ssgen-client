@@ -115,6 +115,7 @@ export function PainelGenomicoPage() {
           <div>
             <h3 className="ss-card-title">{t('painel.national')}</h3>
             <p className="mt-1 text-[12px] text-[var(--ss-muted)]">{t('painel.gauges')}</p>
+            <p className="mt-0.5 text-[11.5px] text-[var(--ss-muted)]">{t('painel.nationalSource')}</p>
           </div>
         </div>
         <div className="ss-card-body">

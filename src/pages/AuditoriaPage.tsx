@@ -163,7 +163,7 @@ function DistribuicaoStep({ females }: { females: FemaleFull[] }) {
 
 function EvolucaoStep({ females }: { females: FemaleFull[] }) {
   const { t } = useI18n()
-  const { benchmarks, breedLabel, indexKey, udderKey, traitLabels } = useBreed()
+  const { benchmarks, trend, breedLabel, indexKey, udderKey, traitLabels } = useBreed()
   const allTraits = Object.keys(traitLabels)
   const trendResult = useMemo(() => computeTrendByYear(females, allTraits), [females])
   const [count, setCount] = useState(3)
@@ -195,6 +195,7 @@ function EvolucaoStep({ females }: { females: FemaleFull[] }) {
 
   return (
     <div className="flex flex-col gap-3.5">
+      <div className="text-[11.5px] text-[var(--ss-muted)]">{t('painel.nationalSource')}</div>
       {benchmarks == null && (
         <div className="rounded-[10px] border border-[var(--ss-border)] bg-[var(--ss-wash)] p-5 text-center">
           <div className="text-[14px] font-bold text-[var(--ss-fg)]">{t('auditoria.nationalReferenceUnavailable', { breed: breedLabel })}</div>
@@ -214,7 +215,15 @@ function EvolucaoStep({ females }: { females: FemaleFull[] }) {
         if (!bench) return null
         const natAvg = bench[2]
         const top25 = bench[3]
-        const nationalData = herdData.map((_, i) => natAvg * 0.92 + ((natAvg - natAvg * 0.92) / (herdData.length - 1)) * i)
+        // série nacional = mediana do banco de fêmeas SSGEN por ano de nascimento (quando existe); senão, referência fixa
+        const trendSeries = (trend as Record<string, unknown> | null | undefined)?.[trait === 'tpi' ? 'gtpi' : trait] as number[] | undefined
+        const trendYears = ((trend as { years?: string[] } | null | undefined)?.years ?? []).map(Number)
+        const nationalData = trendSeries && trendYears.length === trendSeries.length
+          ? trendResult.years.map((y) => {
+              const nearest = trendYears.reduce((best, ty, k) => (Math.abs(ty - Number(y)) < Math.abs(trendYears[best] - Number(y)) ? k : best), 0)
+              return trendSeries[nearest]
+            })
+          : herdData.map(() => natAvg)
         const top25Data = herdData.map((_, i) => top25 * 0.92 + ((top25 - top25 * 0.92) / (herdData.length - 1)) * i)
         return (
           <div key={`${trait}-${idx}`} className="ss-card">
@@ -239,7 +248,7 @@ const Q_COLORS = [
 
 function ScatterStep({ females }: { females: FemaleFull[] }) {
   const { t, formatNumber } = useI18n()
-  const { indexKey, traitLabels } = useBreed()
+  const { indexKey, traitLabels, benchmarks } = useBreed()
   const [xTrait, setXTrait] = useState(indexKey)
   const [yTrait, setYTrait] = useState('hhp')
   const [quadFilter, setQuadFilter] = useState('all')
@@ -283,10 +292,14 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
   const xs = sampled.map((a) => getTraitValue(a, xTrait)).filter((v): v is number => v != null)
   const ys = sampled.map((a) => getTraitValue(a, yTrait)).filter((v): v is number => v != null)
   const padRange = (lo: number, hi: number) => { const p = (hi - lo) * 0.04 || Math.abs(hi) * 0.04 || 1; return [lo - p, hi + p] as const }
-  const [xMin, xMax] = padRange(Math.min(...xs), Math.max(...xs))
-  const [yMin, yMax] = padRange(Math.min(...ys), Math.max(...ys))
-  const xThr = (xMin + xMax) / 2
-  const yThr = (yMin + yMax) / 2
+  // limiar = referência nacional (banco de fêmeas SSGEN) quando existe para a característica; senão, o meio da faixa do rebanho
+  const natOf = (trait: string) => benchmarks?.find(([key]) => key === (trait === 'tpi' ? 'gtpi' : trait))?.[2]
+  const natX = natOf(xTrait)
+  const natY = natOf(yTrait)
+  const [xMin, xMax] = padRange(Math.min(...xs, natX ?? Infinity), Math.max(...xs, natX ?? -Infinity))
+  const [yMin, yMax] = padRange(Math.min(...ys, natY ?? Infinity), Math.max(...ys, natY ?? -Infinity))
+  const xThr = natX ?? (xMin + xMax) / 2
+  const yThr = natY ?? (yMin + yMax) / 2
   const X = (v: number) => padL + ((v - xMin) / (xMax - xMin)) * plotW
   const Y = (v: number) => padT + (1 - (v - yMin) / (yMax - yMin)) * plotH
 
@@ -350,7 +363,10 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
     <div className="flex flex-col gap-3.5">
     <div className="ss-card">
       <div className="ss-card-header">
-        <h3 className="ss-card-title">{t('auditoria.performanceMatrix')} · {xLabel} × {yLabel}</h3>
+        <div>
+          <h3 className="ss-card-title">{t('auditoria.performanceMatrix')} · {xLabel} × {yLabel}</h3>
+          <p className="mt-1 text-[11.5px] text-[var(--ss-muted)]">{natX != null || natY != null ? t('painel.nationalSource') : ''}</p>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <label className="text-[11.5px] font-semibold text-[var(--ss-muted)]">X</label><TraitSelect value={xTrait} onChange={setXTrait} />
           <label className="text-[11.5px] font-semibold text-[var(--ss-muted)]">Y</label><TraitSelect value={yTrait} onChange={setYTrait} />
