@@ -9,6 +9,9 @@ interface AuthState {
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string, fullName: string, breed?: 'HO' | 'JE') => Promise<void>
+  sendPasswordReset: (email: string) => Promise<void>
+  verifyEmailCode: (email: string, code: string) => Promise<void>
+  updatePassword: (password: string) => Promise<void>
   signOut: () => Promise<void>
   sendMagicLink: (email: string) => Promise<void>
 }
@@ -85,5 +88,20 @@ export function useAuth(): AuthState {
     if (error) throw error
   }, [])
 
-  return { session, profile, loading, signIn, signUp, signOut, sendMagicLink }
+  const sendPasswordReset = useCallback(async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/auth` })
+    if (error) throw error
+  }, [])
+
+  const verifyEmailCode = useCallback(async (email: string, code: string) => {
+    const { error } = await supabase.auth.verifyOtp({ email, token: code.trim(), type: 'email' })
+    if (error) throw error
+  }, [])
+
+  const updatePassword = useCallback(async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password })
+    if (error) throw error
+  }, [])
+
+  return { session, profile, loading, signIn, signUp, signOut, sendMagicLink, sendPasswordReset, verifyEmailCode, updatePassword }
 }

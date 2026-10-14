@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -12,7 +12,7 @@ import { useI18n } from '@/i18n'
 
 export function AuthPage() {
   const navigate = useNavigate()
-  const { session, signIn, signUp, sendMagicLink } = useAuth()
+  const { session, signIn, signUp, sendMagicLink, sendPasswordReset, verifyEmailCode, updatePassword } = useAuth()
   const { t } = useI18n()
 
   const [email, setEmail] = useState('')
@@ -22,9 +22,19 @@ export function AuthPage() {
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [codeSent, setCodeSent] = useState(false)
+  const [code, setCode] = useState('')
+  // link de redefinição de senha: a sessão de recuperação não pode mandar direto para o portal
+  const [recovery, setRecovery] = useState(() => typeof window !== 'undefined' && window.location.hash.includes('type=recovery'))
+  const [newPassword, setNewPassword] = useState('')
+
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((event) => { if (event === 'PASSWORD_RECOVERY') setRecovery(true) })
+    return () => data.subscription.unsubscribe()
+  }, [])
 
   // Redirect if already logged in
-  if (session) {
+  if (session && !recovery) {
     navigate('/', { replace: true })
     return null
   }
@@ -95,10 +105,58 @@ export function AuthPage() {
     setLoading(true)
     try {
       await sendMagicLink(email)
+      setCodeSent(true)
       setMessage(t('auth.magicLinkSent'))
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t('auth.sendLinkError')
       setError(msg)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleForgot = async () => {
+    if (!email) {
+      setError(t('auth.enterEmailFirst'))
+      return
+    }
+    setError(null)
+    setLoading(true)
+    try {
+      await sendPasswordReset(email)
+      setMessage(t('auth.resetSent'))
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : t('auth.sendLinkError'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
+    try {
+      await verifyEmailCode(email, code)
+      navigate('/', { replace: true })
+    } catch {
+      setError(t('auth.invalidCode'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
+    try {
+      await updatePassword(newPassword)
+      setRecovery(false)
+      window.history.replaceState(null, '', '/auth')
+      navigate('/', { replace: true })
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : t('auth.createAccountError'))
     } finally {
       setLoading(false)
     }
@@ -133,6 +191,15 @@ export function AuthPage() {
             </div>
           )}
 
+          {recovery ? (
+            <form onSubmit={(e) => { void handleNewPassword(e) }} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-password">{t('auth.newPassword')}</Label>
+                <Input id="new-password" type="password" placeholder={t('auth.passwordPlaceholder')} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={6} />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>{t('auth.saveNewPassword')}</Button>
+            </form>
+          ) : (
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">{t('auth.signIn')}</TabsTrigger>
@@ -185,6 +252,20 @@ export function AuthPage() {
                 >
                   {t('auth.signInMagicLink')}
                 </Button>
+
+                {codeSent && (
+                  <div className="space-y-2 rounded-md border p-3">
+                    <Label htmlFor="login-code">{t('auth.emailCode')}</Label>
+                    <div className="flex gap-2">
+                      <Input id="login-code" inputMode="numeric" autoComplete="one-time-code" placeholder="••••••••" value={code} onChange={(e) => setCode(e.target.value)} />
+                      <Button type="button" disabled={loading || code.trim().length < 6} onClick={(e) => { void handleVerifyCode(e) }}>{t('auth.signIn')}</Button>
+                    </div>
+                  </div>
+                )}
+
+                <button type="button" className="w-full text-center text-sm text-primary underline-offset-4 hover:underline" disabled={loading} onClick={() => { void handleForgot() }}>
+                  {t('auth.forgotPassword')}
+                </button>
               </form>
             </TabsContent>
 
@@ -252,6 +333,7 @@ export function AuthPage() {
               </form>
             </TabsContent>
           </Tabs>
+          )}
 
           <p className="text-xs text-center text-muted-foreground mt-6">
             Select Sires do Brasil &copy; {new Date().getFullYear()}
