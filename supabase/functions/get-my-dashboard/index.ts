@@ -63,7 +63,7 @@ Deno.serve(async (req: Request) => {
       // Laudo = Relatório: 1 por Ordem de Serviço SSGEN que tem arquivo de resultado (result_file_path).
       // NÃO é por animal (genomic_results é resultado por animal, não laudo).
       platformDb.from("service_orders").select("id", { count: "exact", head: true }).in("client_id", clientIds).not("result_file_path", "is", null).is("deleted_at", null),
-      platformDb.from("clients").select("id, nome, farm_name, cidade, estado").in("id", clientIds).is("deleted_at", null),
+      platformDb.from("clients").select("id, nome, farm_name, cidade, estado, metadata").in("id", clientIds).is("deleted_at", null),
     ]);
 
     return new Response(JSON.stringify({

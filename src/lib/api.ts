@@ -232,7 +232,7 @@ export interface DashboardData {
   orders_in_progress: number
   orders_completed: number
   recent_results: number
-  clients: { id: string; nome: string; farm_name: string; cidade: string; estado: string }[]
+  clients: { id: string; nome: string; farm_name: string; cidade: string; estado: string; metadata?: { provas_atualizadas_em?: string } | null }[]
 }
 
 export interface ServiceOrder {

@@ -7,10 +7,18 @@ export function DashboardPage() {
   const { data } = useDashboard()
   const { data: ordersData } = useOrders({ page: 1 })
   const orders = ordersData?.data ?? []
-  const { t, formatNumber } = useI18n()
+  const { t, formatNumber, formatDate } = useI18n()
+  // data da última atualização das provas genômicas (maior data entre as contas do usuário)
+  const proofsDate = (data?.clients ?? []).map((c) => c.metadata?.provas_atualizadas_em).filter((d): d is string => !!d).sort().pop()
 
   return (
     <div>
+      {proofsDate && (
+        <div className="ss-card mb-3 flex items-center gap-2 px-4 py-3 text-[13px]">
+          <Clock size={16} className="text-[var(--ss-primary)]" />
+          <span>{t('dashboard.proofsUpdatedAt', { date: formatDate(new Date(`${proofsDate}T12:00:00`), { day: '2-digit', month: '2-digit', year: 'numeric' }) })}</span>
+        </div>
+      )}
       <div className="ss-grid-kpis">
         <KpiCard icon={FileText} label={t('dashboard.openOrders')} value={data?.orders_in_progress ?? 0} delta="" />
         <KpiCard icon={Plus} label={t('dashboard.registeredFemales')} value={formatNumber(data?.total_genotyped ?? 0)} delta="" />
