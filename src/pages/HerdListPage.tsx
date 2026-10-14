@@ -20,6 +20,7 @@ const herdCols: { key: string; label: string; mono?: boolean; role?: 'index' | '
   { key: 'name', label: 'herd.name' },
   { key: 'cdcb_id', label: 'CDCB', mono: true },
   { key: 'category', label: 'herd.category' },
+  { key: 'provas_atualizadas_em', label: 'herd.proofsDate', mono: true },
   { key: 'birth_date', label: 'herd.birthDate', mono: true },
   { key: 'beta_casein', label: 'herd.betaCasein', mono: true },
   { key: 'kappa_casein', label: 'herd.kappaCasein', mono: true },
@@ -92,6 +93,7 @@ function fmtCell(key: string, val: unknown, formatDate: (value: Date | string | 
   if (val == null) return '—'
   if (key === 'category') return categoryText(String(val))
   if (key === 'birth_date') return formatDate(String(val))
+  if (key === 'provas_atualizadas_em') return formatDate(new Date(`${String(val)}T12:00:00`), { day: '2-digit', month: '2-digit', year: 'numeric' })
   if (typeof val === 'number') return fmt(traitKeyForColumn(key), val)
   return String(val)
 }

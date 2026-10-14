@@ -98,7 +98,7 @@ Deno.serve(async (req: Request) => {
       "sire_naab", "mgs_naab", "mmgs_naab", "genomic_result_id",
       "hhp_dollar", "tpi", "nm_dollar", "cm_dollar", "fm_dollar", "gm_dollar",
       "f_sav", "cfp", "da", "ket", "mast", "met", "rp", "ssb", "dsb",
-      "h_liv", "fi", "gl", "efc", "bwc", "fsc", "hcc", "bsc", "bd",
+      "h_liv", "fi", "gl", "efc", "bwc", "fsc", "hcc", "bsc", "bd", "provas_atualizadas_em",
       "sta", "dfm", "rua", "rls", "rtp", "ftl", "rw", "rlr",
       "fta", "fls", "fua", "ruh", "ruw", "ucl", "udp", "ftp",
       "rfi", "beta_casein", "kappa_casein", "gfi", "jpi", "jui", "str:str_num",

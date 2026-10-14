@@ -55,7 +55,7 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const [femalesRes, genotypedRes, ordersProgressRes, ordersCompleteRes, recentResultsRes, clientsRes] = await Promise.all([
+    const [femalesRes, genotypedRes, ordersProgressRes, ordersCompleteRes, recentResultsRes, clientsRes, proofsDateRes] = await Promise.all([
       platformDb.from("females").select("id", { count: "exact", head: true }).in("client_id", clientIds).is("deleted_at", null),
       platformDb.from("females").select("id", { count: "exact", head: true }).in("client_id", clientIds).not("cdcb_id", "is", null).is("deleted_at", null),
       platformDb.from("service_orders").select("id", { count: "exact", head: true }).in("client_id", clientIds).not("etapa_atual", "in", '("Faturamento")').is("deleted_at", null),
@@ -64,6 +64,7 @@ Deno.serve(async (req: Request) => {
       // NÃO é por animal (genomic_results é resultado por animal, não laudo).
       platformDb.from("service_orders").select("id", { count: "exact", head: true }).in("client_id", clientIds).not("result_file_path", "is", null).is("deleted_at", null),
       platformDb.from("clients").select("id, nome, farm_name, cidade, estado, metadata").in("id", clientIds).is("deleted_at", null),
+      platformDb.from("females").select("provas_atualizadas_em").in("client_id", clientIds).is("deleted_at", null).not("provas_atualizadas_em", "is", null).order("provas_atualizadas_em", { ascending: false }).limit(1),
     ]);
 
     return new Response(JSON.stringify({
@@ -72,6 +73,8 @@ Deno.serve(async (req: Request) => {
       orders_in_progress: ordersProgressRes.count ?? 0,
       orders_completed: ordersCompleteRes.count ?? 0,
       recent_results: recentResultsRes.count ?? 0,
+      proofs_updated_at: (proofsDateRes.data?.[0] as { provas_atualizadas_em?: string } | undefined)?.provas_atualizadas_em
+        ?? ((clientsRes.data ?? []) as { metadata?: { provas_atualizadas_em?: string } | null }[]).map((c) => c.metadata?.provas_atualizadas_em).filter(Boolean).sort().pop() ?? null,
       clients: clientsRes.data ?? [],
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

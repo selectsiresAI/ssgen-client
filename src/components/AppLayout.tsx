@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Activity, BarChart3, Container, FileText, LayoutDashboard, List, Menu, Search } from 'lucide-react'
+import { Activity, BarChart3, Clock, Container, FileText, LayoutDashboard, List, Menu, Search } from 'lucide-react'
+import { useDashboard } from '@/hooks/useApi'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -98,7 +99,10 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
 
 export function AppLayout() {
   const { signOut } = useAuth()
-  const { t } = useI18n()
+  const { t, formatDate } = useI18n()
+  const { data: dash } = useDashboard()
+  // data da última atualização das provas (mais recente entre as fêmeas da conta)
+  const proofsDate = dash?.proofs_updated_at ? formatDate(new Date(`${dash.proofs_updated_at}T12:00:00`), { day: '2-digit', month: '2-digit', year: 'numeric' }) : null
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
   const titles: Record<string, [string, string]> = {
@@ -131,6 +135,12 @@ export function AppLayout() {
           </div>
 
           <div className="flex items-center gap-2">
+            {proofsDate && (
+              <div className="flex items-center gap-1.5 rounded-[8px] border border-[var(--ss-border)] bg-white px-2.5 py-[7px] text-[11px] font-semibold text-[var(--ss-text)] sm:px-3.5 sm:text-[12px]" title={t('dashboard.proofsUpdatedAt', { date: proofsDate })}>
+                <Clock className="h-[13px] w-[13px] text-[var(--ss-primary)]" strokeWidth={1.8} />
+                <span>{t('dashboard.proofsUpdatedAt', { date: proofsDate })}</span>
+              </div>
+            )}
             <div className="hidden items-center gap-[7px] rounded-[8px] border border-[var(--ss-border)] bg-white px-3.5 py-[7px] text-[12px] font-semibold text-[var(--ss-text)] sm:flex">
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--ss-primary-bright)] shadow-[0_0_8px_rgba(220,38,38,.4)] animate-[ss-pulse_2s_infinite]" />
               {t('layout.herdListStatus')}

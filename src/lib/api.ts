@@ -110,6 +110,7 @@ export interface FemaleFull {
   gl: number | null
   efc: number | null
   bwc: number | null
+  provas_atualizadas_em: string | null
   fsc: number | null
   hcc: number | null
   bsc: number | null
@@ -235,6 +236,7 @@ export interface DashboardData {
   orders_in_progress: number
   orders_completed: number
   recent_results: number
+  proofs_updated_at?: string | null
   clients: { id: string; nome: string; farm_name: string; cidade: string; estado: string; metadata?: { provas_atualizadas_em?: string } | null }[]
 }
 
