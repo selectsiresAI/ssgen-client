@@ -146,7 +146,7 @@ export const benchmarks: [string, string, number, number, number][] = [
 ]
 
 export const DEMO_TO_FEMALE: Record<string, string> = {
-  gtpi: 'tpi', jpi: 'jpi', nm: 'nm_dollar', hhp: 'hhp_dollar', cm: 'cm_dollar', fm: 'fm_dollar', gm: 'gm_dollar',
+  gtpi: 'tpi', tpi: 'tpi', jpi: 'jpi', nm: 'nm_dollar', hhp: 'hhp_dollar', cm: 'cm_dollar', fm: 'fm_dollar', gm: 'gm_dollar',
   milk: 'ptam', fat: 'ptaf', fat_pct: 'ptaf_pct', prot: 'ptap', prot_pct: 'ptap_pct',
   dpr: 'dpr', pl: 'pl', scs: 'scs', hcr: 'hcr', ccr: 'ccr', liv: 'liv', sce: 'sce',
   ptat: 'ptat', udc: 'udc', jui: 'jui', flc: 'flc', fsav: 'f_sav', rfi: 'rfi', cfp: 'cfp', efc: 'efc',

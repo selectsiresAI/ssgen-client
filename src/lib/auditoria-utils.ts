@@ -2,7 +2,7 @@ import type { FemaleFull } from './api'
 import { translate } from '@/i18n'
 
 export const FEMALE_TRAIT_MAP: Record<string, keyof FemaleFull> = {
-  hhp: 'hhp_dollar', gtpi: 'tpi', jpi: 'jpi', nm: 'nm_dollar', cm: 'cm_dollar', fm: 'fm_dollar', gm: 'gm_dollar',
+  hhp: 'hhp_dollar', gtpi: 'tpi', tpi: 'tpi', jpi: 'jpi', nm: 'nm_dollar', cm: 'cm_dollar', fm: 'fm_dollar', gm: 'gm_dollar',
   milk: 'ptam', fat: 'ptaf', fat_pct: 'ptaf_pct', prot: 'ptap', prot_pct: 'ptap_pct',
   cfp: 'cfp', fsav: 'f_sav', rfi: 'rfi', efc: 'efc',
   pl: 'pl', dpr: 'dpr', scs: 'scs', hcr: 'hcr', ccr: 'ccr', liv: 'liv', sce: 'sce',
