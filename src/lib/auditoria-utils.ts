@@ -14,6 +14,11 @@ export const FEMALE_TRAIT_MAP: Record<string, keyof FemaleFull> = {
   ftp: 'ftp', rtp: 'rtp', ftl: 'ftl', mf: 'mf', gfi: 'gfi', bwc: 'bwc',
 }
 
+// O banco guarda o índice principal Holandês como 'tpi', mas a tabela de referência nacional o chama de 'gtpi'.
+export function referenceKey(trait: string): string {
+  return trait === 'tpi' ? 'gtpi' : trait
+}
+
 export function getTraitValue(f: FemaleFull, trait: string): number | null {
   const field = FEMALE_TRAIT_MAP[trait]
   if (!field) return null

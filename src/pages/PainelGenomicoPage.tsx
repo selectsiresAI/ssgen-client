@@ -6,7 +6,8 @@ import { TraitSelect } from '@/components/TraitSelect'
 import { useFemalesFull } from '@/hooks/useApi'
 import { useBreed } from '@/lib/breed'
 import { computeHerdAverage } from '@/lib/herdStats'
-import { fmt } from '@/lib/traits'
+import { fmt, DEMO_TO_FEMALE } from '@/lib/traits'
+import { ZONE_COLORS, ageAdjustedValue, goodRank, zoneFromRank, PCT_POINTS } from '@/lib/percentile'
 import { generateReportPdf } from '@/lib/reportPdf'
 import { traitLabel } from '@/lib/traits'
 import { useI18n } from '@/i18n'
@@ -30,9 +31,23 @@ export function PainelGenomicoPage() {
   const [gauge2, setGauge2] = useState('gtpi')
   const [gauge3, setGauge3] = useState('nm')
   const { data: fem, isLoading } = useFemalesFull({ page: 1, perPage: 5000 })
-  const { benchmarks, trend, breedLabel, indexKey, indexLabel, traitLabels } = useBreed()
+  const { benchmarks, trend, percentiles, cohortMedians, breedLabel, indexKey, indexLabel, traitLabels } = useBreed()
   const females = fem?.data ?? []
-  const herdAvg = useMemo(() => computeHerdAverage(females), [females])
+  const herdAvgAll = useMemo(() => computeHerdAverage(females), [females])
+  // comparação: 'same' = com fêmeas nascidas no mesmo ano (valor ajustado por idade); 'all' = com todas as idades
+  const [ageMode, setAgeMode] = useState<'same' | 'all'>('same')
+  const canAgeAdjust = !!cohortMedians && !!benchmarks
+  const herdAvg = useMemo(() => {
+    if (ageMode === 'all' || !cohortMedians || !benchmarks) return herdAvgAll
+    const out = { ...herdAvgAll }
+    for (const [key, , natAvg] of benchmarks) {
+      const field = DEMO_TO_FEMALE[key]
+      if (!field) continue
+      const adj = ageAdjustedValue(females, (f) => { const v = (f as unknown as Record<string, unknown>)[field]; return typeof v === 'number' && Number.isFinite(v) ? v : null }, cohortMedians[key], natAvg)
+      if (adj != null) out[key] = adj
+    }
+    return out
+  }, [ageMode, herdAvgAll, females, cohortMedians, benchmarks])
   const [reportSections, setReportSections] = useState([
     { key: 'executivo', enabled: true }, { key: 'perfil', enabled: true }, { key: 'temporal', enabled: true }, { key: 'nacional', enabled: true }, { key: 'top5', enabled: true }, { key: 'atencao', enabled: true }, { key: 'haplotipo', enabled: false }, { key: 'scatter', enabled: false },
   ])
@@ -47,9 +62,17 @@ export function PainelGenomicoPage() {
     let gauge: ReactNode
     if (bench && val != null) {
       const [, label, natAvg, top25, top10] = bench
-      const zone = getZone(key, val, natAvg, top25, top10)
+      // percentil real do banco SSGEN (quando a tabela existe); senão, a interpolação antiga
+      const pts = percentiles?.[key]
+      const rank = pts ? goodRank(key, val, pts) : null
+      const zone = rank != null ? { zone: zoneFromRank(rank), color: ZONE_COLORS[zoneFromRank(rank)] } : getZone(key, val, natAvg, top25, top10)
+      const i10 = PCT_POINTS.indexOf(10)
+      const i90 = PCT_POINTS.indexOf(90)
+      const lowerBetter = ['scs', 'flc', 'rfi', 'gl', 'sce', 'ssb', 'dsb', 'da', 'ket'].includes(key)
+      const edgeLeft = pts ? (lowerBetter ? pts[i90] : pts[i10]) : null
+      const edgeRight = pts ? (lowerBetter ? pts[i10] : pts[i90]) : null
       const min = Math.round(natAvg - Math.abs(top10 - natAvg))
-      gauge = <GaugeChart label={traitLabels[key] ?? traitLabel[key] ?? label} value={val} formattedValue={fmt(key, val)} min={min} max={top10} natAvg={natAvg} zone={t(`painel.${zone.zone}`)} zoneColor={zone.color} />
+      gauge = <GaugeChart label={traitLabels[key] ?? traitLabel[key] ?? label} value={val} formattedValue={fmt(key, herdAvgAll[key] ?? val)} min={min} max={top10} natAvg={natAvg} zone={rank != null ? (zone.zone === 'top25' ? `Top ${Math.max(0.1, 100 - rank).toFixed(1)}%` : `${t(`painel.${zone.zone}`)} · Top ${Math.max(0.1, 100 - rank).toFixed(1)}%`) : t(`painel.${zone.zone}`)} zoneColor={zone.color} rank={rank ?? undefined} minLabel={edgeLeft != null ? fmt(key, edgeLeft) : undefined} maxLabel={edgeRight != null ? fmt(key, edgeRight) : undefined} />
     } else {
       gauge = <div className="flex h-[130px] items-center justify-center rounded-[14px] border border-dashed border-[var(--ss-border)] bg-[var(--ss-wash)] px-4 text-center text-[12px] text-[var(--ss-muted)]">{t('painel.noIndexReference')}</div>
     }
@@ -116,6 +139,19 @@ export function PainelGenomicoPage() {
             <h3 className="ss-card-title">{t('painel.national')}</h3>
             <p className="mt-1 text-[12px] text-[var(--ss-muted)]">{t('painel.gauges')}</p>
             <p className="mt-0.5 text-[11.5px] text-[var(--ss-muted)]">{t('painel.nationalSource')}</p>
+            {percentiles && <p className="mt-0.5 text-[11.5px] text-[var(--ss-muted)]">{t('painel.zoneDefinition')}</p>}
+            {canAgeAdjust && (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <div className="inline-flex gap-[2px] rounded-[10px] bg-[var(--ss-border-2)] p-[3px]">
+                  {(['same', 'all'] as const).map((mode) => (
+                    <button key={mode} type="button" onClick={() => setAgeMode(mode)} className={`rounded-[8px] px-3 py-1.5 text-[11.5px] font-semibold transition ${ageMode === mode ? 'bg-white text-[var(--ss-fg)] shadow-sm' : 'text-[var(--ss-muted)]'}`}>
+                      {t(mode === 'same' ? 'painel.ageSame' : 'painel.ageAll')}
+                    </button>
+                  ))}
+                </div>
+                <span className="text-[11.5px] text-[var(--ss-muted)]">{t(ageMode === 'same' ? 'painel.ageSameHint' : 'painel.ageAllHint')}</span>
+              </div>
+            )}
           </div>
         </div>
         <div className="ss-card-body">
@@ -142,7 +178,7 @@ export function PainelGenomicoPage() {
                   <button key={key} type="button" onClick={() => setSpectrumCat(key)} className={`rounded-[8px] px-4 py-2 text-[11.5px] font-semibold transition ${spectrumCat === key ? 'bg-white text-[var(--ss-fg)] shadow-[0_1px_3px_rgba(0,0,0,.06)]' : 'text-[var(--ss-muted)] hover:text-[var(--ss-fg)]'}`}>{label}</button>
                 ))}
               </div>
-              <BenchmarkSpectrum benchmarks={benchmarks} herdAvg={herdAvg} category={spectrumCat} />
+              <BenchmarkSpectrum benchmarks={benchmarks} herdAvg={herdAvg} category={spectrumCat} percentiles={percentiles} displayAvg={herdAvgAll} />
             </>
           )}
         </div>

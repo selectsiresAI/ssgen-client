@@ -18,6 +18,8 @@ interface BreedContextValue {
   traitLabels: Record<string, string>
   benchmarks: Benchmarks | null
   trend: TrendData
+  percentiles: Record<string, number[]> | null
+  cohortMedians: Record<string, Record<string, number>> | null
   isLoading: boolean
 }
 
@@ -38,6 +40,8 @@ const fallbackValue: BreedContextValue = {
   traitLabels: traitLabel,
   benchmarks: holsteinBenchmarks,
   trend: holsteinTrend,
+  percentiles: null,
+  cohortMedians: null,
   isLoading: false,
 }
 
@@ -76,6 +80,8 @@ export function BreedProvider({ children }: { children: ReactNode }) {
       traitLabels,
       benchmarks: reference.benchmarks,
       trend: reference.trend,
+      percentiles: reference.percentiles ?? null,
+      cohortMedians: reference.cohort_medians ?? null,
       isLoading,
     }
   }, [data, isError, isLoading, locale])

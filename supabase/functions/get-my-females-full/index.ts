@@ -107,7 +107,7 @@ Deno.serve(async (req: Request) => {
       "pl:pta_pl", "dpr:pta_dpr", "liv:pta_livability", "scs:pta_scs",
       "mf:mf_num",
       "ptat:pta_ptat", "udc:pta_udc", "flc:pta_flc",
-      "sce:pta_sce", "ccr:pta_ccr", "hcr:pta_hcr",
+      "sce:pta_sce", "dce:pta_sire_sce", "ccr:pta_ccr", "hcr:pta_hcr",
       "created_at",
     ].join(", ");
 

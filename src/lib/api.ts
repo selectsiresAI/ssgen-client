@@ -219,6 +219,9 @@ export interface BreedReference {
   catalog: BreedCatalogItem[]
   benchmarks: [string, string, number, number, number][] | null
   trend: Record<string, number[]> | null
+  // tabelas de percentil real do banco de fêmeas SSGEN (ver src/lib/percentile.ts)
+  percentiles?: Record<string, number[]> | null
+  cohort_medians?: Record<string, Record<string, number>> | null
 }
 
 export interface BreedParams {

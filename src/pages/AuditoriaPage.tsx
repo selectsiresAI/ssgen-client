@@ -17,8 +17,7 @@ import {
   computeTrendByYear,
   computeDistribution,
   computeHerdAverage,
-  getTraitValue,
-} from '@/lib/auditoria-utils'
+  getTraitValue, referenceKey } from '@/lib/auditoria-utils'
 
 const defaultTraits = ['hhp', 'gtpi', 'nm']
 
@@ -164,8 +163,11 @@ function DistribuicaoStep({ females }: { females: FemaleFull[] }) {
 function EvolucaoStep({ females }: { females: FemaleFull[] }) {
   const { t } = useI18n()
   const { benchmarks, trend, breedLabel, indexKey, udderKey, traitLabels } = useBreed()
-  const allTraits = Object.keys(traitLabels)
-  const trendResult = useMemo(() => computeTrendByYear(females, allTraits), [females])
+  // inclui o índice principal e o de úbere da raça (ex.: 'tpi'), que podem não estar nas chaves dos rótulos
+  const allTraits = Array.from(new Set([...Object.keys(traitLabels), indexKey, udderKey]))
+  const allTraitsKey = allTraits.join(',')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const trendResult = useMemo(() => computeTrendByYear(females, allTraits), [females, allTraitsKey])
   const [count, setCount] = useState(3)
   const [charts, setCharts] = useState<string[]>(() => breedTraits(defaultTraits, indexKey, udderKey))
   useEffect(() => setCharts((items) => breedTraits(items, indexKey, udderKey)), [indexKey, udderKey])
@@ -211,12 +213,12 @@ function EvolucaoStep({ females }: { females: FemaleFull[] }) {
       {charts.map((trait, idx) => {
         const herdData = trendResult.data[trait]
         if (!herdData || herdData.length < 2) return null
-        const bench = benchmarks?.find(([key]) => key === trait)
+        const bench = benchmarks?.find(([key]) => key === referenceKey(trait))
         if (!bench) return null
         const natAvg = bench[2]
         const top25 = bench[3]
         // série nacional = mediana do banco de fêmeas SSGEN por ano de nascimento (quando existe); senão, referência fixa
-        const trendSeries = (trend as Record<string, unknown> | null | undefined)?.[trait === 'tpi' ? 'gtpi' : trait] as number[] | undefined
+        const trendSeries = (trend as Record<string, unknown> | null | undefined)?.[referenceKey(trait)] as number[] | undefined
         const trendYears = ((trend as { years?: string[] } | null | undefined)?.years ?? []).map(Number)
         const nationalData = trendSeries && trendYears.length === trendSeries.length
           ? trendResult.years.map((y) => {
@@ -293,7 +295,7 @@ function ScatterStep({ females }: { females: FemaleFull[] }) {
   const ys = sampled.map((a) => getTraitValue(a, yTrait)).filter((v): v is number => v != null)
   const padRange = (lo: number, hi: number) => { const p = (hi - lo) * 0.04 || Math.abs(hi) * 0.04 || 1; return [lo - p, hi + p] as const }
   // limiar = referência nacional (banco de fêmeas SSGEN) quando existe para a característica; senão, o meio da faixa do rebanho
-  const natOf = (trait: string) => benchmarks?.find(([key]) => key === (trait === 'tpi' ? 'gtpi' : trait))?.[2]
+  const natOf = (trait: string) => benchmarks?.find(([key]) => key === referenceKey(trait))?.[2]
   const natX = natOf(xTrait)
   const natY = natOf(yTrait)
   const [xMin, xMax] = padRange(Math.min(...xs, natX ?? Infinity), Math.max(...xs, natX ?? -Infinity))

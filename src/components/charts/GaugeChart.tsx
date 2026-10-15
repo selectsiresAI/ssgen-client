@@ -7,6 +7,11 @@ interface GaugeChartProps {
   natAvg: number
   zone: string // i18n-ignore
   zoneColor: string
+  // percentil de qualidade (0 a 100). Quando informado, as faixas e o ponteiro seguem o percentil real:
+  // Abaixo 0-25, Médio 25-75, Top 25% 75-90, Elite 90-100
+  rank?: number
+  minLabel?: string
+  maxLabel?: string
 }
 
 const zones = [
@@ -14,6 +19,14 @@ const zones = [
   ['#FCD34D', 135, 90],
   ['#86EFAC', 90, 45],
   ['#34D399', 45, 0],
+] as const
+
+// faixas pelo percentil real (ângulo = 180 - percentil*1.8)
+const rankZones = [
+  ['#FCA5A5', 180, 135],
+  ['#FCD34D', 135, 45],
+  ['#86EFAC', 45, 18],
+  ['#34D399', 18, 0],
 ] as const
 
 function polar(cx: number, cy: number, r: number, angle: number) {
@@ -32,8 +45,8 @@ function clampPct(value: number, min: number, max: number) {
   return Math.max(0, Math.min(1, (value - min) / (max - min)))
 }
 
-export function GaugeChart({ label, formattedValue, min, max, value, zone }: GaugeChartProps) {
-  const rawPct = clampPct(value, min, max)
+export function GaugeChart({ label, formattedValue, min, max, value, zone, rank, minLabel, maxLabel }: GaugeChartProps) {
+  const rawPct = rank != null ? Math.max(0, Math.min(1, rank / 100)) : clampPct(value, min, max)
   const pct = Number.isFinite(rawPct) ? rawPct : 0.5
   const needleAngle = 180 - pct * 180
   const needle = polar(90, 92, 54, needleAngle)
@@ -48,7 +61,7 @@ export function GaugeChart({ label, formattedValue, min, max, value, zone }: Gau
           </filter>
         </defs>
         <g fill="none" strokeLinecap="round" strokeWidth="12">
-          {zones.map(([color, start, end]) => <path key={color} d={arcPath(start, end)} stroke={color} />)}
+          {(rank != null ? rankZones : zones).map(([color, start, end]) => <path key={color} d={arcPath(start, end)} stroke={color} />)}
         </g>
         <line x1="90" y1="92" x2={needle.x} y2={needle.y} stroke="var(--ss-primary)" strokeWidth="3.5" strokeLinecap="round" />
         <circle cx="90" cy="92" r="6.5" fill="var(--ss-primary)" />
@@ -57,7 +70,7 @@ export function GaugeChart({ label, formattedValue, min, max, value, zone }: Gau
       <div className="text-[11px] font-bold uppercase tracking-[2px] text-[var(--ss-muted)]">{label}</div>
       <div className="font-mono text-[36px] font-black leading-none tracking-[-2px] text-[var(--ss-fg)]">{formattedValue}</div>
       <div className="flex w-full max-w-[200px] justify-between px-1 font-mono text-[10px] text-[var(--ss-muted-2)]">
-        <span>{min}</span><span>{max}</span>
+        <span>{minLabel ?? min}</span><span>{maxLabel ?? max}</span>
       </div>
       <span className="rounded-[20px] bg-[var(--ss-primary-soft)] px-3 py-1 text-[10px] font-bold text-[var(--ss-primary)]">{zone}</span>
     </div>

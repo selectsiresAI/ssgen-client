@@ -1,11 +1,15 @@
 import { fmt, traitLabel } from '@/lib/traits'
 import { useBreed } from '@/lib/breed'
 import { translate, useI18n } from '@/i18n'
+import { ZONE_COLORS, goodRank, zoneFromRank } from '@/lib/percentile'
 
 interface BenchmarkSpectrumProps {
   benchmarks: [string, string, number, number, number][]
   herdAvg: Record<string, number>
   category: string
+  percentiles?: Record<string, number[]> | null
+  // valor que aparece escrito (a média real do rebanho); a posição/classe usa herdAvg (que pode ser ajustado por idade)
+  displayAvg?: Record<string, number>
 }
 
 const inverted = ['scs', 'flc', 'rfi', 'gl', 'sce', 'ssb', 'dsb', 'da', 'ket']
@@ -28,7 +32,7 @@ function zoneFor(trait: string, val: number, natAvg: number, _top25: number, top
   return { pct, zone: 'below', color: '#C0633A' }
 }
 
-export function BenchmarkSpectrum({ benchmarks, herdAvg, category }: BenchmarkSpectrumProps) {
+export function BenchmarkSpectrum({ benchmarks, herdAvg, category, percentiles, displayAvg }: BenchmarkSpectrumProps) {
   const { t, formatNumber, locale } = useI18n()
   const { indexKey, udderKey, traitLabels } = useBreed()
   const categoryKeys = categories[category]?.map((key) => {
@@ -42,7 +46,10 @@ export function BenchmarkSpectrum({ benchmarks, herdAvg, category }: BenchmarkSp
     <div className="flex max-h-[420px] flex-col overflow-y-auto ss-herd-scroll">
       {filtered.map(([key, label, natAvg, top25, top10]) => {
         const val = herdAvg[key] ?? 0
-        const mine = zoneFor(key, val, natAvg, top25, top10)
+        // percentil real do banco SSGEN quando existe; senão, a interpolação antiga
+        const pts = percentiles?.[key]
+        const rank = pts ? goodRank(key, val, pts) : null
+        const mine = rank != null ? { pct: rank, zone: zoneFromRank(rank), color: ZONE_COLORS[zoneFromRank(rank)] } : zoneFor(key, val, natAvg, top25, top10)
         const inv = inverted.includes(key)
         const diff = natAvg === 0 ? 0 : ((inv ? natAvg - val : val - natAvg) / Math.abs(natAvg)) * 100
         return (
@@ -54,7 +61,7 @@ export function BenchmarkSpectrum({ benchmarks, herdAvg, category }: BenchmarkSp
             <div className="relative h-2 rounded-[5px] bg-[linear-gradient(90deg,#DC2626,#F59E0B_30%,#65A30D_60%,#22C55E_85%,#16A34A)] shadow-[inset_0_1px_2px_rgba(0,0,0,.06)]">
               <div className="absolute inset-y-0 z-20 w-0.5" style={{ left: '50%', background: 'repeating-linear-gradient(to bottom, var(--ss-muted) 0, var(--ss-muted) 3px, transparent 3px, transparent 6px)' }} />
               <div className="absolute inset-y-0 z-30 flex flex-col items-center" style={{ left: `${mine.pct}%` }}>
-                <span className="absolute -top-[22px] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-[6px] bg-[var(--ss-fg)] px-2 py-0.5 font-mono text-[11px] font-extrabold text-white shadow-[0_3px_10px_rgba(0,0,0,.2)]">{fmt(key, val)}</span>
+                <span className="absolute -top-[22px] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-[6px] bg-[var(--ss-fg)] px-2 py-0.5 font-mono text-[11px] font-extrabold text-white shadow-[0_3px_10px_rgba(0,0,0,.2)]">{fmt(key, displayAvg?.[key] ?? val)}</span>
                 <span className="absolute top-[2px] left-1/2 -translate-x-1/2 h-3 w-0.5 rounded-sm bg-[var(--ss-fg)]" />
               </div>
             </div>

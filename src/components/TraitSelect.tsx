@@ -2,7 +2,7 @@ import { traitLabel } from '@/lib/traits'
 import { useBreed } from '@/lib/breed'
 import { useI18n } from '@/i18n'
 
-const traitGroups = [
+export const traitGroups = [
   { label: 'traits.group.indices', keys: ['hhp', 'gtpi', 'nm', 'cm', 'fm', 'gm'] }, { label: 'traits.group.production', keys: ['milk', 'fat', 'fat_pct', 'prot', 'prot_pct', 'cfp', 'fsav', 'rfi', 'efc'] }, { label: 'traits.group.functional', keys: ['pl', 'scs', 'dpr', 'hcr', 'ccr', 'liv', 'hliv', 'fi', 'fsc', 'gl'] }, { label: 'traits.group.calving', keys: ['sce', 'ssb', 'dsb', 'mf'] }, { label: 'traits.group.type', keys: ['ptat', 'udc', 'flc', 'sta', 'str', 'dfm', 'rua', 'rw', 'rls', 'rlr', 'fta', 'fls', 'fua', 'ruh', 'ruw', 'ucl', 'udp', 'ftp', 'rtp', 'ftl', 'bd', 'bsc', 'hcc'] }, { label: 'traits.group.health', keys: ['mast', 'met', 'rp', 'da', 'ket', 'gfi'] },
 ]
 
