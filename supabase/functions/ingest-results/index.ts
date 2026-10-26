@@ -198,6 +198,8 @@ const FEMALES_TEXT_FIELDS = new Set(["beta_casein", "kappa_casein"]);
 const ALL_NUMERIC = new Set([
   ...FEMALES_NUMERIC_FIELDS,
   "rel_milk", "rel_fat", "rel_protein",
+  // numerica em genomic_results, mas fora de FEMALES_NUMERIC_FIELDS: sem isto o "**" do CDCB (FPT) chegava como texto
+  "pta_sire_sce",
 ]);
 
 // Chave de servico: a secret nova do projeto (env) ou o JWT legado service_role deste
