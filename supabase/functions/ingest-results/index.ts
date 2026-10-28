@@ -21,6 +21,7 @@ const HEADER_MAP: Record<string, string> = {
   "nasc": "birth_date", "dt nasc": "birth_date", "nascimento": "birth_date",
   "sexo": "sex", "sex": "sex",
   "raca": "breed", "breed": "breed",
+  "eval breed": "eval_breed", "submitted breed": "submitted_breed",
   "sample id": "sample_id", "id amostra": "sample_id",
   "farm id": "farm_id_grid",
   // Sire/dam NAAB
@@ -199,6 +200,30 @@ const ALL_NUMERIC = new Set([
   ...FEMALES_NUMERIC_FIELDS,
   "rel_milk", "rel_fat", "rel_protein",
 ]);
+
+// Jersey: o Grid Neogen usa as colunas IPI (indice de performance) e UDC (indice de ubere) para
+// TODAS as racas. Em Jersey elas sao JPI e JUI, nao TPI/PTA de ubere. Eval_Breed (raca em que a
+// avaliacao foi feita) manda: define a escala dos numeros, mesmo que Submitted Breed diga outra coisa.
+function isJerseyRow(parsed: Record<string, unknown>): boolean {
+  const up = (v: unknown) => String(v ?? "").trim().toUpperCase();
+  const evalBreed = up(parsed.eval_breed);
+  if (evalBreed) return evalBreed === "JE" || evalBreed === "JER" || evalBreed === "JERSEY";
+  const breed = up(parsed.breed) || up(parsed.submitted_breed);
+  if (breed === "JE" || breed === "JER" || breed === "JERSEY") return true;
+  return /^JE(USA|BRA|CAN)/.test(up(parsed.registration)) || /^JE(USA|BRA|CAN)/.test(up(parsed.cdcb_id));
+}
+
+// Move TPI -> JPI e PTA Udder -> JUI numa fêmea Jersey, sem sobrescrever JPI/JUI que o arquivo ja traga.
+function applyJerseyIndexes(update: Record<string, unknown>) {
+  if (update.tpi !== undefined) {
+    if (update.jpi === undefined) update.jpi = update.tpi;
+    update.tpi = null;
+  }
+  if (update.pta_udc !== undefined) {
+    if (update.jui === undefined) update.jui = update.pta_udc;
+    update.pta_udc = null;
+  }
+}
 
 // Chave de servico: a secret nova do projeto (env) ou o JWT legado service_role deste
 // projeto. O JWT so chega aqui com assinatura valida porque a funcao roda com verify_jwt=true.
@@ -514,12 +539,10 @@ Deno.serve(async (req: Request) => {
       if (parsed.mmgs_naab) update.mmgs_naab = parsed.mmgs_naab;
 
       // Breed: PROMOTE to Jersey only (JE is authoritative — never demote to HO here).
-      // Signal: the file's breed/raca column says Jersey, or JEUSA/JEBRA registration prefix.
-      const breedStr = String(parsed.breed ?? "").trim().toUpperCase();
-      const regStr = String(parsed.registration ?? "").trim().toUpperCase();
-      if (breedStr === "JE" || breedStr === "JER" || breedStr === "JERSEY"
-          || regStr.startsWith("JEUSA") || regStr.startsWith("JEBRA")) {
+      // Signal: Eval_Breed JE, a raca column saying Jersey, or JEUSA/JEBRA/JECAN prefix (registro ou Official ID).
+      if (isJerseyRow(parsed)) {
         update.breed = "JE";
+        applyJerseyIndexes(update);
       }
 
       // Match strategy: try cdcb_id first, then ear_tag + client_id
